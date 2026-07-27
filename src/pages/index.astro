@@ -1,0 +1,388 @@
+---
+import "../styles/global.css";
+
+const title = "Memory Map — Explore your ChatGPT history";
+const description =
+  "Turn a ChatGPT export ZIP into a private topic graph, searchable memory, repeated-question report, and fact history in your browser.";
+---
+
+<!--
+THESIS: Conversation history becomes a navigable memory network, not a dashboard of vanity totals.
+OWN-WORLD: Cool paper, ink rules, colored transit routes, labelled interchanges, and evidence-ledger rows.
+STORY: Import privately, see the map form, search it, then inspect the sources behind every suggestion.
+FIRST VIEWPORT: Before import, one route gate. After import, search and the semantic graph dominate with a fact ledger at right.
+FORM: Graph-first memory workbench; selected delegated probe; direction seed 100c1b70, grounded candidate five with transit-stack staging.
+-->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f3f5f2" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <div class="app-shell">
+      <aside class="route-rail" aria-label="Report sections">
+        <a class="brand" href="#main" aria-label="Memory Map home">
+          <svg viewBox="0 0 36 36" aria-hidden="true">
+            <path d="M7 8 17 15 29 7M17 15l1 14M7 27l11 2 11-9" />
+            <circle cx="7" cy="8" r="3" />
+            <circle cx="29" cy="7" r="3" />
+            <circle cx="17" cy="15" r="3" />
+            <circle cx="7" cy="27" r="3" />
+            <circle cx="18" cy="29" r="3" />
+            <circle cx="29" cy="20" r="3" />
+          </svg>
+          <span>Memory Map</span>
+        </a>
+        <p class="brand-note">Detected from your own statements.</p>
+
+        <nav id="report-nav" hidden>
+          <p class="map-key">Routes</p>
+          <a href="#topic-map"><i class="route-dot route-blue"></i>Topic map</a>
+          <a href="#memory-ledger"><i class="route-dot route-teal"></i>Memory ledger</a>
+          <a href="#question-lenses"><i class="route-dot route-amber"></i>Question lenses</a>
+          <a href="#repeated-questions"><i class="route-dot route-red"></i>Repeated questions</a>
+          <a href="#reflection-questions"><i class="route-dot route-violet"></i>Questions for you</a>
+          <a href="#query-tone"><i class="route-dot route-amber"></i>Query tone</a>
+          <a href="#rhythms"><i class="route-dot route-violet"></i>Rhythms</a>
+        </nav>
+
+        <div class="rail-footer">
+          <span class="privacy-mark" aria-hidden="true">◇</span>
+          <span>Archive contents stay on this device</span>
+        </div>
+      </aside>
+
+      <main id="main">
+        <section id="import-view" class="import-view" aria-labelledby="import-heading">
+          <div class="import-copy">
+            <p class="map-key">Your history, made navigable</p>
+            <h1 id="import-heading">Find the questions, facts, and ideas you keep returning to.</h1>
+            <p class="lede">
+              Choose your ChatGPT export. Memory Map reads its conversation files in this tab,
+              then builds a searchable semantic graph with a browser-loaded embedding model.
+            </p>
+          </div>
+
+          <div class="import-grid">
+            <label id="drop-zone" class="drop-zone" for="archive-input">
+              <input id="archive-input" type="file" accept=".zip,application/zip" />
+              <span class="file-mark" aria-hidden="true">.ZIP</span>
+              <strong>Choose your ChatGPT export</strong>
+              <span>or drop the original ZIP here</span>
+              <small>Conversation JSON is read. Attachments and chat.html are ignored.</small>
+            </label>
+
+            <ol class="route-explainer" aria-label="Analysis stages">
+              <li>
+                <span>1</span>
+                <div><strong>Parse</strong><small>Read split conversation files one at a time.</small></div>
+              </li>
+              <li>
+                <span>2</span>
+                <div><strong>Map</strong><small>Embed bounded prompts and fact candidates.</small></div>
+              </li>
+              <li>
+                <span>3</span>
+                <div><strong>Explore</strong><small>Search, inspect repeats, and trace every result.</small></div>
+              </li>
+            </ol>
+          </div>
+
+          <div class="privacy-contract">
+            <strong>Private by construction.</strong>
+            <span>
+              No upload endpoint, account, analytics payload, or archive persistence. Model files
+              download from Hugging Face; your conversation text is not sent with that request.
+            </span>
+          </div>
+        </section>
+
+        <section id="progress-view" class="progress-view" hidden aria-labelledby="progress-heading">
+          <div class="progress-heading-row">
+            <div>
+              <p id="progress-phase" class="map-key">Reading archive</p>
+              <h1 id="progress-heading">Building your memory map</h1>
+            </div>
+            <button id="cancel-analysis" class="button-secondary" type="button">Cancel</button>
+          </div>
+          <div class="progress-route" aria-hidden="true">
+            <span class="progress-stop is-active"></span>
+            <span class="progress-line"><i id="progress-line-fill"></i></span>
+            <span class="progress-stop"></span>
+          </div>
+          <div
+            id="progress-status"
+            class="progress-status"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            Inspecting ZIP entries…
+          </div>
+          <p class="progress-note">
+            Statistics appear before embeddings finish. The first semantic run downloads and
+            caches a small model in your browser.
+          </p>
+        </section>
+
+        <section id="error-view" class="error-view" hidden aria-labelledby="error-heading">
+          <p class="map-key">Route interrupted</p>
+          <h1 id="error-heading">This archive could not be mapped.</h1>
+          <p id="error-message"></p>
+          <button id="error-reset" class="button-primary" type="button">Choose another ZIP</button>
+        </section>
+
+        <section id="report-view" class="report-view" hidden>
+          <header class="report-header">
+            <div>
+              <p class="map-key">Mapped memory</p>
+              <h1>Your conversation history, connected.</h1>
+              <p id="report-meta" class="report-meta"></p>
+            </div>
+            <div class="report-actions">
+              <button id="save-memory" class="button-secondary" type="button">
+                Keep on this device
+              </button>
+              <button id="forget-memory" class="button-secondary danger" type="button" hidden>
+                Forget
+              </button>
+              <button id="reset-report" class="button-secondary" type="button">New archive</button>
+            </div>
+          </header>
+
+          <form id="memory-search" class="memory-search" role="search">
+            <label for="search-query">Search your mapped memory</label>
+            <div class="search-field">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="10.5" cy="10.5" r="6.5"></circle>
+                <path d="m15.5 15.5 5 5"></path>
+              </svg>
+              <input
+                id="search-query"
+                name="query"
+                type="search"
+                autocomplete="off"
+                placeholder="Search the things you have asked, changed, or returned to"
+              />
+              <button type="submit">Search</button>
+            </div>
+            <div id="search-results" class="search-results" hidden></div>
+          </form>
+
+          <section id="overview" class="platform-section overview-section" aria-labelledby="overview-heading">
+            <div class="section-heading">
+              <div>
+                <p class="map-key">Network scale</p>
+                <h2 id="overview-heading">Overview</h2>
+              </div>
+              <p id="sampling-note" class="method-note"></p>
+            </div>
+            <dl id="overview-stats" class="baseline-stats"></dl>
+          </section>
+
+          <div class="workbench">
+            <section id="topic-map" class="map-panel" aria-labelledby="topic-heading">
+              <div class="section-heading">
+                <div>
+                  <p class="map-key">Things connected by meaning</p>
+                  <h2 id="topic-heading">Topic map</h2>
+                </div>
+                <p>Node size is conversation count. Lines are semantic proximity.</p>
+              </div>
+              <div id="graph-loading" class="graph-loading">
+                <span></span>
+                <strong>Semantic map is still forming.</strong>
+                <small>Deterministic insights are ready below.</small>
+              </div>
+              <svg
+                id="topic-graph"
+                class="topic-graph is-hidden"
+                viewBox="0 0 1000 620"
+                role="group"
+                aria-label="Interactive semantic topic graph"
+              ></svg>
+              <p class="mobile-graph-note">Focused neighborhood · the complete topic list follows.</p>
+              <div id="topic-list" class="topic-list" aria-label="Accessible topic list"></div>
+            </section>
+
+            <aside id="memory-ledger" class="ledger-panel" aria-labelledby="ledger-heading">
+              <div class="section-heading compact">
+                <div>
+                  <p class="map-key">Statement history</p>
+                  <h2 id="ledger-heading">Memory ledger</h2>
+                </div>
+              </div>
+              <div id="ledger-tabs" class="ledger-tabs" role="tablist" aria-label="Fact states">
+                <button type="button" role="tab" data-status="current" aria-selected="true">
+                  Current <span>0</span>
+                </button>
+                <button type="button" role="tab" data-status="updated" aria-selected="false">
+                  Updated <span>0</span>
+                </button>
+                <button type="button" role="tab" data-status="refuted" aria-selected="false">
+                  Refuted <span>0</span>
+                </button>
+              </div>
+              <div id="ledger-list" class="ledger-list">
+                <p class="empty-note">Fact candidates appear after semantic grouping.</p>
+              </div>
+              <p class="ledger-disclaimer">
+                Detected from explicit first-person wording. These are candidates, not verified
+                truths.
+              </p>
+            </aside>
+          </div>
+
+          <section
+            id="question-lenses"
+            class="platform-section"
+            aria-labelledby="lenses-heading"
+          >
+            <div class="section-heading">
+              <div>
+                <p class="map-key">Different ways to read the archive</p>
+                <h2 id="lenses-heading">Question lenses</h2>
+              </div>
+              <p>
+                Queries may appear in more than one domain. Open any result to inspect its
+                supporting conversations.
+              </p>
+            </div>
+            <div id="domain-lenses" class="domain-lenses"></div>
+            <div class="lens-detail-grid">
+              <article class="lens-detail-panel" aria-labelledby="typo-heading">
+                <div class="lens-detail-heading">
+                  <div>
+                    <p class="map-key">Conservative writing signals</p>
+                    <h3 id="typo-heading">Likely typos</h3>
+                  </div>
+                  <strong id="typo-total">0</strong>
+                </div>
+                <p id="typo-method"></p>
+                <div id="typo-list" class="typo-list"></div>
+              </article>
+              <article class="lens-detail-panel" aria-labelledby="thread-heading">
+                <div class="lens-detail-heading">
+                  <div>
+                    <p class="map-key">Conversations that changed tracks</p>
+                    <h3 id="thread-heading">Likely thread changes</h3>
+                  </div>
+                  <strong id="thread-total">0</strong>
+                </div>
+                <p id="thread-method"></p>
+                <div id="thread-list" class="thread-list"></div>
+              </article>
+            </div>
+          </section>
+
+          <section
+            id="repeated-questions"
+            class="platform-section"
+            aria-labelledby="repeats-heading"
+          >
+            <div class="section-heading">
+              <div>
+                <p class="map-key">Interchange patterns</p>
+                <h2 id="repeats-heading">Questions you return to</h2>
+              </div>
+              <p>Exact wording and semantic repeats are kept distinct.</p>
+            </div>
+            <div id="repeat-summary" class="inline-summary"></div>
+            <div id="repeat-list" class="repeat-list"></div>
+          </section>
+
+          <section
+            id="reflection-questions"
+            class="platform-section reflection-section"
+            aria-labelledby="reflection-heading"
+          >
+            <div class="section-heading">
+              <div>
+                <p class="map-key">Prompts from your own evidence</p>
+                <h2 id="reflection-heading">Questions your history asks you</h2>
+              </div>
+              <p>
+                Invitations to review a repeat, correction, old memory, quiet theme, or wording
+                spike—not conclusions about you.
+              </p>
+            </div>
+            <div id="reflection-list" class="reflection-list"></div>
+          </section>
+
+          <section id="query-tone" class="platform-section" aria-labelledby="tone-heading">
+            <div class="section-heading">
+              <div>
+                <p class="map-key">Wording, not personality</p>
+                <h2 id="tone-heading">Query tone</h2>
+              </div>
+              <p id="tone-method"></p>
+            </div>
+            <div id="tone-bars" class="tone-bars"></div>
+            <div class="emotion-heading">
+              <p class="map-key">A more expressive vocabulary</p>
+              <h3>Language signals in your queries</h3>
+              <p id="emotion-method"></p>
+            </div>
+            <div id="emotion-bars" class="emotion-bars"></div>
+          </section>
+
+          <section id="rhythms" class="platform-section" aria-labelledby="rhythms-heading">
+            <div class="section-heading">
+              <div>
+                <p class="map-key">Cadence over time</p>
+                <h2 id="rhythms-heading">Rhythms</h2>
+              </div>
+              <p id="date-range"></p>
+            </div>
+            <div id="activity-chart" class="activity-chart" aria-label="Conversation activity by month"></div>
+          </section>
+
+          <section class="methodology" aria-labelledby="method-heading">
+            <p class="map-key">How the map was made</p>
+            <h2 id="method-heading">Transparent by default.</h2>
+            <div>
+              <p>
+                Statistics, question lenses, typo and thread-change candidates, query tone,
+                language signals, and reflection prompts use local, inspectable rules. Topic
+                relationships, semantic repeats, fact grouping, and search use normalized MiniLM
+                embeddings.
+              </p>
+              <p>
+                Assistant assertions are excluded from the fact ledger. Large histories are
+                sampled for semantic work while totals continue to cover the full parsed export.
+              </p>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <aside
+      id="evidence-panel"
+      class="evidence-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="evidence-heading"
+      hidden
+    >
+      <button id="close-evidence" class="evidence-close" type="button" aria-label="Close evidence">
+        ×
+      </button>
+      <p class="map-key">Why this appeared</p>
+      <h2 id="evidence-heading">Supporting conversations</h2>
+      <div id="evidence-content"></div>
+    </aside>
+
+    <div id="app-status" class="visually-hidden" role="status" aria-live="polite"></div>
+    <script>
+      import "../scripts/app";
+    </script>
+  </body>
+</html>

@@ -5,8 +5,9 @@ Also read and follow the shared fleet-level agent standard at `../AGENTS.md`. Tr
 ## Project
 
 - **Stack**: Astro + TypeScript + Tailwind CSS + Transformers.js + Cloudflare Pages
-- **Local dev**: TBD
-- **Deploy**: TBD
+- **Local dev**: `npm install && npm run dev`
+- **Check**: `npm run check`
+- **Deploy**: `npm run deploy` from clean, synced `main`
 
 ## Visual work
 

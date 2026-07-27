@@ -1,0 +1,76 @@
+{
+  "$schema": "fleet.design-review.v1",
+  "version": 1,
+  "project": "chatgpt-memory-insights",
+  "target": "/",
+  "mode": "overhaul",
+  "register": "product",
+  "context": {
+    "product": "PRODUCT.md",
+    "design": "DESIGN.md"
+  },
+  "direction": {
+    "references": [
+      "Harry Beck London Underground diagram",
+      "Giorgia Lupi data humanism",
+      "Observable notebooks"
+    ],
+    "probes": [
+      {
+        "id": "network-foyer",
+        "path": "artifacts/design/probes/network-foyer.png"
+      },
+      {
+        "id": "vertical-journey",
+        "path": "artifacts/design/probes/vertical-journey.png"
+      },
+      {
+        "id": "graph-first-workbench",
+        "path": "artifacts/design/probes/graph-first-workbench.png"
+      }
+    ],
+    "selected": "graph-first-workbench",
+    "approval": "delegated",
+    "before": ""
+  },
+  "evidence": {
+    "screenshots": [
+      {
+        "width": 390,
+        "path": "artifacts/design/after-390.png"
+      },
+      {
+        "width": 768,
+        "path": "artifacts/design/after-768.png"
+      },
+      {
+        "width": 1440,
+        "path": "artifacts/design/after-1440.png"
+      }
+    ],
+    "projectCheck": {
+      "command": "npm run check",
+      "status": "pass"
+    },
+    "critique": {
+      "score": 35,
+      "maximum": 40
+    },
+    "audit": {
+      "score": 18,
+      "maximum": 20
+    },
+    "unresolved": {
+      "p0": 0,
+      "p1": 0
+    },
+    "detector": {
+      "posture": "advisory",
+      "findings": []
+    }
+  },
+  "ownerFeedback": {
+    "decision": "delegated",
+    "note": "The owner approved the project and explicitly delegated implementation and design judgment; independent finish-review P1 findings were resolved before delivery."
+  }
+}

@@ -1,0 +1,179 @@
+# Design
+
+## Direction
+
+**Memory Transit Atlas** treats a conversation history as a legible network:
+recurring questions become stops, themes become routes, and time becomes the
+journey through them. It refuses the generic analytics dashboard and the
+glowing “AI brain” graph. The product should feel like a public information
+system made personal—precise enough to trust, annotated enough to understand.
+
+The first surface is an operational map room. Before import, one dominant drop
+zone explains the route from ZIP to insight. After import, a powerful search
+field and semantic map occupy the primary field while a fixed index moves
+through Topic map, Memory ledger, Repeated questions, Query tone, Rhythms, and
+Memory search. The graph-first workbench probe is the selected composition.
+
+## References
+
+- **Harry Beck’s London Underground diagram** — topology over geographic
+  literalism, disciplined line color, clear interchanges, and labels that stay
+  readable inside complexity.
+- **Giorgia Lupi’s data-humanism work** — personal data explained through
+  annotations and visible evidence rather than reduced to anonymous totals.
+- **Observable notebooks** — computation is progressive, transparent, and
+  inspectable; loading and methodology are part of the interface.
+
+These are structural and craft references, not brand styles to copy.
+
+## Anti-references
+
+- Generic SaaS dashboards made from interchangeable rounded statistic cards.
+- Neon galaxy, neural-brain, glassmorphism, or particle-field AI imagery.
+- “Wrapped” gamification that turns private behavior into unsupported
+  personality claims.
+
+## Palette and Material
+
+The surface is a cool transit map, not warm stationery:
+
+- `--paper: #f3f5f2` — primary field
+- `--paper-raised: #ffffff` — focused panels and controls
+- `--ink: #101b24` — primary text and structural rules
+- `--ink-muted: #5d6970` — annotation and secondary labels
+- `--rule: #cbd2d0` — map grid and separators
+- `--cobalt: #2157d5` — primary action and one route family
+- `--signal: #e44b33` — current position, errors, and one route family
+- `--teal: #168579` — completed states and one route family
+- `--amber: #d69a17` — warnings and one route family
+- `--violet: #7554c8` — one route family
+
+Route colors always pair with shape, label, or line pattern. Solid fields are
+flat; shadows are reserved for floating evidence drawers. Gradients are not
+part of the system.
+
+## Typography
+
+- UI and narrative: `Arial`, `Helvetica Neue`, system sans-serif.
+- Data, dates, counts, and file progress: `ui-monospace`, `SFMono-Regular`,
+  `Consolas`, monospace.
+- Headings use condensed proportions through weight, tracking, and max width,
+  not a decorative display font.
+- Labels use sentence case. All-caps is limited to tiny map keys and status
+  codes.
+
+## Composition
+
+- A narrow route index and a dominant evidence field replace a card grid.
+- Major sections meet edge to edge and are divided by structural rules.
+- The topic map gets the largest single region on desktop.
+- Statistics live as platform boards: one baseline, large numerals, compact
+  annotations, no floating tiles.
+- Repeated questions read as interchange rows: representative wording first,
+  count and date span second, source stops underneath.
+- Empty space is functional map margin, never ornamental padding.
+
+## Components
+
+### Import gate
+
+A bordered map field accepts click, drag, and keyboard activation. It names the
+expected archive, explains that nothing uploads, and shows the three-stage
+route: parse, map, explore.
+
+### Progress route
+
+One continuous route line carries the current stage. Completed stops are filled,
+the active stop pulses once, and future stops remain outlined. Byte and item
+counts use monospaced numerals.
+
+### Topic map
+
+An SVG map uses labelled circular nodes, straight or gently bent edges, and a
+small legend. Selection thickens the route and opens an evidence drawer. It
+does not imitate a geographic subway map literally.
+
+### Evidence drawer
+
+The drawer lists representative conversation titles, dates, and similarity
+evidence. It is the product’s trust mechanism and remains available from graph,
+repeat, and search results.
+
+### Memory ledger
+
+The ledger keeps three explicit states: current, updated, and refuted. Each row
+shows the detected first-person statement, date, state evidence, and source
+conversations. Updated items retain the superseded wording; refuted items retain
+the statement and later refutation. Color is reinforced by labels and a
+continuous left rule.
+
+### Repeated-question rows
+
+Rows use an interchange mark, representative question, recurrence count, date
+span, and a disclosure control. Exact and semantic repeats have distinct
+badges.
+
+### Memory search
+
+A full-width destination field accepts a natural-language query. Results show
+topic route, similarity, representative sources, and why the match appeared.
+
+### Query tone
+
+Tone is a compact distribution and trend table, not an emotional score. It
+uses labels such as positive wording, neutral/direct, and negative wording,
+states the method, and explicitly avoids personality or mental-health claims.
+A second vocabulary view distinguishes curiosity, frustration, urgency,
+uncertainty, excitement, appreciation, and neutral/direct wording. Each label
+defines the words it matched and remains visually secondary to source-backed
+memory insights.
+
+### Questions your history asks you
+
+Evidence-backed reflection cards turn strong patterns into open questions:
+repeated decisions, updated or refuted memories, old facts worth rechecking,
+months with more friction-shaped wording, substantial themes that went quiet,
+widespread terms, and peak-activity months. Every card explains its trigger and
+opens the source conversations. The copy asks rather than diagnoses.
+
+### Question lenses
+
+A ten-cell lens matrix makes the breadth of a history immediately scannable:
+math, health, software, money, career, learning, creative work, relationships,
+travel, and planning. Counts are prominent, descriptions keep category
+boundaries understandable, and each cell opens representative evidence.
+
+Below it, two dense ledgers show likely typo signals and conversations with
+likely thread changes. Both lead with their conservative method and pair every
+count with inspectable sources. “Likely” is never shortened away: these are
+navigation aids, not quality scores.
+
+## Interaction and Motion
+
+- Motion communicates route progress, graph selection, or drawer movement.
+- New graph edges draw once after analysis; they do not continuously animate.
+- Hover alone never reveals required information.
+- Reduced-motion users receive all final states immediately.
+- Model download and sampling disclosures remain visible after completion.
+
+## Responsive Rules
+
+- At 1440 px, the route index is fixed at left and the topic map shares the
+  canvas with an evidence rail.
+- At 768 px, the index becomes a horizontal stop bar and evidence opens below
+  the selected insight.
+- At 390 px, each report section is a single stop in a vertical journey; the
+  graph shows a focused neighborhood and the complete accessible topic list
+  follows it.
+- Tables become labelled rows rather than horizontal scroll traps.
+
+## Accessibility
+
+- Meet WCAG AA contrast for text and functional graph marks.
+- Every SVG node is keyboard focusable and mirrors a real button in the
+  accessible topic list.
+- Announce parsing and model progress through a polite live region.
+- Maintain visible focus with a double-ring treatment that survives route
+  colors.
+- File input, save, forget, and reset remain native controls or native-button
+  semantics.
