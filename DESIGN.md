@@ -99,13 +99,38 @@ The drawer lists representative conversation titles, dates, and similarity
 evidence. It is the product’s trust mechanism and remains available from graph,
 repeat, and search results.
 
+### Analysis lens
+
+A compact control board discloses the selected model profile, why automatic
+mode chose it, and the active evidence threshold. Three named presets and one
+native range control update inferred rows immediately; deterministic totals do
+not move. This control is repeated before import and at the top of the report
+so the trade-off is visible at both decision points.
+
 ### Memory ledger
 
-The ledger keeps three explicit states: current, updated, and refuted. Each row
-shows the detected first-person statement, date, state evidence, and source
-conversations. Updated items retain the superseded wording; refuted items retain
-the statement and later refutation. Color is reinforced by labels and a
-continuous left rule.
+The ledger keeps four explicit states: current, updated, refuted, and possible
+contradiction. Each row shows the detected first-person statement, date, state
+evidence, source conversations, confidence, and matching method. Updated items
+retain the superseded wording; refuted items retain the statement and later
+refutation. Possible contradictions remain visually and verbally less certain
+than explicit changes. Color is reinforced by labels and a continuous left
+rule.
+
+### How your map changed
+
+Three route tabs—topics, question domains, and language signals—show compact
+monthly activity histories. Each route gets an explicit emerging, fading,
+resurfacing, steady, or insufficient-evidence label, a short explanation, and
+source evidence. A neighboring memory-change board places dated statement
+versions on a continuous rule.
+
+### Conversation strands
+
+Substantial conversations are divided into a small number of named semantic
+strands. The evidence drawer presents prompts in original order, makes every
+suggested boundary visible, and distinguishes semantic segmentation from the
+faster deterministic candidate count.
 
 ### Repeated-question rows
 
@@ -154,7 +179,8 @@ navigation aids, not quality scores.
 - New graph edges draw once after analysis; they do not continuously animate.
 - Hover alone never reveals required information.
 - Reduced-motion users receive all final states immediately.
-- Model download and sampling disclosures remain visible after completion.
+- Model choice, download, sampling, and confidence disclosures remain visible
+  after completion.
 
 ## Responsive Rules
 

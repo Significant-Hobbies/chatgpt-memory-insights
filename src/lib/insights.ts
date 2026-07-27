@@ -305,9 +305,13 @@ function emptyEmotionCounts(): Record<EmotionBucket, number> {
 function buildEmotions(prompts: UserPrompt[]): DeterministicReport["emotions"] {
   const counts = emptyEmotionCounts();
   const monthly = new Map<string, Record<EmotionBucket, number>>();
+  const sourcePrompts = new Map<EmotionBucket, UserPrompt[]>(
+    (Object.keys(counts) as EmotionBucket[]).map((bucket) => [bucket, []]),
+  );
   for (const prompt of prompts) {
     const emotion = promptEmotion(prompt.text);
     counts[emotion] += 1;
+    sourcePrompts.get(emotion)?.push(prompt);
     const key = monthKey(prompt.date);
     const bucket = monthly.get(key) ?? emptyEmotionCounts();
     bucket[emotion] += 1;
@@ -318,6 +322,22 @@ function buildEmotions(prompts: UserPrompt[]): DeterministicReport["emotions"] {
     byMonth: [...monthly.entries()]
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([month, monthCounts]) => ({ month, counts: monthCounts })),
+    sources: Object.fromEntries(
+      (Object.keys(counts) as EmotionBucket[]).map((bucket) => {
+        const seen = new Set<string>();
+        const sources = (sourcePrompts.get(bucket) ?? [])
+          .slice()
+          .sort((left, right) => right.date - left.date)
+          .filter((prompt) => {
+            if (seen.has(prompt.conversationId)) return false;
+            seen.add(prompt.conversationId);
+            return true;
+          })
+          .slice(0, 12)
+          .map(({ conversationId, title, date }) => ({ conversationId, title, date }));
+        return [bucket, sources];
+      }),
+    ) as Record<EmotionBucket, SourceRef[]>,
     method:
       "Local vocabulary cues assign one dominant language signal per query. They describe wording—not your feelings, mood, personality, or mental state.",
   };
@@ -370,10 +390,18 @@ function buildQuestionLenses(
 ): QuestionLensReport {
   const categories = QUESTION_LENSES.map(({ patterns, ...lens }) => {
     const matches = prompts.filter((prompt) => patterns.some((pattern) => pattern.test(prompt.text)));
+    const monthly = new Map<string, number>();
+    for (const prompt of matches) {
+      const month = monthKey(prompt.date);
+      monthly.set(month, (monthly.get(month) ?? 0) + 1);
+    }
     return {
       ...lens,
       queryCount: matches.length,
       conversationCount: new Set(matches.map((prompt) => prompt.conversationId)).size,
+      byMonth: [...monthly.entries()]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([label, value]) => ({ label, value })),
       sources: uniqueSources(matches),
     };
   }).sort((left, right) => right.queryCount - left.queryCount);

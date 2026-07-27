@@ -1,5 +1,12 @@
 import { distinctiveTerms, distinctiveTitleTerms, lexicalSimilarity } from "./insights";
+import {
+  buildThreadStrands,
+  classifyTrend,
+  evidenceConfidence,
+  monthKey,
+} from "./analysis";
 import type {
+  AnalysisResolution,
   ConversationRecord,
   FactCandidate,
   FactGroup,
@@ -8,16 +15,33 @@ import type {
   SemanticRepeat,
   SemanticReport,
   SourceRef,
+  ThreadBoundary,
+  ThreadPrompt,
+  ThreadSegmentation,
   TopicEdge,
   TopicNode,
   UserPrompt,
 } from "./types";
 
-export const MODEL_ID = "Xenova/all-MiniLM-L6-v2";
-export const MODEL_REVISION = "751bff37182d3f1213fa05d7196b954e230abad9";
+export const MODEL_PROFILES = {
+  compact: {
+    id: "Xenova/all-MiniLM-L6-v2",
+    revision: "751bff37182d3f1213fa05d7196b954e230abad9",
+    approximateDownloadMb: 24,
+  },
+  multilingual: {
+    id: "Xenova/paraphrase-multilingual-MiniLM-L12-v2",
+    revision: "2c4055b12046f11709e9df2c122e59ffbdc2f900",
+    approximateDownloadMb: 135,
+  },
+} as const;
+export const MODEL_ID = MODEL_PROFILES.compact.id;
+export const MODEL_REVISION = MODEL_PROFILES.compact.revision;
 const CONVERSATION_CAP = 600;
 const QUESTION_CAP = 800;
 const FACT_CAP = 1_500;
+const THREAD_CONVERSATION_CAP = 16;
+const THREAD_PROMPT_CAP = 1_200;
 const COLORS = ["#2157d5", "#e44b33", "#168579", "#d69a17", "#7554c8", "#2f7aa3"];
 const TOPIC_ANCHORS = [
   ["Software engineering", "programming software engineering code frontend backend database bugs"],
@@ -55,6 +79,7 @@ type Extractor = {
 };
 
 let extractorPromise: Promise<Extractor> | null = null;
+let extractorProfile: AnalysisResolution["resolvedModelProfile"] | null = null;
 
 function sourceOf(value: ConversationRecord | UserPrompt | FactCandidate): SourceRef {
   return {
@@ -112,15 +137,21 @@ function sampleQuestions(prompts: UserPrompt[]): UserPrompt[] {
   return [...keep, ...rest];
 }
 
-async function getExtractor(progress: Progress): Promise<Extractor> {
+async function getExtractor(
+  profile: AnalysisResolution["resolvedModelProfile"],
+  progress: Progress,
+): Promise<Extractor> {
+  if (extractorPromise && extractorProfile !== profile) await disposeExtractor();
   if (!extractorPromise) {
+    extractorProfile = profile;
     extractorPromise = (async () => {
       const { env, pipeline } = await import("@huggingface/transformers");
       env.allowLocalModels = false;
       env.allowRemoteModels = true;
       env.useBrowserCache = true;
-      return (await pipeline("feature-extraction", MODEL_ID, {
-        revision: MODEL_REVISION,
+      const model = MODEL_PROFILES[profile];
+      return (await pipeline("feature-extraction", model.id, {
+        revision: model.revision,
         dtype: "q8",
         progress_callback: (event: {
           status: string;
@@ -148,11 +179,16 @@ export async function disposeExtractor(): Promise<void> {
   const extractor = await extractorPromise;
   await extractor.dispose();
   extractorPromise = null;
+  extractorProfile = null;
 }
 
-async function embedTexts(texts: string[], progress: Progress): Promise<Float32Array[]> {
+async function embedTexts(
+  texts: string[],
+  profile: AnalysisResolution["resolvedModelProfile"],
+  progress: Progress,
+): Promise<Float32Array[]> {
   if (texts.length === 0) return [];
-  const extractor = await getExtractor(progress);
+  const extractor = await getExtractor(profile, progress);
   const embeddings: Float32Array[] = [];
   const batchSize = 24;
 
@@ -235,10 +271,14 @@ function semanticRepeats(prompts: UserPrompt[], vectors: Float32Array[]): Semant
         bestScore = score;
       }
     }
+    const lexical =
+      best >= 0 ? lexicalSimilarity(prompts[left].text, prompts[best].text) : 0;
+    const confidence = evidenceConfidence(bestScore, lexical);
     if (
       best >= 0 &&
-      bestScore >= 0.72 &&
-      (lexicalSimilarity(prompts[left].text, prompts[best].text) >= 0.18 || bestScore >= 0.82)
+      bestScore >= 0.62 &&
+      (lexical >= 0.08 || bestScore >= 0.76) &&
+      confidence >= 0.38
     ) {
       union.union(left, best);
     }
@@ -253,13 +293,24 @@ function semanticRepeats(prompts: UserPrompt[], vectors: Float32Array[]): Semant
       const representativeIndex = group
         .map((item) => ({ item, score: cosine(vectors[item], centroid) }))
         .sort((left, right) => right.score - left.score)[0].item;
+      const representativeText = prompts[representativeIndex].text;
+      const comparisons = group.filter((item) => item !== representativeIndex);
       const similarity =
-        group.reduce((sum, item) => sum + cosine(vectors[item], centroid), 0) / group.length;
+        comparisons.reduce(
+          (sum, item) => sum + cosine(vectors[item], vectors[representativeIndex]),
+          0,
+        ) / Math.max(1, comparisons.length);
+      const lexical =
+        comparisons.reduce(
+          (sum, item) => sum + lexicalSimilarity(prompts[item].text, representativeText),
+          0,
+        ) / Math.max(1, comparisons.length);
       return {
         id: `semantic-repeat-${index}`,
-        representative: prompts[representativeIndex].text,
+        representative: representativeText,
         count: group.length,
         similarity,
+        confidence: evidenceConfidence(similarity, lexical),
         questions: ordered.slice(0, 10).map((prompt) => prompt.text),
         sources: ordered.slice(0, 12).map(sourceOf),
       };
@@ -290,9 +341,11 @@ function groupFacts(facts: FactCandidate[], vectors: Float32Array[]): FactGroup[
         bestScore = score;
       }
     }
+    const lexical = best >= 0 ? lexicalSimilarity(facts[left].text, facts[best].text) : 0;
     if (
       best >= 0 &&
-      (bestScore >= 0.86 || (bestScore >= 0.74 && lexicalSimilarity(facts[left].text, facts[best].text) >= 0.16))
+      (bestScore >= 0.84 || (bestScore >= 0.72 && lexical >= 0.14)) &&
+      evidenceConfidence(bestScore, lexical) >= 0.56
     ) {
       union.union(left, best);
     }
@@ -301,15 +354,61 @@ function groupFacts(facts: FactCandidate[], vectors: Float32Array[]): FactGroup[
   return union
     .groups()
     .map((group, index) => {
-      const history = group.map((item) => facts[item]).sort((left, right) => left.date - right.date);
+      const orderedIndices = group
+        .slice()
+        .sort((left, right) => facts[left].date - facts[right].date);
+      const history = orderedIndices.map((item) => facts[item]);
       const latest = history.at(-1)!;
-      const status = classifyFactHistory(history);
+      const latestIndex = orderedIndices.at(-1)!;
+      const previous = orderedIndices
+        .slice(0, -1)
+        .map((item) => ({
+          item,
+          semantic: cosine(vectors[latestIndex], vectors[item]),
+          lexical: lexicalSimilarity(facts[latestIndex].text, facts[item].text),
+        }))
+        .sort((left, right) => right.semantic - left.semantic)[0];
+      const explicitStatus = classifyFactHistory(history);
+      const distinct = new Set(history.map((fact) => normalizedKey(fact.text))).size > 1;
+      const spansConversations =
+        new Set(history.map((fact) => fact.conversationId)).size > 1;
+      const spansAtLeastAWeek = latest.date - history[0].date >= 7 * 24 * 60 * 60;
+      const possibleContradiction =
+        explicitStatus === "current" &&
+        distinct &&
+        spansConversations &&
+        spansAtLeastAWeek &&
+        Boolean(previous) &&
+        previous.semantic >= 0.78 &&
+        previous.lexical >= 0.1 &&
+        previous.lexical < 0.86;
+      const status: FactGroup["status"] = possibleContradiction
+        ? "contradicted"
+        : explicitStatus;
+      const semantic = previous?.semantic ?? 1;
+      const lexical = previous?.lexical ?? 1;
+      const cueBonus =
+        status === "refuted" ? 0.1 : status === "updated" ? 0.06 : status === "contradicted" ? -0.08 : 0;
+      const confidence =
+        status === "current" ? 0.99 : evidenceConfidence(semantic, lexical, cueBonus);
+      const reason =
+        status === "refuted"
+          ? "A later linked statement uses explicit rejection wording."
+          : status === "updated"
+            ? "A later linked statement uses explicit update wording."
+            : status === "contradicted"
+              ? "Related statements differ without an explicit correction cue; review which is current."
+              : "No qualified later change was detected.";
       return {
         id: `fact-${index}`,
         status,
         statement: latest.text,
         firstSeen: history[0].date,
         lastSeen: latest.date,
+        confidence,
+        similarity: semantic,
+        lexicalSimilarity: lexical,
+        reason,
         history,
         sources: history.slice(-10).reverse().map(sourceOf),
       } satisfies FactGroup;
@@ -378,6 +477,14 @@ function topicGraph(
   const groups = centroids.map((_, cluster) =>
     conversations.filter((__, index) => assignments[index] === cluster),
   );
+  const allMonths = [...new Set(conversations.map((conversation) => monthKey(conversation.date)))]
+    .filter((month) => month !== "1970-01")
+    .sort();
+  const monthlyTotals = new Map<string, number>();
+  for (const conversation of conversations) {
+    const month = monthKey(conversation.date);
+    monthlyTotals.set(month, (monthlyTotals.get(month) ?? 0) + 1);
+  }
   const order = groups
     .map((group, cluster) => ({ cluster, count: group.length }))
     .sort((left, right) => right.count - left.count);
@@ -429,6 +536,16 @@ function topicGraph(
       fallback?.slice(0, 34) ||
       `Topic ${cluster + 1}`;
     const point = position.get(cluster) ?? { x: 0.5, y: 0.5 };
+    const monthlyCounts = new Map<string, number>();
+    for (const conversation of group) {
+      const month = monthKey(conversation.date);
+      monthlyCounts.set(month, (monthlyCounts.get(month) ?? 0) + 1);
+    }
+    const activityByMonth = allMonths.map((label) => ({
+      label,
+      value: monthlyCounts.get(label) ?? 0,
+    }));
+    const { trend, momentum } = classifyTrend(activityByMonth, monthlyTotals);
     return {
       id: `topic-${cluster}`,
       label,
@@ -437,6 +554,9 @@ function topicGraph(
       y: point.y,
       color: COLORS[cluster % COLORS.length],
       terms,
+      activityByMonth,
+      trend,
+      momentum,
       sources: [...group]
         .sort((left, right) => right.updatedAt - left.updatedAt)
         .slice(0, 8)
@@ -475,34 +595,187 @@ function conversationFingerprint(conversation: ConversationRecord): string {
   return `${conversation.title}\n${selected.join("\n")}`.slice(0, 1_600);
 }
 
+type PreparedThread = {
+  conversation: ConversationRecord;
+  prompts: UserPrompt[];
+};
+
+function sampleOrderedPrompts(prompts: UserPrompt[], limit: number): UserPrompt[] {
+  const ordered = prompts.slice().sort((left, right) => left.date - right.date);
+  if (ordered.length <= limit) return ordered;
+  return ordered.slice(-limit);
+}
+
+function prepareThreads(
+  conversations: ConversationRecord[],
+  candidateIds: string[],
+): {
+  threads: PreparedThread[];
+  totalPrompts: number;
+} {
+  const candidates = candidateIds
+    .map((id) => conversations.find((conversation) => conversation.conversationId === id))
+    .filter((conversation): conversation is ConversationRecord => Boolean(conversation))
+    .slice(0, THREAD_CONVERSATION_CAP);
+  const totalPrompts = candidates.reduce(
+    (sum, conversation) => sum + conversation.prompts.length,
+    0,
+  );
+  if (candidates.length === 0) return { threads: [], totalPrompts };
+  const perConversation = Math.max(
+    8,
+    Math.floor(THREAD_PROMPT_CAP / Math.max(1, candidates.length)),
+  );
+  let remaining = THREAD_PROMPT_CAP;
+  const threads = candidates
+    .map((conversation) => {
+      const prompts = sampleOrderedPrompts(
+        conversation.prompts,
+        Math.min(perConversation, remaining),
+      );
+      remaining -= prompts.length;
+      return { conversation, prompts };
+    })
+    .filter((thread) => thread.prompts.length >= 4);
+  return { threads, totalPrompts };
+}
+
+function segmentThreads(
+  prepared: PreparedThread[],
+  vectors: Float32Array[],
+): { threads: ThreadSegmentation[]; searchEntries: SearchEntry[] } {
+  const threads: ThreadSegmentation[] = [];
+  const searchEntries: SearchEntry[] = [];
+  let offset = 0;
+
+  for (const { conversation, prompts } of prepared) {
+    const promptVectors = vectors.slice(offset, offset + prompts.length);
+    offset += prompts.length;
+    const threadPrompts: ThreadPrompt[] = prompts.map((prompt) => ({
+      id: prompt.id,
+      text: prompt.text,
+      date: prompt.date,
+      source: sourceOf(prompt),
+    }));
+    const candidates: ThreadBoundary[] = [];
+    for (let index = 1; index < prompts.length; index += 1) {
+      const leftTerms = normalizedKey(prompts[index - 1].text)
+        .split(" ")
+        .filter((term) => term.length > 3);
+      const rightTerms = normalizedKey(prompts[index].text)
+        .split(" ")
+        .filter((term) => term.length > 3);
+      if (leftTerms.length < 4 || rightTerms.length < 4) continue;
+      const lexical = lexicalSimilarity(prompts[index - 1].text, prompts[index].text);
+      const semantic = cosine(promptVectors[index - 1], promptVectors[index]);
+      const continuity = semantic * 0.76 + Math.min(1, lexical * 3) * 0.24;
+      const confidence = Math.max(0, Math.min(0.99, 0.85 - continuity));
+      if (confidence >= 0.35) {
+        candidates.push({
+          at: index,
+          confidence,
+          continuity,
+          lexicalSimilarity: lexical,
+          semanticSimilarity: semantic,
+        });
+      }
+    }
+    const maximumBoundaries = Math.max(
+      2,
+      Math.min(12, Math.round(Math.sqrt(prompts.length) * 1.25)),
+    );
+    const selected: ThreadBoundary[] = [];
+    for (const candidate of candidates.sort(
+      (left, right) => right.confidence - left.confidence || left.at - right.at,
+    )) {
+      if (candidate.at < 2 || candidate.at > prompts.length - 2) continue;
+      if (selected.some((boundary) => Math.abs(boundary.at - candidate.at) < 2)) continue;
+      selected.push(candidate);
+      if (selected.length >= maximumBoundaries) break;
+    }
+    const boundaries = selected.sort((left, right) => left.at - right.at);
+    if (boundaries.length === 0) continue;
+    const strands = buildThreadStrands(threadPrompts, boundaries, 0.35);
+    const confidence = Math.max(...boundaries.map((boundary) => boundary.confidence));
+    const segmentation: ThreadSegmentation = {
+      id: conversation.conversationId,
+      title: conversation.title,
+      date: conversation.date,
+      promptCount: conversation.prompts.length,
+      analyzedPrompts: prompts.length,
+      confidence,
+      prompts: threadPrompts,
+      boundaries,
+      strands,
+      sources: [sourceOf(conversation)],
+    };
+    threads.push(segmentation);
+
+    for (const strand of strands) {
+      const strandVectors = promptVectors.slice(strand.firstPrompt, strand.lastPrompt + 1);
+      searchEntries.push({
+        id: `strand:${conversation.conversationId}:${strand.id}`,
+        type: "strand",
+        title: `${conversation.title} · ${strand.label}`,
+        detail: `${strand.promptCount} prompts in one conversation strand`,
+        source: strand.sources[0] ?? sourceOf(conversation),
+        topicId: null,
+        embedding: average(strandVectors),
+      });
+    }
+  }
+
+  return {
+    threads: threads
+      .sort(
+        (left, right) =>
+          right.confidence - left.confidence ||
+          right.boundaries.length - left.boundaries.length ||
+          right.promptCount - left.promptCount,
+      )
+      .slice(0, THREAD_CONVERSATION_CAP),
+    searchEntries,
+  };
+}
+
 export async function buildSemanticMemory(
   allConversations: ConversationRecord[],
   allPrompts: UserPrompt[],
   allFacts: FactCandidate[],
+  threadCandidateIds: string[],
+  analysis: AnalysisResolution,
   progress: Progress,
 ): Promise<{ report: SemanticReport; searchIndex: SearchEntry[] }> {
   const conversations = stableSample(allConversations, CONVERSATION_CAP);
   const prompts = sampleQuestions(allPrompts);
   const facts = stableSample(allFacts, FACT_CAP);
+  const preparedThreads = prepareThreads(allConversations, threadCandidateIds);
+  const threadPrompts = preparedThreads.threads.flatMap((thread) => thread.prompts);
   const texts = [
     ...conversations.map(conversationFingerprint),
     ...prompts.map((prompt) => prompt.text),
     ...facts.map((fact) => fact.text),
     ...TOPIC_ANCHORS.map(([, description]) => description),
+    ...threadPrompts.map((prompt) => prompt.text),
   ];
-  const vectors = await embedTexts(texts, progress);
+  const vectors = await embedTexts(texts, analysis.resolvedModelProfile, progress);
   const conversationVectors = vectors.slice(0, conversations.length);
   const promptVectors = vectors.slice(conversations.length, conversations.length + prompts.length);
   const factVectors = vectors.slice(conversations.length + prompts.length);
-  const anchorVectors = factVectors.slice(facts.length);
+  const anchorVectors = factVectors.slice(facts.length, facts.length + TOPIC_ANCHORS.length);
   const boundedFactVectors = factVectors.slice(0, facts.length);
+  const threadVectorStart =
+    conversations.length + prompts.length + facts.length + TOPIC_ANCHORS.length;
+  const threadVectors = vectors.slice(threadVectorStart);
 
-  progress("Grouping repeated questions", 0, 3);
+  progress("Grouping repeated questions", 0, 4);
   const repeats = semanticRepeats(prompts, promptVectors);
-  progress("Building fact history", 1, 3);
+  progress("Building fact history", 1, 4);
   const groupedFacts = groupFacts(facts, boundedFactVectors);
-  progress("Laying out topic graph", 2, 3);
+  progress("Laying out topic graph", 2, 4);
   const graph = topicGraph(conversations, conversationVectors, anchorVectors);
+  progress("Segmenting conversation strands", 3, 4);
+  const segmented = segmentThreads(preparedThreads.threads, threadVectors);
 
   const searchIndex: SearchEntry[] = [
     ...conversations.map((conversation, index) => ({
@@ -541,25 +814,34 @@ export async function buildSemanticMemory(
       topicId: topic.id,
       embedding: graph.centroids[index],
     })),
+    ...segmented.searchEntries,
   ];
 
-  progress("Semantic memory ready", 3, 3);
+  const model = MODEL_PROFILES[analysis.resolvedModelProfile];
+  progress("Semantic memory ready", 4, 4);
   return {
     report: {
       model: {
-        id: MODEL_ID,
-        revision: MODEL_REVISION,
+        id: model.id,
+        revision: model.revision,
+        requestedProfile: analysis.modelProfile,
+        resolvedProfile: analysis.resolvedModelProfile,
+        approximateDownloadMb: model.approximateDownloadMb,
+        profileReason: analysis.profileReason,
         embeddedConversations: conversations.length,
         totalConversations: allConversations.length,
         embeddedQuestions: prompts.length,
         totalQuestions: allPrompts.length,
         embeddedFacts: facts.length,
         totalFacts: allFacts.length,
+        embeddedThreadPrompts: threadPrompts.length,
+        totalThreadPrompts: preparedThreads.totalPrompts,
       },
       repeats,
       facts: groupedFacts,
       topics: graph.topics,
       edges: graph.edges,
+      threads: segmented.threads,
     },
     searchIndex,
   };
@@ -569,9 +851,10 @@ export async function searchMemory(
   query: string,
   index: SearchEntry[],
   lexicalIndex: LexicalSearchEntry[],
+  profile: AnalysisResolution["resolvedModelProfile"],
   progress: Progress,
 ): Promise<Array<Omit<SearchEntry, "embedding"> & { similarity: number }>> {
-  const [queryVector] = await embedTexts([query], progress);
+  const [queryVector] = await embedTexts([query], profile, progress);
   const semanticResults = index
     .map(({ embedding, ...entry }) => ({ ...entry, semanticScore: cosine(queryVector, embedding) }))
     .filter((entry) => entry.semanticScore > 0.18)

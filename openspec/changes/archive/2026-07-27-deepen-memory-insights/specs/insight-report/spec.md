@@ -1,19 +1,4 @@
-# insight-report Specification
-
-## Purpose
-TBD - created by archiving change build-browser-memory-atlas. Update Purpose after archive.
-## Requirements
-### Requirement: Show deterministic insights first
-
-The system SHALL produce an insight report before semantic inference completes.
-
-#### Scenario: Parsing completes
-- **WHEN** compatible conversations have been normalized
-- **THEN** the system shows totals, time range, activity, depth, model mix, lexical repeats, and recurring terms
-
-#### Scenario: Semantic model fails
-- **WHEN** the embedding model cannot download or run
-- **THEN** the deterministic report remains usable and the failure is explained
+## MODIFIED Requirements
 
 ### Requirement: Trace insights to source conversations
 
@@ -37,6 +22,8 @@ profiles, approximate model download, and the active confidence policy.
 - **WHEN** the visitor changes the confidence policy after analysis
 - **THEN** the report updates visible candidate counts and preserves a methodology note explaining that evidence was refiltered rather than recomputed
 
+## ADDED Requirements
+
 ### Requirement: Keep complex history scannable
 
 The system SHALL add longitudinal and strand views to the existing transit-atlas
@@ -49,4 +36,3 @@ workbench without removing the graph, search, fact ledger, or accessible lists.
 #### Scenario: Narrow report
 - **WHEN** the report is viewed at mobile width
 - **THEN** evolution periods, confidence controls, timelines, and strands become labelled vertical rows without horizontal-scroll traps
-

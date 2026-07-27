@@ -40,12 +40,18 @@ or personality claims.
   against the owner-supplied export
 - 2026-07-28 — first production release deployed to
   `https://chatgpt-memory-insights.pages.dev`
+- 2026-07-28 — multilingual model selection, tunable confidence, richer memory
+  change trails, semantic conversation strands, and longitudinal evolution
+  views implemented
+- 2026-07-28 — custom production domain configured at
+  `https://chatgpt.significanthobbies.com`
 
 ## Products
 
 - **Memory Map web app** — production static Astro app at
-  `https://chatgpt-memory-insights.pages.dev`, deployed directly to the
-  `chatgpt-memory-insights` Cloudflare Pages project.
+  `https://chatgpt.significanthobbies.com`, deployed directly to the
+  `chatgpt-memory-insights` Cloudflare Pages project. The
+  `https://chatgpt-memory-insights.pages.dev` URL remains the provider route.
 
 ## Features (shipped)
 
@@ -55,8 +61,17 @@ or personality claims.
 - Overlapping math, health, software, money, career, learning, creative,
   relationship, travel, and planning question lenses.
 - Conservative likely-typo and likely multi-thread conversation candidates.
-- Browser-loaded MiniLM topic clustering, semantic repeat detection,
-  source-backed fact history, and hybrid semantic/lexical search.
+- Compact and multilingual browser-loaded MiniLM profiles with automatic
+  script-aware selection, pinned revisions, and visible download disclosure.
+- Browser-loaded topic clustering, semantic repeat detection, source-backed
+  fact history, and hybrid semantic/lexical search.
+- Confidence presets and a custom threshold for inferred evidence.
+- Explicit current, updated, refuted, and possible-contradiction memory states
+  with dated evidence and transparent matching metrics.
+- Semantic conversation strands with ordered prompt timelines and visible
+  boundary evidence.
+- Longitudinal topic, question-domain, and language-signal views with emerging,
+  fading, resurfacing, steady, and insufficient-evidence labels.
 - Interactive SVG topic map with a complete keyboard-accessible topic list.
 - Evidence-linked reflection questions for repeats, memory changes, wording
   spikes, recurring terms, dormant topics, and activity peaks.
@@ -65,9 +80,9 @@ or personality claims.
 
 ## Todo / Planned / Deferred / Blocked
 
-1. Deferred: multilingual embeddings until real usage justifies the additional
-   browser cost and quality trade-off.
-2. Deferred: attachment and exported-memory-file analysis until those schemas
+1. Deferred: attachment and exported-memory-file analysis until those schemas
    are validated independently.
+2. Deferred: cross-device sync and server-side analysis; both would change the
+   product's private static-site boundary.
 3. Owner confirmation needed before adding the optional Fleet
    `docs/learning/new-things.md` study queue for the browser ML stack.

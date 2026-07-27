@@ -40,8 +40,20 @@ delete it from the product.
   the first release.
 - Use an embedding model, not a generative language model, for semantic
   similarity and clustering.
+- Offer a compact English-focused profile, a multilingual profile, and an
+  automatic script-aware choice. Pin both model revisions and disclose the
+  approximate browser download before import.
 - Detect first-person fact candidates, later updates, and explicit refutations
-  through transparent language rules plus semantic grouping.
+  through transparent language rules plus semantic grouping. Keep possible
+  contradictions separate from explicit updates and refutations.
+- Preserve a dated evidence trail for memory changes, including similarity,
+  lexical overlap, detection reason, and confidence.
+- Segment substantial multi-prompt conversations into named semantic strands
+  while preserving prompt order and a visible boundary timeline.
+- Show longitudinal topic, question-domain, and language-signal activity with
+  emerging, fading, resurfacing, steady, or insufficient-evidence labels.
+- Let visitors tune inferred evidence with exploratory, balanced, conservative,
+  or custom confidence thresholds without changing deterministic totals.
 - Estimate broad query tone and dominant language signals—curiosity,
   frustration, urgency, uncertainty, excitement, appreciation, or
   neutral/direct—with small, documented lexical methods; never infer
@@ -79,6 +91,7 @@ delete it from the product.
 - Repeated questions and relationships matter more than vanity totals.
 - Memory changes must preserve their history instead of silently replacing it.
 - The visitor stays in control of model downloads and browser persistence.
+- Confidence is a filter over candidates, not a claim of objective truth.
 - Derived claims must link back to the conversations that support them.
 - Reflection should invite the visitor to decide what is true now.
 

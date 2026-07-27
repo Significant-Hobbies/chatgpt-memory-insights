@@ -47,6 +47,7 @@ export function buildReflectionQuestions(
           id: semantic.id,
           wording: semantic.representative,
           count: semantic.count,
+          confidence: semantic.confidence,
           sources: semantic.sources,
           kind: "similar intent",
         }
@@ -55,6 +56,7 @@ export function buildReflectionQuestions(
             id: exact.id,
             wording: exact.representative,
             count: exact.count,
+            confidence: 0.99,
             sources: exact.sources,
             kind: "nearly the same wording",
           }
@@ -67,6 +69,7 @@ export function buildReflectionQuestions(
       eyebrow: "A question you return to",
       question: `You asked “${clip(strongestRepeat.wording, 92)}” ${strongestRepeat.count} times. Are you looking for a different answer—or postponing a decision?`,
       reason: `Detected from ${strongestRepeat.kind}.`,
+      confidence: strongestRepeat.confidence,
       sources: uniqueSources(strongestRepeat.sources),
     });
   }
@@ -83,6 +86,7 @@ export function buildReflectionQuestions(
       eyebrow: "A memory that moved",
       question: `“${clip(updated.statement, 105)}” changed over time. What should a future answer assume now?`,
       reason: `${linkedStatements} include update wording.`,
+      confidence: updated.confidence,
       sources: uniqueSources(updated.sources),
     });
   }
@@ -98,7 +102,23 @@ export function buildReflectionQuestions(
       eyebrow: "An assumption you pushed back on",
       question: `You explicitly rejected “${clip(refuted.statement, 105)}” — is there an older assumption you want to retire completely?`,
       reason: `${linkedStatements} include explicit correction or refutation wording.`,
+      confidence: refuted.confidence,
       sources: uniqueSources(refuted.sources),
+    });
+  }
+
+  const contradicted = facts
+    .filter((fact) => fact.status === "contradicted")
+    .sort((left, right) => right.confidence - left.confidence || right.lastSeen - left.lastSeen)[0];
+  if (contradicted) {
+    questions.push({
+      id: `contradicted:${contradicted.id}`,
+      kind: "contradicted-memory",
+      eyebrow: "Two memories may disagree",
+      question: `Your history links differing versions of “${clip(contradicted.statement, 96)}”. Which version should future answers trust?`,
+      reason: contradicted.reason,
+      confidence: contradicted.confidence,
+      sources: uniqueSources(contradicted.sources),
     });
   }
 
@@ -128,6 +148,7 @@ export function buildReflectionQuestions(
       eyebrow: "A month with more friction-shaped language",
       question: `Frustration-shaped wording peaked in ${monthLabel(frustrationMonths.month)}. Which topic was creating friction—and did it get resolved?`,
       reason: `${frustrationMonths.count} of ${frustrationMonths.total} queries that month matched the disclosed local vocabulary.`,
+      confidence: Math.min(0.92, 0.58 + frustrationMonths.rate),
       sources: uniqueSources(sources),
     });
   }
@@ -148,6 +169,7 @@ export function buildReflectionQuestions(
       eyebrow: "A memory worth rechecking",
       question: `“${clip(stale.statement, 110)}” has not been restated in over a year. Is it still true?`,
       reason: "Shown because this current-looking memory is old relative to the export.",
+      confidence: 0.78,
       sources: uniqueSources(stale.sources),
     });
   }
@@ -169,6 +191,7 @@ export function buildReflectionQuestions(
       eyebrow: "A line that went quiet",
       question: `You explored ${dormant.topic.label} across ${dormant.topic.count} conversations, then the trail went quiet. Finished—or dormant?`,
       reason: "This substantial topic has no supporting conversation in the final six months of the export.",
+      confidence: Math.min(0.92, 0.62 + dormant.topic.count / 100),
       sources: uniqueSources(dormant.topic.sources),
     });
   }
@@ -188,6 +211,7 @@ export function buildReflectionQuestions(
       eyebrow: "A word that connects many routes",
       question: `“${recurringTerm.label}” appeared across ${recurringTerm.value} conversations. Is it a durable priority, a recurring obstacle, or simply background vocabulary?`,
       reason: "This is the most widespread distinctive term in conversation titles and prompts.",
+      confidence: Math.min(0.94, 0.62 + recurringTerm.value / 100),
       sources: uniqueSources(sources),
     });
   }
@@ -207,6 +231,7 @@ export function buildReflectionQuestions(
       eyebrow: "Your busiest station",
       question: `${monthLabel(busiestMonth.label)} held ${busiestMonth.value} conversations—your busiest month here. What changed in what you were building, learning, or deciding?`,
       reason: "This month contains the most conversations in the export.",
+      confidence: 0.82,
       sources: uniqueSources(sources),
     });
   }

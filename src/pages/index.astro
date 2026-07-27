@@ -46,6 +46,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
           <p class="map-key">Routes</p>
           <a href="#topic-map"><i class="route-dot route-blue"></i>Topic map</a>
           <a href="#memory-ledger"><i class="route-dot route-teal"></i>Memory ledger</a>
+          <a href="#evolution"><i class="route-dot route-violet"></i>How it changed</a>
           <a href="#question-lenses"><i class="route-dot route-amber"></i>Question lenses</a>
           <a href="#repeated-questions"><i class="route-dot route-red"></i>Repeated questions</a>
           <a href="#reflection-questions"><i class="route-dot route-violet"></i>Questions for you</a>
@@ -69,6 +70,40 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               then builds a searchable semantic graph with a browser-loaded embedding model.
             </p>
           </div>
+
+          <fieldset class="analysis-setup">
+            <legend>Choose the analysis lens</legend>
+            <div class="model-profile-options">
+              <label>
+                <input type="radio" name="model-profile" value="auto" checked />
+                <span><strong>Automatic</strong><small>Selects from the writing systems used in your prompts.</small></span>
+              </label>
+              <label>
+                <input type="radio" name="model-profile" value="compact" />
+                <span><strong>Compact English</strong><small>Smaller download for English-first histories.</small></span>
+              </label>
+              <label>
+                <input type="radio" name="model-profile" value="multilingual" />
+                <span><strong>Multilingual</strong><small>≈135 MB · meaning across many languages.</small></span>
+              </label>
+            </div>
+            <div class="confidence-control">
+              <div>
+                <strong>Evidence confidence</strong>
+                <small>Higher confidence shows fewer, stronger inferred connections.</small>
+              </div>
+              <div class="confidence-presets" aria-label="Evidence confidence presets">
+                <button type="button" data-confidence="45">Exploratory</button>
+                <button type="button" data-confidence="65" aria-pressed="true">Balanced</button>
+                <button type="button" data-confidence="82">Conservative</button>
+              </div>
+              <label for="confidence-input">
+                <span>Threshold</span>
+                <input id="confidence-input" type="range" min="35" max="90" value="65" />
+                <output id="confidence-output" for="confidence-input">65%</output>
+              </label>
+            </div>
+          </fieldset>
 
           <div class="import-grid">
             <label id="drop-zone" class="drop-zone" for="archive-input">
@@ -128,7 +163,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
           </div>
           <p class="progress-note">
             Statistics appear before embeddings finish. The first semantic run downloads and
-            caches a small model in your browser.
+            caches the selected model in your browser.
           </p>
         </section>
 
@@ -175,6 +210,27 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
             </div>
             <div id="search-results" class="search-results" hidden></div>
           </form>
+
+          <section class="analysis-lens" aria-labelledby="analysis-lens-heading">
+            <div>
+              <p class="map-key">Filter inferred evidence</p>
+              <h2 id="analysis-lens-heading">Analysis lens</h2>
+              <p id="model-profile-note"></p>
+            </div>
+            <div class="report-confidence">
+              <div id="report-confidence-presets" class="confidence-presets" aria-label="Report confidence presets">
+                <button type="button" data-confidence="45">Exploratory</button>
+                <button type="button" data-confidence="65" aria-pressed="true">Balanced</button>
+                <button type="button" data-confidence="82">Conservative</button>
+              </div>
+              <label for="report-confidence-input">
+                <span>Visible evidence threshold</span>
+                <input id="report-confidence-input" type="range" min="35" max="90" value="65" />
+                <output id="report-confidence-output" for="report-confidence-input">65%</output>
+              </label>
+              <small id="confidence-impact">Semantic candidates will be filtered without re-reading your ZIP.</small>
+            </div>
+          </section>
 
           <section id="overview" class="platform-section overview-section" aria-labelledby="overview-heading">
             <div class="section-heading">
@@ -229,6 +285,9 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
                 <button type="button" role="tab" data-status="refuted" aria-selected="false">
                   Refuted <span>0</span>
                 </button>
+                <button type="button" role="tab" data-status="contradicted" aria-selected="false">
+                  Possible contradictions <span>0</span>
+                </button>
               </div>
               <div id="ledger-list" class="ledger-list">
                 <p class="empty-note">Fact candidates appear after semantic grouping.</p>
@@ -239,6 +298,38 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               </p>
             </aside>
           </div>
+
+          <section id="evolution" class="platform-section evolution-section" aria-labelledby="evolution-heading">
+            <div class="section-heading">
+              <div>
+                <p class="map-key">Routes through time</p>
+                <h2 id="evolution-heading">How your map changed</h2>
+              </div>
+              <p>Emerging, fading, and resurfacing are local trend labels—not explanations for why your interests changed.</p>
+            </div>
+            <div class="evolution-switcher" role="tablist" aria-label="Evolution evidence">
+              <button type="button" role="tab" data-evolution="topics" aria-selected="true">Topics</button>
+              <button type="button" role="tab" data-evolution="domains" aria-selected="false">Question domains</button>
+              <button type="button" role="tab" data-evolution="language" aria-selected="false">Language signals</button>
+            </div>
+            <div class="evolution-grid">
+              <div>
+                <div id="evolution-list" class="evolution-list">
+                  <p class="empty-note">Evolution routes appear after analysis.</p>
+                </div>
+              </div>
+              <aside class="memory-change-board" aria-labelledby="memory-change-heading">
+                <div class="lens-detail-heading">
+                  <div>
+                    <p class="map-key">Statements that moved</p>
+                    <h3 id="memory-change-heading">Memory changes</h3>
+                  </div>
+                  <strong id="memory-change-total">0</strong>
+                </div>
+                <div id="memory-change-list" class="memory-change-list"></div>
+              </aside>
+            </div>
+          </section>
 
           <section
             id="question-lenses"
@@ -272,7 +363,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
                 <div class="lens-detail-heading">
                   <div>
                     <p class="map-key">Conversations that changed tracks</p>
-                    <h3 id="thread-heading">Likely thread changes</h3>
+                    <h3 id="thread-heading">Conversation strands</h3>
                   </div>
                   <strong id="thread-total">0</strong>
                 </div>
@@ -351,12 +442,14 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               <p>
                 Statistics, question lenses, typo and thread-change candidates, query tone,
                 language signals, and reflection prompts use local, inspectable rules. Topic
-                relationships, semantic repeats, fact grouping, and search use normalized MiniLM
-                embeddings.
+                relationships, semantic repeats, fact grouping, conversation strands, and search
+                use normalized browser-loaded embeddings.
               </p>
               <p>
                 Assistant assertions are excluded from the fact ledger. Large histories are
                 sampled for semantic work while totals continue to cover the full parsed export.
+                Confidence controls refilter stored candidates; they do not make inferred evidence
+                certain.
               </p>
             </div>
           </section>

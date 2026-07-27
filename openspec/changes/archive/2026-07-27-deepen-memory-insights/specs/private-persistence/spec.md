@@ -1,16 +1,4 @@
-# private-persistence Specification
-
-## Purpose
-TBD - created by archiving change build-browser-memory-atlas. Update Purpose after archive.
-## Requirements
-### Requirement: Persist nothing by default
-
-The system SHALL keep imported and derived data in transient browser memory
-unless the visitor explicitly saves it.
-
-#### Scenario: Visitor closes an unsaved report
-- **WHEN** the visitor has not chosen to keep the memory
-- **THEN** no application snapshot is available on the next visit
+## MODIFIED Requirements
 
 ### Requirement: Save a derived memory snapshot
 
@@ -21,14 +9,6 @@ conversation strands, to browser storage without saving the source ZIP.
 #### Scenario: Visitor chooses keep
 - **WHEN** the visitor confirms “Keep on this device”
 - **THEN** the system stores the derived report, semantic index, model metadata, confidence settings, timelines, and strands in IndexedDB and shows its saved state
-
-### Requirement: Forget saved memory
-
-The system SHALL provide a prominent action to delete the local snapshot.
-
-#### Scenario: Visitor chooses forget
-- **WHEN** the visitor confirms the forget action
-- **THEN** the system deletes the product's IndexedDB data and returns to the import state
 
 ### Requirement: Reject incompatible snapshots
 
@@ -42,4 +22,3 @@ lacks the model metadata required to search its semantic index safely.
 #### Scenario: Snapshot model metadata is incomplete
 - **WHEN** a stored semantic index does not identify the pinned model profile and revision that created it
 - **THEN** the system rejects semantic restore rather than embedding searches with an incompatible model
-

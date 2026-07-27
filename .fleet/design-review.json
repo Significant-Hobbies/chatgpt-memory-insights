@@ -2,36 +2,19 @@
   "$schema": "fleet.design-review.v1",
   "version": 1,
   "project": "chatgpt-memory-insights",
-  "target": "/",
-  "mode": "overhaul",
+  "target": "memory evolution, confidence controls, and conversation strands",
+  "mode": "preserve",
   "register": "product",
   "context": {
     "product": "PRODUCT.md",
     "design": "DESIGN.md"
   },
   "direction": {
-    "references": [
-      "Harry Beck London Underground diagram",
-      "Giorgia Lupi data humanism",
-      "Observable notebooks"
-    ],
-    "probes": [
-      {
-        "id": "network-foyer",
-        "path": "artifacts/design/probes/network-foyer.png"
-      },
-      {
-        "id": "vertical-journey",
-        "path": "artifacts/design/probes/vertical-journey.png"
-      },
-      {
-        "id": "graph-first-workbench",
-        "path": "artifacts/design/probes/graph-first-workbench.png"
-      }
-    ],
-    "selected": "graph-first-workbench",
-    "approval": "delegated",
-    "before": ""
+    "references": [],
+    "probes": [],
+    "selected": "existing-design",
+    "approval": "not-required",
+    "before": "artifacts/design/before.jpg"
   },
   "evidence": {
     "screenshots": [
@@ -53,7 +36,7 @@
       "status": "pass"
     },
     "critique": {
-      "score": 35,
+      "score": 36,
       "maximum": 40
     },
     "audit": {
@@ -66,11 +49,15 @@
     },
     "detector": {
       "posture": "advisory",
-      "findings": []
+      "findings": [
+        "layout-transition: fixed by converting progress width animation to transform",
+        "overused-font: intentional false positive; Arial is the documented transit-information typeface",
+        "codex-grid-background: intentional false positive; the grid is confined to the ZIP map field"
+      ]
     }
   },
   "ownerFeedback": {
     "decision": "delegated",
-    "note": "The owner approved the project and explicitly delegated implementation and design judgment; independent finish-review P1 findings were resolved before delivery."
+    "note": "Owner approved all five product upgrades and delegated implementation and design judgment."
   }
 }

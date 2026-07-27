@@ -1,11 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { classifyFactHistory, cosine } from "./semantic";
+import { classifyFactHistory, cosine, MODEL_PROFILES } from "./semantic";
 import type { FactCandidate } from "./types";
 
 describe("cosine", () => {
   it("compares normalized embedding vectors", () => {
     expect(cosine(new Float32Array([1, 0]), new Float32Array([1, 0]))).toBe(1);
     expect(cosine(new Float32Array([1, 0]), new Float32Array([0, 1]))).toBe(0);
+  });
+});
+
+describe("browser model profiles", () => {
+  it("pins both compact and multilingual model revisions", () => {
+    expect(MODEL_PROFILES.compact).toEqual({
+      id: "Xenova/all-MiniLM-L6-v2",
+      revision: "751bff37182d3f1213fa05d7196b954e230abad9",
+      approximateDownloadMb: 24,
+    });
+    expect(MODEL_PROFILES.multilingual).toEqual({
+      id: "Xenova/paraphrase-multilingual-MiniLM-L12-v2",
+      revision: "2c4055b12046f11709e9df2c122e59ffbdc2f900",
+      approximateDownloadMb: 135,
+    });
   });
 });
 
