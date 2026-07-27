@@ -33,4 +33,4 @@
 - [x] 5.1 Validate OpenSpec and run unit, type, build, and dependency checks
 - [x] 5.2 Verify the supplied sample archive in a local browser
 - [x] 5.3 Complete Fleet design review at 390, 768, and 1440 pixels
-- [ ] 5.4 Update project status, archive the OpenSpec change, commit, push, and deploy
+- [x] 5.4 Update project status, archive the OpenSpec change, commit, push, and deploy

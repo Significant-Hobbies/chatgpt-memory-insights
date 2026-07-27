@@ -38,12 +38,14 @@ or personality claims.
 - 2026-07-28 — browser ZIP pipeline, semantic memory, evidence-led report,
   query lenses, and responsive product surface implemented and validated
   against the owner-supplied export
+- 2026-07-28 — first production release deployed to
+  `https://chatgpt-memory-insights.pages.dev`
 
 ## Products
 
-- **Memory Map web app** — static Astro output targeting the
-  `chatgpt-memory-insights` Cloudflare Pages project; first production deploy
-  pending.
+- **Memory Map web app** — production static Astro app at
+  `https://chatgpt-memory-insights.pages.dev`, deployed directly to the
+  `chatgpt-memory-insights` Cloudflare Pages project.
 
 ## Features (shipped)
 
@@ -63,10 +65,9 @@ or personality claims.
 
 ## Todo / Planned / Deferred / Blocked
 
-1. Deploy the first production release to Cloudflare Pages and record the URL.
-2. Deferred: multilingual embeddings until real usage justifies the additional
+1. Deferred: multilingual embeddings until real usage justifies the additional
    browser cost and quality trade-off.
-3. Deferred: attachment and exported-memory-file analysis until those schemas
+2. Deferred: attachment and exported-memory-file analysis until those schemas
    are validated independently.
-4. Owner confirmation needed before adding the optional Fleet
+3. Owner confirmation needed before adding the optional Fleet
    `docs/learning/new-things.md` study queue for the browser ML stack.
