@@ -45,6 +45,8 @@ or personality claims.
   views implemented
 - 2026-07-28 — custom production domain configured at
   `https://chatgpt.significanthobbies.com`
+- 2026-07-28 — expanded insight release deployed and smoke-tested on the custom
+  production domain
 
 ## Products
 

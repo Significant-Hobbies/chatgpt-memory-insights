@@ -30,4 +30,4 @@
 - [x] 5.2 Analyze the owner-supplied export and inspect representative multilingual, timeline, confidence, and strand results
 - [x] 5.3 Complete preserve-mode browser evidence, Impeccable critique/polish/audit, detector, and Fleet design receipt
 - [x] 5.4 Archive the OpenSpec change and update PRODUCT.md, DESIGN.md, README.md, and PROJECT_STATUS.md
-- [ ] 5.5 Commit and push clean main, pass the Fleet deploy guard, deploy the Pages project, and smoke-test the custom domain
+- [x] 5.5 Commit and push clean main, pass the Fleet deploy guard, deploy the Pages project, and smoke-test the custom domain
