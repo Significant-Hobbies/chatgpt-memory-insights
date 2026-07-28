@@ -27,7 +27,7 @@ const capabilityRoutes = [
       {
         title: "Activity rhythms",
         detail:
-          "Conversation volume by month, with source date range and peak-period evidence.",
+          "A monthly cadence graph switches between conversation count and approximate word count, filters by any overlapping question route, and shows the selected total and peak month.",
       },
       {
         title: "Recurring terms",
@@ -160,7 +160,7 @@ const capabilityRoutes = [
       {
         title: "One global view period",
         detail:
-          "Switch between the recent 3, 6, 12, or 24 months and all history; chronological charts, query tone, and language signals stay aligned to the same window.",
+          "Switch between the recent 3, 6, 12, or 24 calendar months and all history; the activity calendar, cadence graph, topic movement, query tone, and language signals stay aligned to the same window, including inactive months.",
       },
       {
         title: "Seven-slide Story mode",
@@ -319,6 +319,7 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#f3f5f2" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{title}</title>
   </head>
   <body class="about-page">

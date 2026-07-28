@@ -615,13 +615,48 @@ export function buildDeterministicReport(
   const prompts = conversations.flatMap((conversation) => conversation.prompts);
   const dates = conversations.map((conversation) => conversation.date).filter(Boolean);
   const activity = new Map<string, number>();
+  const activityRhythms = new Map<
+    "all" | QuestionLens["id"],
+    Map<
+      string,
+      {
+        conversations: number;
+        messages: number;
+        userPrompts: number;
+        words: number;
+      }
+    >
+  >();
   const dailyActivity = new Map<string, ConversationRecord[]>();
   const weekday = new Map<string, number>();
   const models = new Map<string, number>();
   const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+  const addRhythm = (id: "all" | QuestionLens["id"], conversation: ConversationRecord) => {
+    const month = monthKey(conversation.date);
+    const series = activityRhythms.get(id) ?? new Map();
+    const current = series.get(month) ?? {
+      conversations: 0,
+      messages: 0,
+      userPrompts: 0,
+      words: 0,
+    };
+    current.conversations += 1;
+    current.messages += conversation.messageCount;
+    current.userPrompts += conversation.userMessageCount;
+    current.words += conversation.wordCount;
+    series.set(month, current);
+    activityRhythms.set(id, series);
+  };
+
   for (const conversation of conversations) {
     activity.set(monthKey(conversation.date), (activity.get(monthKey(conversation.date)) ?? 0) + 1);
+    addRhythm("all", conversation);
+    for (const routeId of classifyQuestionLensIds(
+      conversation.prompts.map((prompt) => prompt.text),
+    )) {
+      addRhythm(routeId, conversation);
+    }
     if (conversation.date) {
       const day = dateKey(conversation.date);
       const dayConversations = dailyActivity.get(day) ?? [];
@@ -666,6 +701,16 @@ export function buildDeterministicReport(
     activityByMonth: [...activity.entries()]
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([label, value]) => ({ label, value })),
+    activityRhythms: [
+      { id: "all" as const, label: "All conversations" },
+      ...QUESTION_LENSES.map(({ id, label }) => ({ id, label })),
+    ].map(({ id, label }) => ({
+      id,
+      label,
+      byMonth: [...(activityRhythms.get(id)?.entries() ?? [])]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([month, values]) => ({ label: month, ...values })),
+    })),
     activityByWeekday: weekdays.map((label) => ({ label, value: weekday.get(label) ?? 0 })),
     modelUsage: [...models.entries()]
       .sort((left, right) => right[1] - left[1])

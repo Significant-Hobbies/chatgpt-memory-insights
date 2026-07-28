@@ -43,6 +43,20 @@ export type ActivityDay = CountDatum & {
   sources: SourceRef[];
 };
 
+export type ActivityRhythmDatum = {
+  label: string;
+  conversations: number;
+  messages: number;
+  userPrompts: number;
+  words: number;
+};
+
+export type ActivityRhythmSeries = {
+  id: "all" | QuestionLens["id"];
+  label: string;
+  byMonth: ActivityRhythmDatum[];
+};
+
 export type ExactRepeat = {
   id: string;
   representative: string;
@@ -180,6 +194,7 @@ export type DeterministicReport = {
   dateRange: { start: number; end: number };
   activityByDay?: ActivityDay[];
   activityByMonth: CountDatum[];
+  activityRhythms?: ActivityRhythmSeries[];
   activityByWeekday: CountDatum[];
   modelUsage: CountDatum[];
   depth: {

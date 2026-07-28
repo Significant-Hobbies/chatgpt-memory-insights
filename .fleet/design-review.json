@@ -2,7 +2,7 @@
   "$schema": "fleet.design-review.v1",
   "version": 1,
   "project": "chatgpt-memory-insights",
-  "target": "progressive conversation graph formation",
+  "target": "period-aware rhythms, activity calendar, evidence drawer, and route rail",
   "mode": "preserve",
   "register": "product",
   "context": {
@@ -14,21 +14,21 @@
     "probes": [],
     "selected": "existing-design",
     "approval": "not-required",
-    "before": "artifacts/design/performance-after-1440.png"
+    "before": "artifacts/design/report-top-before.png"
   },
   "evidence": {
     "screenshots": [
       {
         "width": 390,
-        "path": "artifacts/design/graph-formation-after-390.png"
+        "path": "artifacts/design/period-report-after-390.png"
       },
       {
         "width": 768,
-        "path": "artifacts/design/graph-formation-after-768.png"
+        "path": "artifacts/design/period-report-after-768.png"
       },
       {
         "width": 1440,
-        "path": "artifacts/design/graph-formation-after-1440.png"
+        "path": "artifacts/design/period-report-after-1440.png"
       }
     ],
     "projectCheck": {
@@ -36,7 +36,7 @@
       "status": "pass"
     },
     "critique": {
-      "score": 38,
+      "score": 36,
       "maximum": 40
     },
     "audit": {
@@ -54,6 +54,6 @@
   },
   "ownerFeedback": {
     "decision": "delegated",
-    "note": "Owner explicitly requested that the graph visibly form after each conversation is added."
+    "note": "Owner explicitly requested the period fixes, filterable cadence graph, spacing and rail polish, relocated search, collapsed one-time details, and favicon."
   }
 }

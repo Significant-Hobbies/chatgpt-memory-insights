@@ -21,6 +21,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#f3f5f2" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{title}</title>
   </head>
   <body>
@@ -316,108 +317,102 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
             </div>
           </header>
 
-          <section
-            id="analysis-timing-board"
-            class="analysis-timing-board"
-            aria-labelledby="analysis-timing-heading"
-            hidden
-          >
-            <div class="analysis-timing-heading">
-              <div>
-                <p class="map-key">Live execution route</p>
-                <h2 id="analysis-timing-heading">How long your map took</h2>
-              </div>
-              <p id="report-timing-status" role="status" aria-live="polite">
-                Initial insights are ready. Semantic analysis is continuing.
-              </p>
-            </div>
-            <dl class="analysis-timing-metrics">
-              <div>
-                <dt>Initial insight</dt>
-                <dd id="report-timing-initial">—</dd>
-              </div>
-              <div class="timing-total">
-                <dt>End to end</dt>
-                <dd id="report-timing-total">Running…</dd>
-              </div>
-              <div>
-                <dt>Model preparation</dt>
-                <dd id="report-timing-model">Waiting</dd>
-              </div>
-              <div>
-                <dt>Semantic work</dt>
-                <dd id="report-timing-semantic">Waiting</dd>
-              </div>
-              <div>
-                <dt>Compute route</dt>
-                <dd id="report-timing-runtime">Selecting…</dd>
-              </div>
-              <div>
-                <dt>Candidate coverage</dt>
-                <dd id="report-timing-coverage">Forming…</dd>
-              </div>
-            </dl>
-            <ol id="report-stage-list" class="timing-stages timing-stages-report" aria-label="Analysis stage timings">
-              <li data-timing-stage="discover">
-                <i></i><span>Open archive</span><time>Waiting</time>
-              </li>
-              <li data-timing-stage="parse">
-                <i></i><span>Read conversations</span><time>Waiting</time>
-              </li>
-              <li data-timing-stage="statistics">
-                <i></i><span>Initial insights</span><time>Waiting</time>
-              </li>
-              <li data-timing-stage="model">
-                <i></i><span>Prepare model</span><time>Waiting</time>
-              </li>
-              <li data-timing-stage="embed">
-                <i></i><span>Map semantic memory</span><time>Waiting</time>
-              </li>
-              <li data-timing-stage="cluster">
-                <i></i><span>Assemble report</span><time>Waiting</time>
-              </li>
-            </ol>
-          </section>
+          <details id="analysis-details" class="analysis-details" open>
+            <summary>
+              <span>
+                <strong>Analysis details</strong>
+                <small id="analysis-details-summary">
+                  Semantic work is running · balanced evidence
+                </small>
+              </span>
+              <b>Timing, model, and confidence</b>
+            </summary>
+            <div class="analysis-details-body">
+              <section
+                id="analysis-timing-board"
+                class="analysis-timing-board"
+                aria-labelledby="analysis-timing-heading"
+                hidden
+              >
+                <div class="analysis-timing-heading">
+                  <div>
+                    <p class="map-key">Live execution route</p>
+                    <h2 id="analysis-timing-heading">How long your map took</h2>
+                  </div>
+                  <p id="report-timing-status" role="status" aria-live="polite">
+                    Initial insights are ready. Semantic analysis is continuing.
+                  </p>
+                </div>
+                <dl class="analysis-timing-metrics">
+                  <div>
+                    <dt>Initial insight</dt>
+                    <dd id="report-timing-initial">—</dd>
+                  </div>
+                  <div class="timing-total">
+                    <dt>End to end</dt>
+                    <dd id="report-timing-total">Running…</dd>
+                  </div>
+                  <div>
+                    <dt>Model preparation</dt>
+                    <dd id="report-timing-model">Waiting</dd>
+                  </div>
+                  <div>
+                    <dt>Semantic work</dt>
+                    <dd id="report-timing-semantic">Waiting</dd>
+                  </div>
+                  <div>
+                    <dt>Compute route</dt>
+                    <dd id="report-timing-runtime">Selecting…</dd>
+                  </div>
+                  <div>
+                    <dt>Candidate coverage</dt>
+                    <dd id="report-timing-coverage">Forming…</dd>
+                  </div>
+                </dl>
+                <ol id="report-stage-list" class="timing-stages timing-stages-report" aria-label="Analysis stage timings">
+                  <li data-timing-stage="discover">
+                    <i></i><span>Open archive</span><time>Waiting</time>
+                  </li>
+                  <li data-timing-stage="parse">
+                    <i></i><span>Read conversations</span><time>Waiting</time>
+                  </li>
+                  <li data-timing-stage="statistics">
+                    <i></i><span>Initial insights</span><time>Waiting</time>
+                  </li>
+                  <li data-timing-stage="model">
+                    <i></i><span>Prepare model</span><time>Waiting</time>
+                  </li>
+                  <li data-timing-stage="embed">
+                    <i></i><span>Map semantic memory</span><time>Waiting</time>
+                  </li>
+                  <li data-timing-stage="cluster">
+                    <i></i><span>Assemble report</span><time>Waiting</time>
+                  </li>
+                </ol>
+              </section>
 
-          <form id="memory-search" class="memory-search" role="search">
-            <label for="search-query">Search your mapped memory</label>
-            <div class="search-field">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="10.5" cy="10.5" r="6.5"></circle>
-                <path d="m15.5 15.5 5 5"></path>
-              </svg>
-              <input
-                id="search-query"
-                name="query"
-                type="search"
-                autocomplete="off"
-                placeholder="Search the things you have asked, changed, or returned to"
-              />
-              <button type="submit">Search</button>
+              <section class="analysis-lens" aria-labelledby="analysis-lens-heading">
+                <div>
+                  <p class="map-key">Filter inferred evidence</p>
+                  <h2 id="analysis-lens-heading">Analysis lens</h2>
+                  <p id="model-profile-note"></p>
+                </div>
+                <div class="report-confidence">
+                  <div id="report-confidence-presets" class="confidence-presets" aria-label="Report confidence presets">
+                    <button type="button" data-confidence="45">Exploratory</button>
+                    <button type="button" data-confidence="65" aria-pressed="true">Balanced</button>
+                    <button type="button" data-confidence="82">Conservative</button>
+                  </div>
+                  <label for="report-confidence-input">
+                    <span>Visible evidence threshold</span>
+                    <input id="report-confidence-input" type="range" min="35" max="90" value="65" />
+                    <output id="report-confidence-output" for="report-confidence-input">65%</output>
+                  </label>
+                  <small id="confidence-impact">Semantic candidates will be filtered without re-reading your ZIP.</small>
+                </div>
+              </section>
             </div>
-            <div id="search-results" class="search-results" hidden></div>
-          </form>
-
-          <section class="analysis-lens" aria-labelledby="analysis-lens-heading">
-            <div>
-              <p class="map-key">Filter inferred evidence</p>
-              <h2 id="analysis-lens-heading">Analysis lens</h2>
-              <p id="model-profile-note"></p>
-            </div>
-            <div class="report-confidence">
-              <div id="report-confidence-presets" class="confidence-presets" aria-label="Report confidence presets">
-                <button type="button" data-confidence="45">Exploratory</button>
-                <button type="button" data-confidence="65" aria-pressed="true">Balanced</button>
-                <button type="button" data-confidence="82">Conservative</button>
-              </div>
-              <label for="report-confidence-input">
-                <span>Visible evidence threshold</span>
-                <input id="report-confidence-input" type="range" min="35" max="90" value="65" />
-                <output id="report-confidence-output" for="report-confidence-input">65%</output>
-              </label>
-              <small id="confidence-impact">Semantic candidates will be filtered without re-reading your ZIP.</small>
-            </div>
-          </section>
+          </details>
 
           <section id="overview" class="platform-section overview-section" aria-labelledby="overview-heading">
             <div class="section-heading">
@@ -585,6 +580,24 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
                 </div>
                 <p>Node size is conversation count. Lines are semantic proximity.</p>
               </div>
+              <form id="memory-search" class="memory-search" role="search">
+                <label for="search-query">Search your mapped memory</label>
+                <div class="search-field">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="10.5" cy="10.5" r="6.5"></circle>
+                    <path d="m15.5 15.5 5 5"></path>
+                  </svg>
+                  <input
+                    id="search-query"
+                    name="query"
+                    type="search"
+                    autocomplete="off"
+                    placeholder="Search what you asked, changed, or returned to"
+                  />
+                  <button type="submit">Search</button>
+                </div>
+                <div id="search-results" class="search-results" hidden></div>
+              </form>
               <div id="graph-loading" class="graph-loading">
                 <span></span>
                 <strong>Semantic map is still forming.</strong>
@@ -862,7 +875,55 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               </div>
               <p id="date-range"></p>
             </div>
-            <div id="activity-chart" class="activity-chart" aria-label="Conversation activity by month"></div>
+            <div class="rhythm-toolbar">
+              <div class="rhythm-measure" role="group" aria-labelledby="rhythm-measure-label">
+                <span id="rhythm-measure-label">Measure</span>
+                <button type="button" data-rhythm-measure="conversations" aria-pressed="true">
+                  Conversations
+                </button>
+                <button type="button" data-rhythm-measure="words" aria-pressed="false">
+                  Approx. words
+                </button>
+              </div>
+              <label for="rhythm-route">
+                <span>Question route</span>
+                <select id="rhythm-route">
+                  <option value="all">All conversations</option>
+                  <option value="math">Math</option>
+                  <option value="health">Health</option>
+                  <option value="software">Software</option>
+                  <option value="money">Money</option>
+                  <option value="career">Career</option>
+                  <option value="learning">Learning</option>
+                  <option value="creative">Creative</option>
+                  <option value="relationships">Relationships</option>
+                  <option value="travel">Travel</option>
+                  <option value="planning">Planning</option>
+                </select>
+              </label>
+            </div>
+            <div class="rhythm-summary" aria-live="polite">
+              <div>
+                <span>Selected total</span>
+                <strong id="rhythm-total">—</strong>
+              </div>
+              <div>
+                <span>Peak month</span>
+                <strong id="rhythm-peak">—</strong>
+              </div>
+              <p id="rhythm-method">
+                Monthly conversation starts across the selected period.
+              </p>
+            </div>
+            <div
+              id="activity-chart"
+              class="activity-chart atlas-plot"
+              aria-label="Monthly conversation activity"
+            ></div>
+            <details class="chart-data rhythm-data">
+              <summary>Read rhythm data</summary>
+              <div id="rhythm-data-list" class="chart-data-list"></div>
+            </details>
           </section>
 
           <section class="methodology" aria-labelledby="method-heading">

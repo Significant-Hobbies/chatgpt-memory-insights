@@ -72,6 +72,10 @@ sync, and verified medical, emotional, or personality claims.
 - 2026-07-28 — progressive conversation-by-conversation graph formation added
   to ingestion and verified against all 1,061 conversations in the owner
   archive; production deployment was not performed
+- 2026-07-28 — exact calendar-period filtering, filterable conversation/word
+  cadence, repaired topic-momentum labels, collapsed one-time analysis details,
+  relocated search, refined route rail and evidence drawer, and a custom
+  favicon completed; production deployment was not performed
 
 ## Products
 
@@ -101,6 +105,9 @@ sync, and verified medical, emotional, or personality claims.
   fading, resurfacing, steady, and insufficient-evidence labels.
 - Period-aware visual atlas with daily activity, question mix, language
   signals, repeat landscape, topic movement, and conversation-shape views.
+- Filterable monthly cadence graph for conversation count or approximate word
+  count across all conversations or one overlapping question route, aligned to
+  the same exact calendar window as the atlas, tone, and language signals.
 - Full-screen seven-slide Story mode with keyboard, swipe, touch, direct-slide,
   evidence-detour, and reduced-motion support.
 - Interactive SVG topic map with a complete keyboard-accessible topic list.

@@ -25,10 +25,18 @@ and the complete path from ChatGPT export to searchable memory.
 
 Analysis is progressive: deterministic insights appear first, while a six-stage
 route shows elapsed time and an estimated wait for semantic mapping. The
-completed report keeps a separate end-to-end execution receipt that includes
-archive parsing, model download and preparation, embeddings, and report
-assembly. Supported compact-model runs use WebGPU acceleration with a complete
-WebAssembly fallback.
+completed report collapses its one-time timing, model, and confidence controls
+into an analysis receipt instead of leaving setup chrome in the reading path.
+The receipt includes archive parsing, model download and preparation,
+embeddings, and report assembly. Supported compact-model runs use WebGPU
+acceleration with a complete WebAssembly fallback.
+
+The report period controls exact calendar windows, including inactive months.
+It updates the daily activity calendar, topic movement, query tone, language
+signals, and a filterable monthly cadence graph that can compare conversation
+count or approximate word count for all conversations or one overlapping
+question route. Search lives with the semantic topic map where its results are
+explained by graph and source evidence.
 
 During ingestion, every parsed conversation becomes a distinct stop in a live
 deterministic route sketch. The same canvas moves into the report while

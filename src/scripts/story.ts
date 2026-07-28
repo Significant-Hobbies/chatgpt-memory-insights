@@ -1,4 +1,5 @@
 import type { EmotionBucket, FullReport, SourceRef } from "../lib/types";
+import { activityMonthWindow } from "../lib/period";
 
 type StoryContext = {
   showEvidence: (title: string, sources: SourceRef[], notes?: string[]) => void;
@@ -72,13 +73,6 @@ function truncate(value: string, length: number): string {
     : normalized;
 }
 
-function availableMonths(report: FullReport, periodMonths: number | null): string[] {
-  const months = report.deterministic.activityByMonth
-    .map((datum) => datum.label)
-    .filter((label) => /^\d{4}-\d{2}$/.test(label));
-  return periodMonths === null ? months : months.slice(-periodMonths);
-}
-
 function statGrid(values: Array<{ label: string; value: string }>): HTMLElement {
   const grid = element("dl", undefined, "story-stat-grid");
   values.forEach(({ label, value }) => {
@@ -114,7 +108,7 @@ function buildSlides(
   clearsConfidence: (score: number) => boolean,
 ): StorySlide[] {
   const deterministic = report.deterministic;
-  const months = availableMonths(report, periodMonths);
+  const months = activityMonthWindow(report.deterministic, periodMonths);
   const monthSet = new Set(months);
   const periodLabel =
     periodMonths === null

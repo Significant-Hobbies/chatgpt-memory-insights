@@ -179,6 +179,60 @@ describe("deterministic insights", () => {
     expect(report.activityByDay?.[0].sources).toHaveLength(12);
   });
 
+  it("builds overlapping monthly activity rhythms for route and measure filtering", () => {
+    const november = 1_700_000_000;
+    const december = 1_701_388_800;
+    const conversations = [
+      conversation(
+        "mixed",
+        november,
+        [
+          prompt(
+            "mixed",
+            "Calculate the average calories for this nutrition plan.",
+            november,
+            "mixed",
+          ),
+        ],
+        6,
+      ),
+      conversation(
+        "software",
+        december,
+        [prompt("software", "Debug this TypeScript API.", december, "software")],
+        4,
+      ),
+    ];
+    conversations[0].wordCount = 240;
+    conversations[1].wordCount = 120;
+
+    const { report } = buildDeterministicReport(conversations);
+    const all = report.activityRhythms?.find((series) => series.id === "all");
+    const math = report.activityRhythms?.find((series) => series.id === "math");
+    const health = report.activityRhythms?.find((series) => series.id === "health");
+    const software = report.activityRhythms?.find((series) => series.id === "software");
+
+    expect(all?.byMonth).toEqual([
+      {
+        label: "2023-11",
+        conversations: 1,
+        messages: 6,
+        userPrompts: 1,
+        words: 240,
+      },
+      {
+        label: "2023-12",
+        conversations: 1,
+        messages: 4,
+        userPrompts: 1,
+        words: 120,
+      },
+    ]);
+    expect(math?.byMonth[0]).toMatchObject({ conversations: 1, words: 240 });
+    expect(health?.byMonth[0]).toMatchObject({ conversations: 1, words: 240 });
+    expect(software?.byMonth[0]).toMatchObject({ conversations: 1, words: 120 });
+  });
+
   it("keeps lexical overlap transparent", () => {
     expect(
       lexicalSimilarity(

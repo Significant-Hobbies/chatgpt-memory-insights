@@ -8,6 +8,7 @@ import {
   normalizeSettings,
 } from "../lib/analysis";
 import { formatDuration } from "../lib/performance";
+import { activityMonthWindow } from "../lib/period";
 import {
   FORMATION_ROUTES,
   formationPoint,
@@ -39,6 +40,7 @@ import type {
   GraphFormationConversation,
   MemorySnapshot,
   ModelProfile,
+  QuestionLens,
   SearchResult,
   SourceRef,
   ThreadSegmentation,
@@ -72,6 +74,8 @@ const progressFill = $<HTMLElement>("#progress-line-fill");
 const progressElapsed = $("#progress-elapsed");
 const progressRemaining = $("#progress-remaining");
 const progressRuntime = $("#progress-runtime");
+const analysisDetails = $<HTMLDetailsElement>("#analysis-details");
+const analysisDetailsSummary = $("#analysis-details-summary");
 const analysisTimingBoard = $("#analysis-timing-board");
 const errorMessage = $("#error-message");
 const appStatus = $("#app-status");
@@ -88,6 +92,7 @@ const confidenceOutput = $<HTMLOutputElement>("#confidence-output");
 const reportConfidenceInput = $<HTMLInputElement>("#report-confidence-input");
 const reportConfidenceOutput = $<HTMLOutputElement>("#report-confidence-output");
 const atlasPeriod = $<HTMLSelectElement>("#atlas-period");
+const rhythmRoute = $<HTMLSelectElement>("#rhythm-route");
 const storyButton = $<HTMLButtonElement>("#open-story");
 const enableMemoryChatButton = $<HTMLButtonElement>("#enable-memory-chat");
 const unloadMemoryChatButton = $<HTMLButtonElement>("#unload-memory-chat");
@@ -119,6 +124,9 @@ let ledgerStatus: FactGroup["status"] = "current";
 let activeConfidence = 65;
 let evolutionKind: "topics" | "domains" | "language" = "topics";
 let activePeriodMonths: number | null = 12;
+let activeRhythmMeasure: "conversations" | "words" = "conversations";
+let activeRhythmRouteId: "all" | QuestionLens["id"] = "all";
+let analysisDetailsAutoSettled = false;
 let evidenceReturnFocus: HTMLElement | SVGElement | null = null;
 let timingInterval: number | null = null;
 let latestTiming:
@@ -179,6 +187,43 @@ function showOnly(view: HTMLElement) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+const reportRouteLinks = [
+  ...reportNav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
+];
+const reportRouteSections = reportRouteLinks
+  .map((link) => {
+    const target = document.querySelector<HTMLElement>(link.hash);
+    return target ? { link, target } : null;
+  })
+  .filter((entry): entry is { link: HTMLAnchorElement; target: HTMLElement } => Boolean(entry));
+
+function setCurrentReportRoute(id: string | null) {
+  for (const { link, target } of reportRouteSections) {
+    if (id === target.id) {
+      link.setAttribute("aria-current", "location");
+    } else {
+      link.removeAttribute("aria-current");
+    }
+  }
+}
+
+const reportRouteObserver = new IntersectionObserver(
+  (entries) => {
+    const visible = entries
+      .filter((entry) => entry.isIntersecting)
+      .sort(
+        (left, right) =>
+          Math.abs(left.boundingClientRect.top) - Math.abs(right.boundingClientRect.top),
+      )[0];
+    if (visible?.target instanceof HTMLElement) setCurrentReportRoute(visible.target.id);
+  },
+  { rootMargin: "-18% 0px -68% 0px", threshold: 0 },
+);
+for (const { link, target } of reportRouteSections) {
+  reportRouteObserver.observe(target);
+  link.addEventListener("click", () => setCurrentReportRoute(target.id));
+}
+
 function formatNumber(value: number): string {
   return new Intl.NumberFormat().format(value);
 }
@@ -190,6 +235,15 @@ function formatDate(timestamp: number): string {
     month: "short",
     year: "numeric",
   }).format(new Date(timestamp * 1_000));
+}
+
+function formatMonth(month: string): string {
+  const [year, monthIndex] = month.split("-").map(Number);
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, monthIndex - 1, 1)));
 }
 
 function formatPercent(value: number): string {
@@ -257,6 +311,8 @@ function renderLiveTiming(
   renderStageTimings(timing.completedStages, phase, timing.stageElapsedMs);
 
   if (currentReport) {
+    analysisDetails.open = true;
+    analysisDetailsAutoSettled = false;
     analysisTimingBoard.hidden = false;
     $("#report-timing-initial").textContent = formatDuration(
       currentReport.performance?.initialInsightsMs ?? timing.totalElapsedMs,
@@ -288,12 +344,16 @@ function renderLiveTiming(
           ? ""
           : ` · about ${formatDuration(timing.estimatedRemainingMs)} left`
       }`;
+    analysisDetailsSummary.textContent =
+      `${label}${total > 0 ? ` · ${percent}%` : ""} · ${confidencePreset(activeConfidence)} evidence`;
   }
 }
 
 function renderPerformanceSummary(performance: AnalysisPerformance | undefined, restored = false) {
   if (!performance) {
     analysisTimingBoard.hidden = true;
+    analysisDetailsSummary.textContent =
+      `Model and confidence · ${confidencePreset(activeConfidence)} evidence`;
     return;
   }
   analysisTimingBoard.hidden = false;
@@ -313,6 +373,19 @@ function renderPerformanceSummary(performance: AnalysisPerformance | undefined, 
       ? `${restored ? "Original analysis run" : "Complete map ready"}. Total includes archive parsing, model preparation, embedding, and report assembly.`
       : "Initial insights are ready. Semantic analysis is continuing.";
   renderStageTimings(performance.stages, null, 0);
+  if (performance.status === "complete") {
+    analysisDetailsSummary.textContent =
+      `${performance.totalMs === null ? "Complete" : `Complete in ${formatDuration(performance.totalMs)}`} · ${confidencePreset(activeConfidence)} evidence`;
+    if (!analysisDetailsAutoSettled) {
+      analysisDetails.open = false;
+      analysisDetailsAutoSettled = true;
+    }
+  } else {
+    analysisDetails.open = true;
+    analysisDetailsAutoSettled = false;
+    analysisDetailsSummary.textContent =
+      `Semantic work is running · ${confidencePreset(activeConfidence)} evidence`;
+  }
 }
 
 function stopTimingTicker() {
@@ -380,6 +453,13 @@ function setConfidence(value: number, rerender = true) {
       String(Number(button.dataset.confidence) === activeConfidence),
     );
   }
+  const performance = currentReport?.performance;
+  analysisDetailsSummary.textContent =
+    performance?.status === "complete"
+      ? `${performance.totalMs === null ? "Complete" : `Complete in ${formatDuration(performance.totalMs)}`} · ${confidencePreset(activeConfidence)} evidence`
+      : performance
+        ? `Semantic work is running · ${confidencePreset(activeConfidence)} evidence`
+        : `Model and confidence · ${confidencePreset(activeConfidence)} evidence`;
   if (rerender && currentReport) {
     renderReport(currentReport);
     appStatus.textContent = `Showing ${confidencePreset(activeConfidence)} evidence at ${display} confidence.`;
@@ -571,12 +651,16 @@ function resetApp() {
   void analysisLease.release();
   stopTimingTicker();
   latestTiming = null;
+  analysisDetails.open = true;
+  analysisDetailsAutoSettled = false;
+  analysisDetailsSummary.textContent = "Semantic work is running · balanced evidence";
   resetGraphFormation();
   currentReport = null;
   currentSnapshot = null;
   archiveInput.value = "";
   searchResults.hidden = true;
   evidencePanel.hidden = true;
+  document.body.classList.remove("has-evidence");
   appShell.inert = false;
   evidenceReturnFocus = null;
   showOnly(importView);
@@ -588,6 +672,7 @@ function openEvidencePanel() {
       ? document.activeElement
       : null;
   evidencePanel.hidden = false;
+  document.body.classList.add("has-evidence");
   appShell.inert = true;
   $<HTMLButtonElement>("#close-evidence").focus();
 }
@@ -595,6 +680,7 @@ function openEvidencePanel() {
 function closeEvidencePanel(restoreFocus = true) {
   if (evidencePanel.hidden) return;
   evidencePanel.hidden = true;
+  document.body.classList.remove("has-evidence");
   appShell.inert = false;
   if (restoreFocus && storyController.resumeFromEvidence()) {
     evidenceReturnFocus = null;
@@ -618,6 +704,8 @@ async function analyzeFile(file: File) {
   }
   currentReport = null;
   currentSnapshot = null;
+  analysisDetails.open = true;
+  analysisDetailsAutoSettled = false;
   latestTiming = null;
   resetGraphFormation();
   progressFill.style.transform = "scaleX(0.02)";
@@ -786,20 +874,31 @@ function renderReport(report: FullReport) {
     }),
   );
 
-  $("#date-range").textContent = `${formatDate(deterministic.dateRange.start)} — ${formatDate(
-    deterministic.dateRange.end,
-  )}`;
+  const visibleMonths = activityMonthWindow(deterministic, activePeriodMonths);
+  $("#date-range").textContent =
+    activePeriodMonths === null
+      ? `All history · ${formatDate(deterministic.dateRange.start)} — ${formatDate(
+          deterministic.dateRange.end,
+        )}`
+      : `${formatNumber(activePeriodMonths)} months · ${formatMonth(
+          visibleMonths[0],
+        )} — ${formatMonth(visibleMonths.at(-1) ?? visibleMonths[0])}`;
   const periodLabel =
     activePeriodMonths === null ? "All available history." : `Recent ${activePeriodMonths} months.`;
   $("#tone-method").textContent = `${deterministic.tone.method} ${periodLabel}`;
   $("#emotion-method").textContent = `${deterministic.emotions.method} ${periodLabel}`;
+  if (!deterministic.activityRhythms?.length) {
+    activeRhythmMeasure = "conversations";
+    activeRhythmRouteId = "all";
+  }
   renderTone(report);
   renderReflections(report);
-  renderActivity(report);
   renderVisualAtlas(report, {
     clearsConfidence,
     showEvidence,
     periodMonths: activePeriodMonths,
+    rhythmMeasure: activeRhythmMeasure,
+    rhythmRouteId: activeRhythmRouteId,
   });
   renderRepeats(report);
   renderQuestionLenses(report);
@@ -1203,13 +1302,22 @@ function unloadMemoryChatModel(clearSession = true) {
 function showEvidence(title: string, sources: SourceRef[], notes: string[] = []) {
   $("#evidence-heading").textContent = title;
   const fragments: HTMLElement[] = [];
-  for (const note of notes.filter(Boolean)) fragments.push(text("p", note, "evidence-note"));
+  const visibleNotes = notes.filter(Boolean);
+  if (visibleNotes.length > 0) {
+    const summary = document.createElement("div");
+    summary.className = "evidence-summary";
+    summary.append(...visibleNotes.map((note) => text("p", note, "evidence-note")));
+    fragments.push(summary);
+  }
+  const sourceList = document.createElement("ol");
+  sourceList.className = "evidence-source-list";
   for (const source of sources) {
-    const item = document.createElement("div");
+    const item = document.createElement("li");
     item.className = "evidence-source";
     item.append(text("strong", source.title), text("small", formatDate(source.date)));
-    fragments.push(item);
+    sourceList.append(item);
   }
+  if (sourceList.childElementCount > 0) fragments.push(sourceList);
   evidenceContent.replaceChildren(...fragments);
   openEvidencePanel();
 }
@@ -1281,12 +1389,15 @@ function showFactEvidence(fact: FactGroup) {
     history.append(paragraph);
   }
   const sources = fact.sources.map((source) => {
-    const item = document.createElement("div");
+    const item = document.createElement("li");
     item.className = "evidence-source";
     item.append(text("strong", source.title), text("small", formatDate(source.date)));
     return item;
   });
-  evidenceContent.replaceChildren(history, ...sources);
+  const sourceList = document.createElement("ol");
+  sourceList.className = "evidence-source-list";
+  sourceList.append(...sources);
+  evidenceContent.replaceChildren(history, sourceList);
   openEvidencePanel();
 }
 
@@ -1722,12 +1833,7 @@ function renderConfidenceImpact(report: FullReport) {
 
 function renderTone(report: FullReport) {
   const visibleMonths = new Set(
-    activePeriodMonths
-      ? report.deterministic.activityByMonth
-          .map((datum) => datum.label)
-          .filter((label) => /^\d{4}-\d{2}$/.test(label))
-          .slice(-activePeriodMonths)
-      : report.deterministic.activityByMonth.map((datum) => datum.label),
+    activityMonthWindow(report.deterministic, activePeriodMonths),
   );
   const counts =
     activePeriodMonths === null
@@ -1868,23 +1974,6 @@ function renderReflections(report: FullReport) {
   );
 }
 
-function renderActivity(report: FullReport) {
-  const activity = report.deterministic.activityByMonth;
-  const max = Math.max(1, ...activity.map((datum) => datum.value));
-  const chart = $("#activity-chart");
-  chart.replaceChildren(
-    ...activity.map((datum) => {
-      const bar = document.createElement("button");
-      bar.type = "button";
-      bar.className = "activity-bar";
-      bar.style.height = `${Math.max(3, (datum.value / max) * 100)}%`;
-      bar.dataset.label = `${datum.label}: ${formatNumber(datum.value)} conversations`;
-      bar.setAttribute("aria-label", bar.dataset.label);
-      return bar;
-    }),
-  );
-}
-
 function renderSearchResults(results: SearchResult[]) {
   searchResults.hidden = false;
   if (results.length === 0) {
@@ -1940,6 +2029,20 @@ atlasPeriod.addEventListener("change", () => {
     activePeriodMonths === null
       ? "Showing all available history in period-aware views."
       : `Showing the recent ${activePeriodMonths} months in period-aware views.`;
+});
+for (const button of document.querySelectorAll<HTMLButtonElement>("[data-rhythm-measure]")) {
+  button.addEventListener("click", () => {
+    activeRhythmMeasure = button.dataset.rhythmMeasure as typeof activeRhythmMeasure;
+    if (currentReport) renderReport(currentReport);
+    appStatus.textContent =
+      `Rhythms now show ${activeRhythmMeasure === "words" ? "approximate words" : "conversation count"}.`;
+  });
+}
+rhythmRoute.addEventListener("change", () => {
+  activeRhythmRouteId = rhythmRoute.value as typeof activeRhythmRouteId;
+  if (currentReport) renderReport(currentReport);
+  appStatus.textContent =
+    `Rhythms filtered to ${rhythmRoute.selectedOptions[0]?.textContent ?? "all conversations"}.`;
 });
 storyButton.addEventListener("click", () => {
   if (!currentReport) return;
@@ -2124,6 +2227,7 @@ window.addEventListener("pagehide", () => {
   if (graphFormationFrame !== null) window.cancelAnimationFrame(graphFormationFrame);
   graphFormationFrame = null;
   graphFormationResizeObserver.disconnect();
+  reportRouteObserver.disconnect();
   memoryChatWorker?.terminate();
   memoryChatWorker = null;
   worker.terminate();

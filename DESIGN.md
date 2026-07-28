@@ -205,7 +205,21 @@ language signals, repeat landscape, topic movement, and conversation shape.
 A single evidence-linked “Start here” row identifies the strongest overlapping
 question route in the selected period. Calendar cells are visual marks, not
 hundreds of tiny controls; the adjacent readable-data disclosure owns the
-source actions.
+source actions. Recent periods are literal calendar windows ending at the
+archive's latest month, so inactive months remain visible and the calendar may
+scroll horizontally without widening the page.
+
+Rhythms is the report's seventh longitudinal view: an Observable Plot cadence
+line that switches between conversation starts and approximate words, filters
+to any overlapping question route, and keeps the selected total, peak month,
+method, and readable data together. The report's semantic search belongs in the
+Topic map workbench rather than in the permanent report header.
+
+Timing, model selection, and evidence-threshold controls are useful during
+analysis but secondary after completion. They collapse into a native Analysis
+details disclosure once the map is ready. The route rail stays available for
+orientation, indicates the section nearest the reading position, and the
+evidence drawer groups inference notes separately from numbered sources.
 
 Story mode is a seven-slide, full-screen presentation of the same evidence.
 It preserves the active period and confidence threshold, keeps every claim

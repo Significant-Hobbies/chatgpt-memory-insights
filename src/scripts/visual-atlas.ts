@@ -1,11 +1,15 @@
 import type {
   EmotionBucket,
   FullReport,
+  QuestionLens,
   SourceRef,
   TrendState,
 } from "../lib/types";
+import { activityMonthWindow } from "../lib/period";
 import {
+  areaY,
   dot,
+  lineY,
   plot,
   rectY,
   ruleX,
@@ -17,6 +21,8 @@ type AtlasContext = {
   clearsConfidence: (score: number) => boolean;
   showEvidence: (title: string, sources: SourceRef[], notes?: string[]) => void;
   periodMonths: number | null;
+  rhythmMeasure: "conversations" | "words";
+  rhythmRouteId: "all" | QuestionLens["id"];
 };
 
 type RepeatPoint = {
@@ -126,17 +132,10 @@ function evidenceButton(
   return button;
 }
 
-function monthWindow(report: FullReport, periodMonths: number | null): string[] {
-  const months = report.deterministic.activityByMonth
-    .map((datum) => datum.label)
-    .filter((label) => /^\d{4}-\d{2}$/.test(label));
-  return periodMonths === null ? months : months.slice(-periodMonths);
-}
-
 function renderAtlasHighlight(report: FullReport, context: AtlasContext) {
   const button = document.querySelector<HTMLButtonElement>("#atlas-highlight");
   if (!button) return;
-  const months = new Set(monthWindow(report, context.periodMonths));
+  const months = new Set(activityMonthWindow(report.deterministic, context.periodMonths));
   const ranked = report.deterministic.lenses.categories
     .map((lens) => ({
       lens,
@@ -247,25 +246,35 @@ function renderActivityCalendar(report: FullReport, context: AtlasContext) {
     return;
   }
 
+  const selectedMonths = activityMonthWindow(report.deterministic, context.periodMonths);
+  if (selectedMonths.length === 0) {
+    chart.replaceChildren(emptyState("No dated conversations were available in this period."));
+    data.replaceChildren(element("p", "No dated daily activity in this period."));
+    return;
+  }
+  const selectedMonthSet = new Set(selectedMonths);
   const end = new Date(report.deterministic.dateRange.end * 1_000);
   end.setUTCHours(0, 0, 0, 0);
-  const endSundayOffset = 6 - end.getUTCDay();
-  end.setUTCDate(end.getUTCDate() + endSundayOffset);
-  const requestedWeeks =
-    context.periodMonths === null ? 52 : Math.max(13, Math.ceil(context.periodMonths * 4.35));
-  const visibleWeeks = Math.min(52, requestedWeeks);
+  end.setUTCDate(end.getUTCDate() + (6 - end.getUTCDay()));
+  const start = new Date(`${selectedMonths[0]}-01T00:00:00Z`);
+  start.setUTCDate(start.getUTCDate() - start.getUTCDay());
+  const visibleWeeks = Math.max(
+    1,
+    Math.ceil((end.getTime() - start.getTime() + 86_400_000) / (7 * 86_400_000)),
+  );
+  const periodLabel =
+    context.periodMonths === null
+      ? `all history · ${selectedMonths.length} months`
+      : `recent ${context.periodMonths} months`;
   $("#activity-window-label").textContent =
-    context.periodMonths === null || requestedWeeks > 52
-      ? "Conversation starts · recent 52 weeks within the selected period"
-      : `Conversation starts · recent ${visibleWeeks} weeks`;
-  const start = new Date(end);
-  start.setUTCDate(start.getUTCDate() - visibleWeeks * 7 + 1);
+    `Conversation starts · ${periodLabel} · ${visibleWeeks} weeks`;
   const byDay = new Map(activity.map((datum) => [datum.label, datum]));
   const visibleDays = Array.from({ length: visibleWeeks * 7 }, (_, index) => {
     const date = new Date(start);
     date.setUTCDate(start.getUTCDate() + index);
     const label = date.toISOString().slice(0, 10);
-    return { date, label, datum: byDay.get(label) };
+    const month = label.slice(0, 7);
+    return { date, label, datum: selectedMonthSet.has(month) ? byDay.get(label) : undefined };
   });
   const max = Math.max(1, ...visibleDays.map(({ datum }) => datum?.value ?? 0));
 
@@ -314,7 +323,20 @@ function renderActivityCalendar(report: FullReport, context: AtlasContext) {
     }),
     element("span", "Busy"),
   );
-  chart.replaceChildren(monthLine, calendarBody, scale);
+  const calendarWindow = element("div", undefined, "calendar-window");
+  calendarWindow.style.setProperty("--week-count", String(visibleWeeks));
+  calendarWindow.append(monthLine, calendarBody);
+  const calendarScroll = element("div", undefined, "calendar-scroll");
+  calendarScroll.tabIndex = 0;
+  calendarScroll.setAttribute(
+    "aria-label",
+    `Daily conversation activity for ${periodLabel}. Scroll horizontally for earlier dates.`,
+  );
+  calendarScroll.append(calendarWindow);
+  chart.replaceChildren(calendarScroll, scale);
+  window.requestAnimationFrame(() => {
+    calendarScroll.scrollLeft = calendarScroll.scrollWidth;
+  });
 
   const active = visibleDays.filter(({ datum }) => (datum?.value ?? 0) > 0).reverse();
   data.replaceChildren(
@@ -325,10 +347,10 @@ function renderActivityCalendar(report: FullReport, context: AtlasContext) {
             `${formatNumber(datum?.value ?? 0)} conversation${datum?.value === 1 ? "" : "s"}`,
             datum?.sources ?? [],
             context,
-            [`Daily activity in the visible ${visibleWeeks}-week window.`],
+            [`Daily activity in the selected ${periodLabel} window.`],
           ),
         )
-      : [element("p", `No active days in the visible ${visibleWeeks}-week window.`)]),
+      : [element("p", `No active days in the selected ${periodLabel} window.`)]),
   );
 }
 
@@ -337,7 +359,7 @@ function renderQuestionMix(report: FullReport, context: AtlasContext) {
   const legend = $("#question-mix-legend");
   const data = $("#question-mix-data");
   chart.replaceChildren();
-  const months = monthWindow(report, context.periodMonths);
+  const months = activityMonthWindow(report.deterministic, context.periodMonths);
   $("#question-window-label").textContent =
     `Top five overlapping query routes · ${context.periodMonths === null ? "all history" : `recent ${context.periodMonths} months`}`;
   const lenses = report.deterministic.lenses.categories
@@ -457,7 +479,7 @@ function renderQuestionMix(report: FullReport, context: AtlasContext) {
 function renderLanguageMatrix(report: FullReport, context: AtlasContext) {
   const chart = $("#language-matrix");
   const data = $("#language-matrix-data");
-  const months = monthWindow(report, context.periodMonths);
+  const months = activityMonthWindow(report.deterministic, context.periodMonths);
   $("#language-window-label").textContent =
     `Dominant vocabulary cue per query · ${context.periodMonths === null ? "all history" : `recent ${context.periodMonths} months`}`;
   const emotions = report.deterministic.emotions;
@@ -539,7 +561,9 @@ function renderLanguageMatrix(report: FullReport, context: AtlasContext) {
 }
 
 function repeatPoints(report: FullReport, context: AtlasContext): RepeatPoint[] {
-  const visibleMonths = new Set(monthWindow(report, context.periodMonths));
+  const visibleMonths = new Set(
+    activityMonthWindow(report.deterministic, context.periodMonths),
+  );
   const exact: RepeatPoint[] = report.deterministic.exactRepeats.map((repeat) => ({
     id: repeat.id,
     label: repeat.representative,
@@ -699,7 +723,7 @@ function renderTopicMomentum(report: FullReport, context: AtlasContext) {
     data.replaceChildren(element("p", "Topic momentum appears after semantic analysis."));
     return;
   }
-  const selectedMonths = monthWindow(report, context.periodMonths);
+  const selectedMonths = activityMonthWindow(report.deterministic, context.periodMonths);
   const topics = report.semantic.topics
     .map((topic) => ({
       ...topic,
@@ -727,9 +751,20 @@ function renderTopicMomentum(report: FullReport, context: AtlasContext) {
   const plotTopics = topics.map((topic, index) => ({
     ...topic,
     normalizedMomentum: topic.momentum / maxMomentum,
-    shortLabel: index < 8 ? truncate(topic.label.split(" · ")[0], 21) : "",
+    shortLabel: index < 6 ? truncate(topic.label.split(" · ")[0], 18) : "",
     fill: `url(#atlas-dither-${Object.keys(TREND_COLORS).indexOf(topic.trend)})`,
   }));
+  const labelGap = Math.max(4, Math.ceil(Math.max(...topics.map((topic) => topic.selectedCount)) * 0.08));
+  let previousLabelY = -Infinity;
+  const labeledTopics = plotTopics
+    .filter((topic) => topic.shortLabel)
+    .slice()
+    .sort((left, right) => left.selectedCount - right.selectedCount)
+    .map((topic) => {
+      const labelY = Math.max(topic.selectedCount, previousLabelY + labelGap);
+      previousLabelY = labelY;
+      return { ...topic, labelY };
+    });
   const trendColors = Object.keys(TREND_COLORS).map(
     (trend) => TREND_COLORS[trend as TrendState],
   );
@@ -738,7 +773,7 @@ function renderTopicMomentum(report: FullReport, context: AtlasContext) {
     width: 620,
     height: 350,
     marginTop: 28,
-    marginRight: 32,
+    marginRight: 58,
     marginBottom: 52,
     marginLeft: 56,
     ariaLabel: "Semantic topics by local momentum and selected-period conversation count",
@@ -771,19 +806,30 @@ function renderTopicMomentum(report: FullReport, context: AtlasContext) {
         title: (topic) =>
           `${topic.label}\n${topic.selectedCount} selected-period conversations · ${TREND_LABELS[topic.trend as TrendState]}`,
       }),
-      plotText(
-        plotTopics.filter((topic) => topic.shortLabel),
-        {
+      ...labeledTopics.flatMap((topic) => [
+        lineY(
+          [
+            { x: topic.normalizedMomentum, y: topic.selectedCount },
+            { x: topic.normalizedMomentum, y: topic.labelY },
+          ],
+          {
+            x: "x",
+            y: "y",
+            stroke: "#9ba6aa",
+            strokeWidth: 0.8,
+          },
+        ),
+        plotText([topic], {
           x: "normalizedMomentum",
-          y: "selectedCount",
+          y: "labelY",
           text: "shortLabel",
-          dx: 9,
-          dy: -9,
-          textAnchor: "start",
+          dx: topic.normalizedMomentum > 0.45 ? -9 : 9,
+          dy: -7,
+          textAnchor: topic.normalizedMomentum > 0.45 ? "end" : "start",
           fontSize: 10,
           fill: "#26353c",
-        },
-      ),
+        }),
+      ]),
     ],
   });
   chart.append(plotElement);
@@ -873,6 +919,145 @@ function renderConversationShape(report: FullReport) {
   );
 }
 
+function renderActivityRhythms(report: FullReport, context: AtlasContext) {
+  const chart = $("#activity-chart");
+  const data = $("#rhythm-data-list");
+  const routeSelect = document.querySelector<HTMLSelectElement>("#rhythm-route");
+  const wordButton = document.querySelector<HTMLButtonElement>('[data-rhythm-measure="words"]');
+  const hasDetailedRhythms = Boolean(report.deterministic.activityRhythms?.length);
+  if (routeSelect) routeSelect.disabled = !hasDetailedRhythms;
+  if (wordButton) wordButton.disabled = !hasDetailedRhythms;
+
+  const measure = hasDetailedRhythms ? context.rhythmMeasure : "conversations";
+  const routeId = hasDetailedRhythms ? context.rhythmRouteId : "all";
+  const months = activityMonthWindow(report.deterministic, context.periodMonths);
+  const storedSeries = report.deterministic.activityRhythms?.find(
+    (series) => series.id === routeId,
+  );
+  const fallback = new Map(
+    report.deterministic.activityByMonth.map((datum) => [
+      datum.label,
+      {
+        label: datum.label,
+        conversations: datum.value,
+        messages: 0,
+        userPrompts: 0,
+        words: 0,
+      },
+    ]),
+  );
+  const byMonth = new Map(
+    (storedSeries?.byMonth ?? [...fallback.values()]).map((datum) => [datum.label, datum]),
+  );
+  const values = months.map((month) => ({
+    month,
+    value: byMonth.get(month)?.[measure] ?? 0,
+  }));
+  const metricLabel = measure === "words" ? "approximate words" : "conversations";
+  const routeLabel = storedSeries?.label ?? "All conversations";
+  const total = values.reduce((sum, datum) => sum + datum.value, 0);
+  const peak = values
+    .slice()
+    .sort((left, right) => right.value - left.value || right.month.localeCompare(left.month))[0];
+  $("#rhythm-total").textContent = `${formatNumber(total)} ${metricLabel}`;
+  $("#rhythm-peak").textContent =
+    peak && peak.value > 0 ? `${formatMonth(peak.month)} · ${formatNumber(peak.value)}` : "No activity";
+  $("#rhythm-method").textContent = hasDetailedRhythms
+    ? routeId === "all"
+      ? `${routeLabel} · ${metricLabel} by conversation start month.`
+      : `${routeLabel} route · ${metricLabel} from complete matched conversations. Routes overlap.`
+    : "Conversation starts from an older saved report. Re-import for words and route filters.";
+  chart.setAttribute(
+    "aria-label",
+    `${routeLabel}: ${metricLabel} by month in the selected period`,
+  );
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-rhythm-measure]")) {
+    button.setAttribute(
+      "aria-pressed",
+      String(button.dataset.rhythmMeasure === measure),
+    );
+  }
+  if (routeSelect) routeSelect.value = routeId;
+
+  if (values.length === 0) {
+    chart.replaceChildren(emptyState("No monthly activity was available in this period."));
+    data.replaceChildren(element("p", "No monthly activity was available in this period."));
+    return;
+  }
+  const peakValue = Math.max(1, ...values.map((datum) => datum.value));
+  const plotElement = plot({
+    className: "atlas-observable-plot",
+    width: 1040,
+    height: 340,
+    marginTop: 28,
+    marginRight: 34,
+    marginBottom: 48,
+    marginLeft: measure === "words" ? 78 : 58,
+    ariaLabel: `${routeLabel}: ${metricLabel} by month`,
+    ariaDescription:
+      routeId === "all"
+        ? `Monthly ${metricLabel} across the selected period.`
+        : `Monthly ${metricLabel} for complete conversations with a matching ${routeLabel} query. Routes overlap.`,
+    style: {
+      background: "transparent",
+      color: "#58666d",
+      fontFamily: 'ui-monospace, "SFMono-Regular", Consolas, monospace',
+      fontSize: "11px",
+    },
+    x: {
+      type: "band",
+      label: null,
+      tickFormat: (value) => formatMonth(String(value)),
+    },
+    y: {
+      grid: true,
+      label: metricLabel,
+      domain: [0, peakValue],
+      nice: true,
+      tickFormat: (value) => formatNumber(Number(value)),
+    },
+    marks: [
+      ruleY([0], { stroke: "#9aa7a4" }),
+      areaY(values, {
+        x: "month",
+        y: "value",
+        curve: "monotone-x",
+        fill: "#2157d5",
+        fillOpacity: 0.13,
+      }),
+      lineY(values, {
+        x: "month",
+        y: "value",
+        curve: "monotone-x",
+        stroke: "#2157d5",
+        strokeWidth: 2.5,
+      }),
+      dot(values, {
+        x: "month",
+        y: "value",
+        r: 3.5,
+        fill: "#ffffff",
+        stroke: "#2157d5",
+        strokeWidth: 2,
+        title: (datum) =>
+          `${datum.month}\n${formatNumber(datum.value)} ${metricLabel}`,
+      }),
+    ],
+  });
+  plotElement.classList.add("rhythm-observable-plot");
+  chart.replaceChildren(plotElement);
+  data.replaceChildren(
+    ...values.map((datum) =>
+      element(
+        "p",
+        `${datum.month} · ${formatNumber(datum.value)} ${metricLabel}`,
+        "rhythm-data-row",
+      ),
+    ),
+  );
+}
+
 export function renderVisualAtlas(report: FullReport, context: AtlasContext) {
   $("#atlas-period-note").textContent =
     context.periodMonths === null
@@ -885,4 +1070,5 @@ export function renderVisualAtlas(report: FullReport, context: AtlasContext) {
   renderRepeatLandscape(report, context);
   renderTopicMomentum(report, context);
   renderConversationShape(report);
+  renderActivityRhythms(report, context);
 }

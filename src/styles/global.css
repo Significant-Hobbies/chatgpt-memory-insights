@@ -84,19 +84,34 @@ button {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 236px minmax(0, 1fr);
+  grid-template-columns: 256px minmax(0, 1fr);
   min-height: 100vh;
 }
 
 .route-rail {
   position: sticky;
   top: 0;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 2rem 1.5rem 1.25rem;
+  padding: 1.5rem 1.25rem 1.25rem;
   border-right: 1px solid var(--rule);
-  background: var(--paper-raised);
+  background:
+    radial-gradient(circle at 1px 1px, rgb(33 87 213 / 8%) 0 0.8px, transparent 1px)
+      0 0 / 7px 7px,
+    var(--paper-raised);
+}
+
+.route-rail::after {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+  content: "";
+  background: var(--cobalt);
 }
 
 .brand {
@@ -108,6 +123,8 @@ button {
   font-weight: 800;
   letter-spacing: -0.025em;
   text-decoration: none;
+  padding: 0.35rem 0 1.1rem;
+  border-bottom: 1px solid var(--ink);
 }
 
 .brand svg {
@@ -129,7 +146,8 @@ button {
 }
 
 .brand-note {
-  margin: 0.75rem 0 3rem;
+  max-width: 22ch;
+  margin: 0.85rem 0 2rem;
   color: var(--ink-muted);
   font-size: 0.78rem;
   line-height: 1.5;
@@ -147,30 +165,58 @@ button {
 
 .route-rail nav {
   display: grid;
-  gap: 0.1rem;
+  gap: 0;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  scrollbar-width: thin;
 }
 
 .route-rail nav a {
   position: relative;
+  z-index: 0;
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  min-height: 2.6rem;
-  padding: 0.4rem 0;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.55rem;
   color: var(--ink);
   font-size: 0.86rem;
   text-decoration: none;
+  transition:
+    color 160ms ease-out,
+    background-color 160ms ease-out;
 }
 
 .route-rail nav a::before {
   position: absolute;
   z-index: -1;
   top: 50%;
-  left: 0.38rem;
+  left: 0.93rem;
   width: 1px;
   height: 2.7rem;
   content: "";
   background: var(--rule);
+}
+
+.route-rail nav a:hover,
+.route-rail nav a:focus-visible,
+.route-rail nav a[aria-current="location"] {
+  color: var(--cobalt);
+  background: color-mix(in srgb, var(--cobalt) 8%, var(--paper-raised));
+}
+
+.route-rail nav a[aria-current="location"] {
+  font-weight: 800;
+}
+
+.route-rail nav a[aria-current="location"]::after {
+  position: absolute;
+  top: 0.45rem;
+  right: 0;
+  bottom: 0.45rem;
+  width: 2px;
+  content: "";
+  background: currentColor;
 }
 
 .route-rail nav a:last-child::before {
@@ -213,6 +259,8 @@ button {
   margin-top: auto;
   color: var(--ink-muted);
   font-size: 0.72rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
 }
 
 .rail-footer > a {
@@ -778,9 +826,68 @@ h2 {
   background: var(--paper-raised);
 }
 
+.analysis-details {
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper-raised);
+}
+
+.analysis-details > summary {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 4.6rem;
+  padding: 0.85rem 3rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.analysis-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.analysis-details > summary::after {
+  flex: 0 0 auto;
+  width: 1.7rem;
+  color: var(--cobalt);
+  content: "+";
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 1.4rem;
+  text-align: right;
+}
+
+.analysis-details[open] > summary::after {
+  content: "−";
+}
+
+.analysis-details > summary > span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.analysis-details > summary strong {
+  font-size: 0.9rem;
+}
+
+.analysis-details > summary small,
+.analysis-details > summary > b {
+  color: var(--ink-muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.analysis-details > summary > b {
+  margin-left: auto;
+}
+
+.analysis-details-body {
+  border-top: 1px solid var(--rule);
+}
+
 .analysis-timing-board {
   padding: 2rem 3rem 2.25rem;
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid var(--rule);
   background:
     radial-gradient(circle at 1px 1px, rgb(33 87 213 / 9%) 0 0.8px, transparent 1px)
       0 0 / 6px 6px,
@@ -880,12 +987,10 @@ h2 {
 }
 
 .memory-search {
-  position: sticky;
-  z-index: 20;
-  top: 0;
-  padding: 1.1rem 3rem 1.25rem;
-  border-bottom: 1px solid var(--rule);
-  background: rgb(243 245 242 / 96%);
+  position: relative;
+  z-index: 10;
+  margin-bottom: 2.25rem;
+  padding: 0;
 }
 
 .memory-search > label {
@@ -934,9 +1039,9 @@ h2 {
 
 .search-results {
   position: absolute;
-  top: calc(100% - 0.25rem);
-  right: 3rem;
-  left: 3rem;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  left: 0;
   max-height: min(60vh, 520px);
   overflow: auto;
   border: 1px solid var(--ink);
@@ -1035,7 +1140,8 @@ h2 {
 .baseline-stats dd {
   margin: 0.55rem 0 0;
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-  font-size: clamp(1.35rem, 2.4vw, 2.35rem);
+  font-size: clamp(1.25rem, 1.9vw, 2rem);
+  font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
 }
 
@@ -1290,6 +1396,23 @@ h2 {
   font-size: 0.58rem;
 }
 
+.calendar-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.2rem 0 0.7rem;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: var(--rule-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.calendar-window {
+  min-width: max(100%, calc(var(--week-count) * 0.82rem + 2.2rem));
+}
+
+.calendar-scroll:focus-visible {
+  outline-offset: 0.2rem;
+}
+
 .calendar-months span {
   overflow: visible;
   white-space: nowrap;
@@ -1433,6 +1556,10 @@ h2 {
 
 .atlas-observable-plot [role="button"]:hover {
   filter: saturate(1.3) drop-shadow(0 2px 2px rgb(16 27 36 / 20%));
+}
+
+.topic-momentum .atlas-observable-plot {
+  overflow: hidden;
 }
 
 .language-grid {
@@ -2712,36 +2839,132 @@ h2 {
   line-height: 1.45;
 }
 
-.activity-chart {
-  display: flex;
+.rhythm-toolbar {
+  display: grid;
+  grid-template-columns: minmax(20rem, 1fr) minmax(15rem, 0.55fr);
+  gap: 1.5rem;
   align-items: end;
-  gap: 3px;
-  min-height: 230px;
-  padding-top: 1rem;
-  border-bottom: 1px solid var(--ink);
+  margin-bottom: 1.25rem;
 }
 
-.activity-bar {
-  position: relative;
-  flex: 1;
-  min-width: 3px;
+.rhythm-measure {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+
+.rhythm-measure > span,
+.rhythm-toolbar label > span {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--ink-muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.rhythm-measure > span {
+  grid-column: 1 / -1;
+}
+
+.rhythm-measure button {
+  min-height: 3rem;
+  cursor: pointer;
+  border: 1px solid var(--rule);
+  background: var(--paper-raised);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.rhythm-measure button + button {
+  border-left: 0;
+}
+
+.rhythm-measure button[aria-pressed="true"] {
+  color: white;
   background: var(--cobalt);
 }
 
-.activity-bar:hover::after,
-.activity-bar:focus::after {
-  position: absolute;
-  z-index: 2;
-  bottom: calc(100% + 0.5rem);
-  left: 50%;
-  width: max-content;
-  padding: 0.35rem 0.5rem;
-  content: attr(data-label);
-  transform: translateX(-50%);
-  color: white;
-  background: var(--ink);
+.rhythm-measure button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.rhythm-toolbar label {
+  display: grid;
+}
+
+.rhythm-toolbar select {
+  min-height: 3.1rem;
+  padding: 0.55rem 2.25rem 0.55rem 0.75rem;
+  cursor: pointer;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  color: var(--ink);
+  background: var(--paper-raised);
+  font-weight: 700;
+}
+
+.rhythm-summary {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.45fr) minmax(10rem, 0.45fr) minmax(18rem, 1.1fr);
+  border-block: 1px solid var(--ink);
+}
+
+.rhythm-summary > * {
+  min-width: 0;
+  margin: 0;
+  padding: 0.9rem 1rem;
+}
+
+.rhythm-summary > *:first-child {
+  padding-left: 0;
+}
+
+.rhythm-summary > * + * {
+  border-left: 1px solid var(--rule);
+}
+
+.rhythm-summary span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--ink-muted);
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-  font-size: 0.68rem;
+  font-size: 0.64rem;
+}
+
+.rhythm-summary strong {
+  font-size: clamp(1rem, 2vw, 1.35rem);
+}
+
+.rhythm-summary p {
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.activity-chart {
+  min-height: 340px;
+  padding-top: 1.25rem;
+  border-bottom: 1px solid var(--ink);
+}
+
+.rhythm-observable-plot {
+  overflow: hidden;
+}
+
+.rhythm-data {
+  margin-top: 0.85rem;
+}
+
+.rhythm-data-row {
+  margin: 0;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.72rem;
 }
 
 .methodology {
@@ -3084,15 +3307,27 @@ h2 {
   }
 }
 
+body.has-evidence {
+  overflow: hidden;
+}
+
+body.has-evidence::before {
+  position: fixed;
+  z-index: 55;
+  inset: 0;
+  content: "";
+  background: rgb(16 27 36 / 28%);
+}
+
 .evidence-panel {
   position: fixed;
   z-index: 60;
   top: 0;
   right: 0;
-  width: min(440px, 100%);
-  height: 100vh;
+  width: min(560px, 100%);
+  height: 100dvh;
   overflow: auto;
-  padding: 2.5rem 1.5rem;
+  padding: 4.5rem clamp(1.5rem, 4vw, 3rem) 4rem;
   border-left: 1px solid var(--ink);
   background: var(--paper-raised);
   box-shadow: -14px 0 38px rgb(16 27 36 / 20%);
@@ -3100,10 +3335,10 @@ h2 {
 
 .evidence-close {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  width: 2.4rem;
-  height: 2.4rem;
+  top: 1.4rem;
+  right: 1.4rem;
+  width: 2.8rem;
+  height: 2.8rem;
   cursor: pointer;
   border: 1px solid var(--ink);
   background: var(--paper-raised);
@@ -3111,21 +3346,66 @@ h2 {
 }
 
 .evidence-panel h2 {
+  max-width: 13ch;
+  margin-bottom: 2.5rem;
+  font-size: clamp(2.15rem, 5vw, 3.8rem);
+  line-height: 0.98;
+}
+
+.evidence-summary {
+  display: grid;
+  gap: 0.75rem;
   margin-bottom: 2rem;
+  padding: 1.25rem 0;
+  border-block: 1px solid var(--ink);
+}
+
+.evidence-summary p {
+  max-width: 52ch;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.evidence-summary p:first-child {
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.evidence-source-list {
+  margin: 0;
+  padding: 0;
+  counter-reset: evidence-source;
+  list-style: none;
 }
 
 .evidence-source {
-  padding: 1rem 0;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 0.35rem 0.8rem;
+  padding: 1.2rem 0;
   border-top: 1px solid var(--rule);
+  counter-increment: evidence-source;
+}
+
+.evidence-source::before {
+  grid-row: 1 / span 2;
+  color: var(--cobalt);
+  content: counter(evidence-source, decimal-leading-zero);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.68rem;
 }
 
 .evidence-source strong {
   display: block;
+  grid-column: 2;
+  line-height: 1.35;
 }
 
 .evidence-source small {
   display: block;
-  margin-top: 0.35rem;
+  grid-column: 2;
+  margin-top: 0;
   color: var(--ink-muted);
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
 }
@@ -3264,7 +3544,7 @@ h2 {
   grid-template-columns: minmax(0, 0.85fr) minmax(360px, 1.15fr);
   gap: 3rem;
   padding: 1.4rem 3rem;
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 0;
   background: var(--paper-raised);
 }
 
@@ -3788,7 +4068,6 @@ h2 {
   .report-header,
   .platform-section,
   .map-panel,
-  .memory-search,
   .analysis-lens {
     padding-right: 1rem;
     padding-left: 1rem;
@@ -3810,6 +4089,30 @@ h2 {
   .atlas-period-control {
     grid-template-columns: 1fr;
     width: 100%;
+  }
+
+  .analysis-details > summary {
+    align-items: flex-start;
+    padding-inline: 1rem;
+  }
+
+  .analysis-details > summary > b {
+    display: none;
+  }
+
+  .rhythm-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .rhythm-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .rhythm-summary > p {
+    grid-column: 1 / -1;
+    padding-left: 0;
+    border-top: 1px solid var(--rule);
+    border-left: 0;
   }
 
   .atlas-period-control small {
@@ -4106,7 +4409,7 @@ h2 {
   }
 
   .activity-chart {
-    min-height: 170px;
+    min-height: 280px;
   }
 
   .methodology {
