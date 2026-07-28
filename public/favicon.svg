@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Memory Map</title>
   <rect width="64" height="64" rx="14" fill="#3157d5"/>
   <path
     d="M14 17 30 28 50 15M30 28l2 22M14 47l18 3 18-15"
