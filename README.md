@@ -19,6 +19,16 @@ histories. The visitor can override that choice before import.
 
 Production: <https://chatgpt.significanthobbies.com>
 
+## Get your ChatGPT export
+
+In ChatGPT, open your profile menu and choose **Settings → Data controls →
+Export data → Export**, then confirm the request. OpenAI sends an email or SMS
+when the export is ready; download the ZIP and import it without unzipping it.
+Exports can take up to seven days, and the download link expires after 24
+hours. See OpenAI's
+[official export instructions](https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data)
+or use the [Privacy Portal](https://privacy.openai.com/).
+
 ## Develop
 
 ```bash

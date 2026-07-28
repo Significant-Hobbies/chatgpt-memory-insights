@@ -47,6 +47,8 @@ or personality claims.
   `https://chatgpt.significanthobbies.com`
 - 2026-07-28 — expanded insight release deployed and smoke-tested on the custom
   production domain
+- 2026-07-28 — official ChatGPT export instructions and Privacy Portal fallback
+  added to the import onboarding
 
 ## Products
 
@@ -79,6 +81,8 @@ or personality claims.
   spikes, recurring terms, dormant topics, and activity peaks.
 - Explicit opt-in IndexedDB save, restore, version rejection, and forget flow.
 - Responsive import, progress, report, evidence, empty, and recovery states.
+- Native, accessible export guidance with current official OpenAI routes,
+  delivery timing, ZIP handling, and account-availability caveats.
 
 ## Todo / Planned / Deferred / Blocked
 

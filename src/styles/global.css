@@ -264,6 +264,104 @@ h2 {
   line-height: 1.7;
 }
 
+.export-guide {
+  max-width: 890px;
+  margin-top: 2.25rem;
+  border-block: 1px solid var(--ink);
+  background: rgb(255 255 255 / 40%);
+}
+
+.export-guide summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  min-height: 3.5rem;
+  padding: 0.75rem 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.export-guide summary::-webkit-details-marker {
+  display: none;
+}
+
+.export-guide summary::after {
+  color: var(--cobalt);
+  content: "+";
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 1.35rem;
+}
+
+.export-guide[open] summary::after {
+  content: "−";
+}
+
+.export-guide summary > span {
+  color: var(--cobalt);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.export-guide-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(240px, 0.75fr);
+  gap: 1.5rem 3rem;
+  padding: 0.5rem 0 1.5rem;
+  border-top: 1px solid var(--rule);
+}
+
+.export-guide ol {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 1.25rem 0 0 1.3rem;
+}
+
+.export-guide li {
+  padding-left: 0.35rem;
+  line-height: 1.55;
+}
+
+.export-guide-notes {
+  padding-top: 1.25rem;
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.export-guide-notes p {
+  margin: 0 0 0.75rem;
+}
+
+.export-guide-links {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.export-guide-links a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+  background: var(--paper-raised);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.export-guide-links a:hover {
+  border-color: var(--cobalt);
+  color: var(--cobalt);
+}
+
 .import-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
@@ -1931,6 +2029,33 @@ h2 {
 
   .analysis-setup {
     margin-top: 2.5rem;
+  }
+
+  .export-guide summary {
+    grid-template-columns: 1fr auto;
+    gap: 0.25rem 1rem;
+  }
+
+  .export-guide summary > span {
+    grid-column: 1;
+  }
+
+  .export-guide summary > strong {
+    grid-column: 1;
+  }
+
+  .export-guide summary::after {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+  }
+
+  .export-guide-body {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .export-guide-links {
+    grid-column: 1;
   }
 
   .model-profile-options {
