@@ -75,7 +75,8 @@ sync, and verified medical, emotional, or personality claims.
 - 2026-07-28 — exact calendar-period filtering, filterable conversation/word
   cadence, repaired topic-momentum labels, collapsed one-time analysis details,
   relocated search, refined route rail and evidence drawer, and a custom
-  favicon completed; production deployment was not performed
+  favicon released and smoke-tested at
+  `https://chatgpt.significanthobbies.com`
 
 ## Products
 
