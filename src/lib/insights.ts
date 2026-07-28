@@ -606,6 +606,7 @@ export function buildDeterministicReport(
   const prompts = conversations.flatMap((conversation) => conversation.prompts);
   const dates = conversations.map((conversation) => conversation.date).filter(Boolean);
   const activity = new Map<string, number>();
+  const dailyActivity = new Map<string, ConversationRecord[]>();
   const weekday = new Map<string, number>();
   const models = new Map<string, number>();
   const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -613,6 +614,10 @@ export function buildDeterministicReport(
   for (const conversation of conversations) {
     activity.set(monthKey(conversation.date), (activity.get(monthKey(conversation.date)) ?? 0) + 1);
     if (conversation.date) {
+      const day = dateKey(conversation.date);
+      const dayConversations = dailyActivity.get(day) ?? [];
+      dayConversations.push(conversation);
+      dailyActivity.set(day, dayConversations);
       const label = weekdays[new Date(conversation.date * 1_000).getUTCDay()];
       weekday.set(label, (weekday.get(label) ?? 0) + 1);
     }
@@ -638,6 +643,17 @@ export function buildDeterministicReport(
       start: dates.length ? Math.min(...dates) : 0,
       end: dates.length ? Math.max(...dates) : 0,
     },
+    activityByDay: [...dailyActivity.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([label, dayConversations]) => ({
+        label,
+        value: dayConversations.length,
+        sources: dayConversations
+          .slice()
+          .sort((left, right) => right.date - left.date)
+          .slice(0, 12)
+          .map(({ conversationId, title, date }) => ({ conversationId, title, date })),
+      })),
     activityByMonth: [...activity.entries()]
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([label, value]) => ({ label, value })),

@@ -44,6 +44,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
 
         <nav id="report-nav" hidden>
           <p class="map-key">Routes</p>
+          <a href="#visual-atlas"><i class="route-dot route-red"></i>Visual atlas</a>
           <a href="#topic-map"><i class="route-dot route-blue"></i>Topic map</a>
           <a href="#memory-ledger"><i class="route-dot route-teal"></i>Memory ledger</a>
           <a href="#evolution"><i class="route-dot route-violet"></i>How it changed</a>
@@ -232,6 +233,9 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               <p id="report-meta" class="report-meta"></p>
             </div>
             <div class="report-actions">
+              <button id="open-story" class="button-story" type="button">
+                Play your story
+              </button>
               <button id="save-memory" class="button-secondary" type="button">
                 Keep on this device
               </button>
@@ -291,6 +295,152 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               <p id="sampling-note" class="method-note"></p>
             </div>
             <dl id="overview-stats" class="baseline-stats"></dl>
+          </section>
+
+          <section
+            id="visual-atlas"
+            class="platform-section visual-atlas-section"
+            aria-labelledby="visual-atlas-heading"
+          >
+            <div class="section-heading atlas-heading">
+              <div>
+                <p class="map-key">Six ways to see the archive</p>
+                <h2 id="visual-atlas-heading">Visual atlas</h2>
+              </div>
+              <div class="atlas-period-control">
+                <label for="atlas-period">View period</label>
+                <select id="atlas-period">
+                  <option value="3">Recent 3 months</option>
+                  <option value="6">Recent 6 months</option>
+                  <option value="12" selected>Recent 12 months</option>
+                  <option value="24">Recent 24 months</option>
+                  <option value="all">All history</option>
+                </select>
+                <small id="atlas-period-note">
+                  Applied to chronological charts, query tone, and language signals.
+                </small>
+              </div>
+            </div>
+
+            <div class="atlas-key" aria-label="Visual atlas legend">
+              <span><i class="atlas-key-deterministic"></i>Full parsed export</span>
+              <span><i class="atlas-key-semantic"></i>Embedding-backed sample</span>
+              <span><i class="atlas-key-action"></i>Open a mark to inspect sources</span>
+            </div>
+
+            <button id="atlas-highlight" class="atlas-highlight" type="button" hidden>
+              <span>Start here · strongest signal in this period</span>
+              <strong id="atlas-highlight-title"></strong>
+              <small id="atlas-highlight-detail"></small>
+              <b>Open source conversations →</b>
+            </button>
+
+            <div class="visual-atlas-grid">
+              <figure class="atlas-figure activity-calendar-figure">
+                <figcaption>
+                  <span><b>01</b><strong>Activity calendar</strong></span>
+                  <small id="activity-window-label">Conversation starts · selected period</small>
+                </figcaption>
+                <div
+                  id="activity-calendar"
+                  class="activity-calendar"
+                  aria-label="Recent daily conversation activity"
+                ></div>
+                <details class="chart-data">
+                  <summary>Read activity data</summary>
+                  <div id="activity-calendar-data" class="chart-data-list"></div>
+                </details>
+              </figure>
+
+              <figure class="atlas-figure question-mix-figure">
+                <figcaption>
+                  <span><b>02</b><strong>Question mix over time</strong></span>
+                  <small id="question-window-label">Top five overlapping query routes</small>
+                </figcaption>
+                <div id="question-mix-legend" class="chart-legend"></div>
+                <div
+                  id="question-mix-chart"
+                  class="atlas-plot question-mix-chart"
+                  aria-label="Question lens activity over the recent twelve months"
+                ></div>
+                <details class="chart-data">
+                  <summary>Read question-mix data</summary>
+                  <div id="question-mix-data" class="chart-data-list"></div>
+                </details>
+              </figure>
+
+              <figure class="atlas-figure language-matrix-figure">
+                <figcaption>
+                  <span><b>03</b><strong>Language signal matrix</strong></span>
+                  <small id="language-window-label">Dominant vocabulary cue per query</small>
+                </figcaption>
+                <div
+                  id="language-matrix"
+                  class="language-matrix"
+                  aria-label="Query wording signals by month"
+                ></div>
+                <p class="atlas-caveat">
+                  Wording signals, not feelings, personality, or diagnosis.
+                </p>
+                <details class="chart-data">
+                  <summary>Read language-signal data</summary>
+                  <div id="language-matrix-data" class="chart-data-list"></div>
+                </details>
+              </figure>
+
+              <figure class="atlas-figure repeat-landscape-figure">
+                <figcaption>
+                  <span><b>04</b><strong>Repeat landscape</strong></span>
+                  <small>Frequency × time span · exact and semantic groups</small>
+                </figcaption>
+                <div
+                  id="repeat-landscape"
+                  class="atlas-plot repeat-landscape"
+                  aria-label="Repeated question groups by frequency and time span"
+                ></div>
+                <details class="chart-data">
+                  <summary>Read repeat data</summary>
+                  <div id="repeat-landscape-data" class="chart-data-list"></div>
+                </details>
+              </figure>
+
+              <figure class="atlas-figure topic-momentum-figure">
+                <figcaption>
+                  <span><b>05</b><strong>Topic momentum</strong></span>
+                  <small>Fading ← local movement → emerging</small>
+                </figcaption>
+                <div id="topic-momentum-state" class="atlas-forming">
+                  <span></span>
+                  <strong>Topic movement is still forming.</strong>
+                  <small>The other four deterministic views are already usable.</small>
+                </div>
+                <div
+                  id="topic-momentum"
+                  class="atlas-plot topic-momentum is-hidden"
+                  aria-label="Semantic topics by momentum and conversation count"
+                ></div>
+                <details class="chart-data">
+                  <summary>Read topic-momentum data</summary>
+                  <div id="topic-momentum-data" class="chart-data-list"></div>
+                </details>
+              </figure>
+
+              <figure class="atlas-figure conversation-shape-figure">
+                <figcaption>
+                  <span><b>06</b><strong>Conversation shape</strong></span>
+                  <small>Depth, weekday rhythm, and model mix · all history</small>
+                </figcaption>
+                <div
+                  id="conversation-shape"
+                  class="conversation-shape"
+                  aria-label="Conversation depth, weekday rhythm, and model usage"
+                ></div>
+                <details class="chart-data">
+                  <summary>Read conversation-shape data</summary>
+                  <div id="conversation-shape-data" class="chart-data-list"></div>
+                </details>
+              </figure>
+            </div>
           </section>
 
           <div class="workbench">
@@ -506,6 +656,26 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
         </section>
       </main>
     </div>
+
+    <dialog id="story-dialog" class="story-dialog" aria-labelledby="story-heading">
+      <div class="story-shell">
+        <header class="story-header">
+          <span class="story-brand">Memory Map</span>
+          <p id="story-position" aria-live="polite">Slide 1 of 7</p>
+          <button id="close-story" type="button" aria-label="Close story">×</button>
+        </header>
+        <nav id="story-progress" class="story-progress" aria-label="Story slides"></nav>
+        <main id="story-slide" class="story-slide" tabindex="-1">
+          <p class="story-eyebrow">Your history, in motion</p>
+          <h2 id="story-heading">Your ChatGPT history, mapped.</h2>
+        </main>
+        <footer class="story-controls">
+          <button id="story-previous" type="button">← Previous</button>
+          <span>Use arrow keys or swipe</span>
+          <button id="story-next" type="button">Next →</button>
+        </footer>
+      </div>
+    </dialog>
 
     <aside
       id="evidence-panel"

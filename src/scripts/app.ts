@@ -21,6 +21,8 @@ import type {
   WorkerRequest,
   WorkerResponse,
 } from "../lib/types";
+import { createStoryController } from "./story";
+import { renderVisualAtlas } from "./visual-atlas";
 
 const $ = <T extends Element = HTMLElement>(selector: string): T => {
   const element = document.querySelector<T>(selector);
@@ -55,6 +57,8 @@ const confidenceInput = $<HTMLInputElement>("#confidence-input");
 const confidenceOutput = $<HTMLOutputElement>("#confidence-output");
 const reportConfidenceInput = $<HTMLInputElement>("#report-confidence-input");
 const reportConfidenceOutput = $<HTMLOutputElement>("#report-confidence-output");
+const atlasPeriod = $<HTMLSelectElement>("#atlas-period");
+const storyButton = $<HTMLButtonElement>("#open-story");
 
 let worker = createWorker();
 let currentReport: FullReport | null = null;
@@ -62,7 +66,9 @@ let currentSnapshot: MemorySnapshot | null = null;
 let ledgerStatus: FactGroup["status"] = "current";
 let activeConfidence = 65;
 let evolutionKind: "topics" | "domains" | "language" = "topics";
+let activePeriodMonths: number | null = 12;
 let evidenceReturnFocus: HTMLElement | SVGElement | null = null;
+const storyController = createStoryController({ showEvidence });
 
 function createWorker() {
   const nextWorker = new Worker(new URL("../workers/analyze.worker.ts", import.meta.url), {
@@ -159,6 +165,7 @@ function resetWorker() {
 }
 
 function resetApp() {
+  storyController.close();
   resetWorker();
   currentReport = null;
   currentSnapshot = null;
@@ -184,6 +191,10 @@ function closeEvidencePanel(restoreFocus = true) {
   if (evidencePanel.hidden) return;
   evidencePanel.hidden = true;
   appShell.inert = false;
+  if (restoreFocus && storyController.resumeFromEvidence()) {
+    evidenceReturnFocus = null;
+    return;
+  }
   if (restoreFocus && evidenceReturnFocus?.isConnected) evidenceReturnFocus.focus();
   evidenceReturnFocus = null;
 }
@@ -286,11 +297,18 @@ function renderReport(report: FullReport) {
   $("#date-range").textContent = `${formatDate(deterministic.dateRange.start)} — ${formatDate(
     deterministic.dateRange.end,
   )}`;
-  $("#tone-method").textContent = deterministic.tone.method;
-  $("#emotion-method").textContent = deterministic.emotions.method;
+  const periodLabel =
+    activePeriodMonths === null ? "All available history." : `Recent ${activePeriodMonths} months.`;
+  $("#tone-method").textContent = `${deterministic.tone.method} ${periodLabel}`;
+  $("#emotion-method").textContent = `${deterministic.emotions.method} ${periodLabel}`;
   renderTone(report);
   renderReflections(report);
   renderActivity(report);
+  renderVisualAtlas(report, {
+    clearsConfidence,
+    showEvidence,
+    periodMonths: activePeriodMonths,
+  });
   renderRepeats(report);
   renderQuestionLenses(report);
   renderEvolution(report);
@@ -961,7 +979,27 @@ function renderConfidenceImpact(report: FullReport) {
 }
 
 function renderTone(report: FullReport) {
-  const counts = report.deterministic.tone.counts;
+  const visibleMonths = new Set(
+    activePeriodMonths
+      ? report.deterministic.activityByMonth
+          .map((datum) => datum.label)
+          .filter((label) => /^\d{4}-\d{2}$/.test(label))
+          .slice(-activePeriodMonths)
+      : report.deterministic.activityByMonth.map((datum) => datum.label),
+  );
+  const counts =
+    activePeriodMonths === null
+      ? report.deterministic.tone.counts
+      : report.deterministic.tone.byMonth
+          .filter((datum) => visibleMonths.has(datum.month))
+          .reduce(
+            (totals, datum) => ({
+              positive: totals.positive + datum.positive,
+              neutral: totals.neutral + datum.neutral,
+              negative: totals.negative + datum.negative,
+            }),
+            { positive: 0, neutral: 0, negative: 0 },
+          );
   const total = counts.positive + counts.neutral + counts.negative;
   const labels = [
     ["positive", "Positive wording"],
@@ -985,7 +1023,28 @@ function renderTone(report: FullReport) {
     }),
   );
 
-  const emotionCounts = report.deterministic.emotions.counts;
+  const emotionCounts =
+    activePeriodMonths === null
+      ? report.deterministic.emotions.counts
+      : report.deterministic.emotions.byMonth
+          .filter((datum) => visibleMonths.has(datum.month))
+          .reduce(
+            (totals, datum) => {
+              for (const bucket of Object.keys(totals) as EmotionBucket[]) {
+                totals[bucket] += datum.counts[bucket];
+              }
+              return totals;
+            },
+            {
+              curiosity: 0,
+              frustration: 0,
+              urgency: 0,
+              uncertainty: 0,
+              excitement: 0,
+              appreciation: 0,
+              neutral: 0,
+            },
+          );
   const emotionTotal = Object.values(emotionCounts).reduce((sum, value) => sum + value, 0);
   const emotionLabels = [
     ["curiosity", "Curiosity", "Questions seeking explanation, understanding, or discovery"],
@@ -1012,9 +1071,14 @@ function renderTone(report: FullReport) {
         text("output", `${formatNumber(emotionCounts[bucket])} · ${formatPercent(proportion)}`),
       );
       button.addEventListener("click", () => {
-        showEvidence(`${label} wording`, report.deterministic.emotions.sources[bucket], [
+        const sources = report.deterministic.emotions.sources[bucket].filter(
+          (source) =>
+            activePeriodMonths === null ||
+            visibleMonths.has(new Date(source.date * 1_000).toISOString().slice(0, 7)),
+        );
+        showEvidence(`${label} wording`, sources, [
           description,
-          `${formatNumber(emotionCounts[bucket])} queries matched this dominant language signal.`,
+          `${formatNumber(emotionCounts[bucket])} queries matched this dominant language signal in the selected period.`,
           "This is a vocabulary cue, not an inference about how you felt.",
         ]);
       });
@@ -1126,6 +1190,23 @@ confidenceInput.addEventListener("input", () => setConfidence(Number(confidenceI
 reportConfidenceInput.addEventListener("input", () =>
   setConfidence(Number(reportConfidenceInput.value)),
 );
+atlasPeriod.addEventListener("change", () => {
+  activePeriodMonths = atlasPeriod.value === "all" ? null : Number(atlasPeriod.value);
+  if (!currentReport) return;
+  renderReport(currentReport);
+  appStatus.textContent =
+    activePeriodMonths === null
+      ? "Showing all available history in period-aware views."
+      : `Showing the recent ${activePeriodMonths} months in period-aware views.`;
+});
+storyButton.addEventListener("click", () => {
+  if (!currentReport) return;
+  storyController.open(currentReport, {
+    periodMonths: activePeriodMonths,
+    clearsConfidence,
+    launcher: storyButton,
+  });
+});
 
 for (const tab of document.querySelectorAll<HTMLButtonElement>("[data-evolution]")) {
   tab.addEventListener("click", () => {

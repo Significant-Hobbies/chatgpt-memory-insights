@@ -52,6 +52,12 @@ Route colors always pair with shape, label, or line pattern. Solid fields are
 flat; shadows are reserved for floating evidence drawers. Gradients are not
 part of the system.
 
+The Visual atlas and Story mode are bounded presentation layers within this
+system. They may use a sparse dither texture to distinguish data families and
+an oversized interchange ring as a route motif. The texture must remain
+diagrammatic rather than decorative; generic gradient surfaces remain out of
+scope.
+
 ## Typography
 
 - UI and narrative: `Arial`, `Helvetica Neue`, system sans-serif.
@@ -59,6 +65,9 @@ part of the system.
   `Consolas`, monospace.
 - Headings use condensed proportions through weight, tracking, and max width,
   not a decorative display font.
+- Story-mode display numerals and headlines may use `Georgia` as a bounded
+  editorial voice; the report, controls, labels, and evidence stay in the core
+  UI typography.
 - Labels use sentence case. All-caps is limited to tiny map keys and status
   codes.
 
@@ -152,6 +161,21 @@ A second vocabulary view distinguishes curiosity, frustration, urgency,
 uncertainty, excitement, appreciation, and neutral/direct wording. Each label
 defines the words it matched and remains visually secondary to source-backed
 memory insights.
+
+### Visual atlas and Story mode
+
+The atlas presents six coordinated views: daily activity, question mix,
+language signals, repeat landscape, topic movement, and conversation shape.
+A single evidence-linked “Start here” row identifies the strongest overlapping
+question route in the selected period. Calendar cells are visual marks, not
+hundreds of tiny controls; the adjacent readable-data disclosure owns the
+source actions.
+
+Story mode is a seven-slide, full-screen presentation of the same evidence.
+It preserves the active period and confidence threshold, keeps every claim
+qualified, and resumes the same slide after an evidence detour. Direct slide
+controls use full-size touch targets even when their visible route marks are
+thin.
 
 ### Questions your history asks you
 

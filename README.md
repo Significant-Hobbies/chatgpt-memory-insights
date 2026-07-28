@@ -19,7 +19,7 @@ histories. The visitor can override that choice before import.
 
 Production: <https://chatgpt.significanthobbies.com>
 
-The public `/about` capability atlas explains all 36 current product
+The public `/about` capability atlas explains all 39 current product
 capabilities, the browser-only data path, intended and unsupported use cases,
 and the complete path from ChatGPT export to searchable memory.
 

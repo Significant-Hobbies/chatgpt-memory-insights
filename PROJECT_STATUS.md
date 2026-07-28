@@ -25,6 +25,8 @@ or personality claims.
 - Cloudflare Pages for static hosting.
 - Hugging Face model files for the browser-loaded pinned
   `Xenova/all-MiniLM-L6-v2` embedding model.
+- Observable Plot for typed, framework-independent SVG charts in the visual
+  atlas.
 - npm packages listed in `package.json`; the runtime has no application API.
 
 ### Internal
@@ -49,8 +51,11 @@ or personality claims.
   production domain
 - 2026-07-28 — official ChatGPT export instructions and Privacy Portal fallback
   added to the import onboarding
-- 2026-07-28 — public value proposition and exhaustive 36-capability atlas
+- 2026-07-28 — public value proposition and exhaustive 39-capability atlas
   added at `/about`
+- 2026-07-28 — period-aware six-chart visual atlas, evidence-linked starting
+  insight, and seven-slide Story mode completed; production deployment was not
+  performed in this change
 
 ## Products
 
@@ -78,6 +83,10 @@ or personality claims.
   boundary evidence.
 - Longitudinal topic, question-domain, and language-signal views with emerging,
   fading, resurfacing, steady, and insufficient-evidence labels.
+- Period-aware visual atlas with daily activity, question mix, language
+  signals, repeat landscape, topic movement, and conversation-shape views.
+- Full-screen seven-slide Story mode with keyboard, swipe, touch, direct-slide,
+  evidence-detour, and reduced-motion support.
 - Interactive SVG topic map with a complete keyboard-accessible topic list.
 - Evidence-linked reflection questions for repeats, memory changes, wording
   spikes, recurring terms, dormant topics, and activity peaks.
@@ -97,3 +106,5 @@ or personality claims.
    product's private static-site boundary.
 3. Owner confirmation needed before adding the optional Fleet
    `docs/learning/new-things.md` study queue for the browser ML stack.
+4. Planned: deploy the visual-atlas and Story-mode release to production only
+   when the owner explicitly requests a production deployment.

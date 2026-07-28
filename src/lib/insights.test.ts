@@ -57,6 +57,41 @@ describe("deterministic insights", () => {
 
     expect(report.totals.conversations).toBe(3);
     expect(report.totals.longestStreak).toBe(3);
+    expect(report.activityByDay).toEqual([
+      {
+        label: "2023-11-14",
+        value: 1,
+        sources: [
+          {
+            conversationId: "a",
+            title: "Conversation a",
+            date: 1_700_000_000,
+          },
+        ],
+      },
+      {
+        label: "2023-11-15",
+        value: 1,
+        sources: [
+          {
+            conversationId: "b",
+            title: "Conversation b",
+            date: 1_700_086_400,
+          },
+        ],
+      },
+      {
+        label: "2023-11-16",
+        value: 1,
+        sources: [
+          {
+            conversationId: "c",
+            title: "Conversation c",
+            date: 1_700_172_800,
+          },
+        ],
+      },
+    ]);
     expect(report.exactRepeats).toHaveLength(1);
     expect(report.exactRepeats[0].count).toBe(2);
     expect(report.tone.counts.negative).toBe(2);
@@ -125,6 +160,23 @@ describe("deterministic insights", () => {
     expect(report.lenses.threads.likelyMultiThreaded).toBe(1);
     expect(report.lenses.threads.candidates[0].estimatedThreads).toBeGreaterThan(1);
     expect(() => structuredClone(report)).not.toThrow();
+  });
+
+  it("bounds daily evidence while preserving the full activity count", () => {
+    const day = 1_700_000_000;
+    const conversations = Array.from({ length: 15 }, (_, index) =>
+      conversation(
+        `day-${index}`,
+        day + index,
+        [prompt(`day-${index}`, `Question number ${index}?`, day + index, `day-${index}`)],
+      ),
+    );
+
+    const { report } = buildDeterministicReport(conversations);
+
+    expect(report.activityByDay).toHaveLength(1);
+    expect(report.activityByDay?.[0].value).toBe(15);
+    expect(report.activityByDay?.[0].sources).toHaveLength(12);
   });
 
   it("keeps lexical overlap transparent", () => {

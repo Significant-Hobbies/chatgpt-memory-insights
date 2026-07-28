@@ -39,6 +39,10 @@ export type CountDatum = {
   value: number;
 };
 
+export type ActivityDay = CountDatum & {
+  sources: SourceRef[];
+};
+
 export type ExactRepeat = {
   id: string;
   representative: string;
@@ -174,6 +178,7 @@ export type DeterministicReport = {
     longestStreak: number;
   };
   dateRange: { start: number; end: number };
+  activityByDay?: ActivityDay[];
   activityByMonth: CountDatum[];
   activityByWeekday: CountDatum[];
   modelUsage: CountDatum[];

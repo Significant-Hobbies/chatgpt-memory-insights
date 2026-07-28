@@ -2,7 +2,7 @@
   "$schema": "fleet.design-review.v1",
   "version": 1,
   "project": "chatgpt-memory-insights",
-  "target": "public value proposition page",
+  "target": "post-ingestion visual insight atlas",
   "mode": "preserve",
   "register": "product",
   "context": {
@@ -14,21 +14,21 @@
     "probes": [],
     "selected": "existing-design",
     "approval": "not-required",
-    "before": "artifacts/design/value-prop-before.png"
+    "before": "artifacts/design/before.png"
   },
   "evidence": {
     "screenshots": [
       {
         "width": 390,
-        "path": "artifacts/design/about-after-390.png"
+        "path": "artifacts/design/after-390.png"
       },
       {
         "width": 768,
-        "path": "artifacts/design/about-after-768.png"
+        "path": "artifacts/design/after-768.png"
       },
       {
         "width": 1440,
-        "path": "artifacts/design/about-after-1440.png"
+        "path": "artifacts/design/after-1440.png"
       }
     ],
     "projectCheck": {
@@ -40,7 +40,7 @@
       "maximum": 40
     },
     "audit": {
-      "score": 19,
+      "score": 18,
       "maximum": 20
     },
     "unresolved": {
@@ -49,15 +49,11 @@
     },
     "detector": {
       "posture": "advisory",
-      "findings": [
-        "CLI detector returned no findings for src/pages/about.astro",
-        "Initial touch-target P2 was fixed with 44px navigation and resource links",
-        "Browser overlay injection was unavailable because the evaluation surface is read-only"
-      ]
+      "findings": []
     }
   },
   "ownerFeedback": {
     "decision": "delegated",
-    "note": "Owner approved the complete product build and asked for a polished value proposition page; implementation and final design judgment were delegated."
+    "note": "Owner approved all proposed visual work and explicitly delegated the UI pass and sub-agent review."
   }
 }
