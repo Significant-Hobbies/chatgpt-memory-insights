@@ -49,6 +49,8 @@ or personality claims.
   production domain
 - 2026-07-28 — official ChatGPT export instructions and Privacy Portal fallback
   added to the import onboarding
+- 2026-07-28 — public value proposition and exhaustive 36-capability atlas
+  added at `/about`
 
 ## Products
 
@@ -83,6 +85,9 @@ or personality claims.
 - Responsive import, progress, report, evidence, empty, and recovery states.
 - Native, accessible export guidance with current official OpenAI routes,
   delivery timing, ZIP handling, and account-availability caveats.
+- Static public `/about` route with an illustrative memory-map mechanism,
+  exhaustive shipped capability routes, privacy architecture, fit and limit
+  guidance, export onboarding, and a direct path into analysis.
 
 ## Todo / Planned / Deferred / Blocked
 

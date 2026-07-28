@@ -206,12 +206,24 @@ button {
 }
 
 .rail-footer {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  display: grid;
+  gap: 0.75rem;
   margin-top: auto;
   color: var(--ink-muted);
   font-size: 0.72rem;
+}
+
+.rail-footer > a {
+  width: fit-content;
+  color: var(--ink);
+  font-weight: 700;
+  text-underline-offset: 0.2em;
+}
+
+.rail-privacy {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .privacy-mark {
@@ -262,6 +274,17 @@ h2 {
   color: var(--ink-muted);
   font-size: 1.08rem;
   line-height: 1.7;
+}
+
+.product-tour-link {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  margin-top: 1rem;
+  color: var(--cobalt);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-underline-offset: 0.2em;
 }
 
 .export-guide {

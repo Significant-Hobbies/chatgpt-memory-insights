@@ -2,7 +2,7 @@
   "$schema": "fleet.design-review.v1",
   "version": 1,
   "project": "chatgpt-memory-insights",
-  "target": "memory evolution, confidence controls, and conversation strands",
+  "target": "public value proposition page",
   "mode": "preserve",
   "register": "product",
   "context": {
@@ -14,21 +14,21 @@
     "probes": [],
     "selected": "existing-design",
     "approval": "not-required",
-    "before": "artifacts/design/before.jpg"
+    "before": "artifacts/design/value-prop-before.png"
   },
   "evidence": {
     "screenshots": [
       {
         "width": 390,
-        "path": "artifacts/design/after-390.png"
+        "path": "artifacts/design/about-after-390.png"
       },
       {
         "width": 768,
-        "path": "artifacts/design/after-768.png"
+        "path": "artifacts/design/about-after-768.png"
       },
       {
         "width": 1440,
-        "path": "artifacts/design/after-1440.png"
+        "path": "artifacts/design/about-after-1440.png"
       }
     ],
     "projectCheck": {
@@ -36,11 +36,11 @@
       "status": "pass"
     },
     "critique": {
-      "score": 36,
+      "score": 35,
       "maximum": 40
     },
     "audit": {
-      "score": 18,
+      "score": 19,
       "maximum": 20
     },
     "unresolved": {
@@ -50,14 +50,14 @@
     "detector": {
       "posture": "advisory",
       "findings": [
-        "layout-transition: fixed by converting progress width animation to transform",
-        "overused-font: intentional false positive; Arial is the documented transit-information typeface",
-        "codex-grid-background: intentional false positive; the grid is confined to the ZIP map field"
+        "CLI detector returned no findings for src/pages/about.astro",
+        "Initial touch-target P2 was fixed with 44px navigation and resource links",
+        "Browser overlay injection was unavailable because the evaluation surface is read-only"
       ]
     }
   },
   "ownerFeedback": {
     "decision": "delegated",
-    "note": "Owner approved all five product upgrades and delegated implementation and design judgment."
+    "note": "Owner approved the complete product build and asked for a polished value proposition page; implementation and final design judgment were delegated."
   }
 }
