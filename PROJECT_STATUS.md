@@ -66,6 +66,9 @@ sync, and verified medical, emotional, or personality claims.
   structured change/repeat retrieval, grounding validation, independent model
   unload, and single-tab analysis ownership completed; production deployment
   was not performed
+- 2026-07-28 — visual atlas, execution timing, and graph-routed Memory Chat
+  release deployed and smoke-tested at
+  `https://chatgpt.significanthobbies.com`
 
 ## Products
 
@@ -132,5 +135,3 @@ sync, and verified medical, emotional, or personality claims.
    product's private static-site boundary.
 3. Owner confirmation needed before adding the optional Fleet
    `docs/learning/new-things.md` study queue for the browser ML stack.
-4. Planned: deploy the visual-atlas and Story-mode release to production only
-   when the owner explicitly requests a production deployment.
