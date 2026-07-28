@@ -5,6 +5,7 @@ import { normalizeConversationChunk } from "../lib/export";
 import { resolveAnalysisSettings } from "../lib/analysis";
 import { buildDeterministicReport } from "../lib/insights";
 import { buildReflectionQuestions } from "../lib/reflections";
+import { AnalysisRunTimer } from "../lib/performance";
 import {
   buildLexicalIndex,
   buildSemanticMemory,
@@ -14,6 +15,7 @@ import {
 import type {
   ConversationRecord,
   AnalysisSettings,
+  AnalysisRuntime,
   FullReport,
   LexicalSearchEntry,
   MemorySnapshot,
@@ -27,9 +29,25 @@ let searchIndex: SearchEntry[] = [];
 let lexicalIndex: LexicalSearchEntry[] = [];
 let currentReport: FullReport | null = null;
 let generation = 0;
+let analysisTimer: AnalysisRunTimer | null = null;
+let analysisRuntime: AnalysisRuntime | undefined;
 
 function post(message: WorkerResponse) {
   worker.postMessage(message);
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error && "message" in error) {
+    return String((error as { message: unknown }).message);
+  }
+  if (typeof error === "string") return error;
+  try {
+    const serialized = JSON.stringify(error);
+    return serialized && serialized !== "{}" ? serialized : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function progress(
@@ -37,8 +55,17 @@ function progress(
   label: string,
   current: number,
   total: number,
+  runtime?: AnalysisRuntime,
 ) {
-  post({ type: "progress", phase, label, current, total });
+  if (runtime) analysisRuntime = runtime;
+  post({
+    type: "progress",
+    phase,
+    label,
+    current,
+    total,
+    timing: analysisTimer?.update(phase, current, total, runtime ?? analysisRuntime),
+  });
 }
 
 async function analyze(file: File, settings: AnalysisSettings) {
@@ -46,6 +73,8 @@ async function analyze(file: File, settings: AnalysisSettings) {
   searchIndex = [];
   lexicalIndex = [];
   currentReport = null;
+  analysisRuntime = undefined;
+  analysisTimer = new AnalysisRunTimer();
   progress("discover", "Reading archive directory", 0, 1);
 
   const zip = new ZipReader(new BlobReader(file));
@@ -91,6 +120,8 @@ async function analyze(file: File, settings: AnalysisSettings) {
       semantic: null,
       reflections: [],
     };
+    analysisTimer.markInitialInsights();
+    currentReport.performance = analysisTimer.summary("running");
     currentReport.reflections = buildReflectionQuestions(currentReport, deterministic.prompts);
     post({ type: "deterministic", report: currentReport });
 
@@ -106,13 +137,26 @@ async function analyze(file: File, settings: AnalysisSettings) {
       deterministic.facts,
       deterministic.report.lenses.threads.candidates.map((candidate) => candidate.id),
       analysis,
-      (label, current, total) => progress("embed", label, current, total),
+      (phase, label, current, total, runtime) =>
+        progress(phase, label, current, total, runtime),
     );
     if (activeGeneration !== generation) return;
 
     searchIndex = semantic.searchIndex;
     currentReport = { ...currentReport, semantic: semantic.report };
     currentReport.reflections = buildReflectionQuestions(currentReport, deterministic.prompts);
+    const model = semantic.report.model;
+    const semanticCandidateCount =
+      model.embeddedConversations +
+      model.embeddedQuestions +
+      model.embeddedFacts +
+      model.embeddedThreadPrompts +
+      (model.embeddedTopicAnchors ?? 0);
+    currentReport.performance = analysisTimer.summary(
+      "complete",
+      model.runtime,
+      semanticCandidateCount,
+    );
     const snapshot: MemorySnapshot = {
       version: 3,
       report: currentReport,
@@ -120,12 +164,19 @@ async function analyze(file: File, settings: AnalysisSettings) {
       lexicalIndex,
     };
     post({ type: "complete", report: currentReport, snapshot });
+    analysisTimer = null;
   } catch (error) {
+    try {
+      await disposeExtractor();
+    } catch {
+      // The worker will still surface the original analysis error.
+    }
     post({
       type: "error",
-      message: error instanceof Error ? error.message : "The archive could not be analyzed.",
+      message: errorMessage(error, "The archive could not be analyzed."),
       recoverable: Boolean(currentReport),
     });
+    analysisTimer = null;
   } finally {
     await zip.close();
   }
@@ -148,13 +199,14 @@ worker.addEventListener("message", async (event: MessageEvent<WorkerRequest>) =>
         searchIndex,
         lexicalIndex,
         currentReport?.analysis.resolvedModelProfile ?? "compact",
-        (label, current, total) => progress("embed", label, current, total),
+        (phase, label, current, total, runtime) =>
+          progress(phase, label, current, total, runtime),
       );
       post({ type: "search-results", query: request.query, results });
     } catch (error) {
       post({
         type: "error",
-        message: error instanceof Error ? error.message : "Memory search failed.",
+        message: errorMessage(error, "Memory search failed."),
         recoverable: true,
       });
     }
@@ -186,6 +238,8 @@ worker.addEventListener("message", async (event: MessageEvent<WorkerRequest>) =>
     return;
   }
   generation += 1;
+  analysisTimer = null;
+  analysisRuntime = undefined;
   searchIndex = [];
   lexicalIndex = [];
   currentReport = null;

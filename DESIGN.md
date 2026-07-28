@@ -94,7 +94,15 @@ route: parse, map, explore.
 
 One continuous route line carries the current stage. Completed stops are filled,
 the active stop pulses once, and future stops remain outlined. Byte and item
-counts use monospaced numerals.
+counts use monospaced numerals. A three-part timing board keeps total elapsed
+time, the current estimated wait, and the resolved compute route visible while
+the deterministic report appears behind it.
+
+After completion, the same route becomes an execution receipt. It separates the
+time to initial insight from the full end-to-end total and explicitly includes
+archive opening, parsing, model download and preparation, semantic mapping, and
+report assembly. Runtime, batch size, and preserved semantic-candidate coverage
+remain visible so a fast result does not hide reduced analysis.
 
 ### Topic map
 
@@ -151,6 +159,27 @@ badges.
 
 A full-width destination field accepts a natural-language query. Results show
 topic route, similarity, representative sources, and why the match appeared.
+
+### Graph memory chat
+
+The topic map and chat panel form one workbench on desktop: graph at left,
+conversation at right. A question adds a temporary query interchange, then
+draws the traversed routes to at most four topic nodes. A parallel five-stop
+ledger names question receipt, search, topic traversal, evidence packing, and
+local synthesis so the answer is never visually detached from retrieval.
+
+Memory Chat is an opt-in presentation layer over the existing hybrid index.
+The pinned 77M q8 model sees no more than six labelled excerpts and four recent
+turns. Its answer remains visibly distinct from memory state, must cite an
+S1–S6 evidence stop, and is withheld when the grounding check fails. Evidence
+buttons remain usable even when generation fails.
+
+### Browser resource safety
+
+Only one tab may own heavyweight archive analysis at a time. The generation
+worker loads only after semantic analysis and explicit consent; its model,
+approximate cached download, English focus, and local WASM route stay visible.
+Unload, reset, errors, and page exit terminate workers and release ownership.
 
 ### Query tone
 

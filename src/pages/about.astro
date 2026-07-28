@@ -71,7 +71,12 @@ const capabilityRoutes = [
       {
         title: "Visible model cost",
         detail:
-          "Shows the pinned model, revision, selection reason, and approximate first-download size: about 24 MB compact or 135 MB multilingual.",
+          "Shows the pinned model, revision, selection reason, and approximate first-download size: about 90 MB for accelerated compact analysis, 24 MB for compact compatibility mode, or 135 MB multilingual.",
+      },
+      {
+        title: "Accelerated browser inference",
+        detail:
+          "Uses WebGPU with larger bounded batches when the compact model and browser support it, then retries the complete ordered workload in portable WebAssembly mode when needed.",
       },
       {
         title: "Semantic topic clusters",
@@ -172,6 +177,36 @@ const capabilityRoutes = [
           "Search conversations, individual questions, fact candidates, topics, and semantic strands with a hybrid semantic and lexical index.",
       },
       {
+        title: "Visible graph traversal",
+        detail:
+          "Each memory question creates a temporary query node, highlights up to four topic routes, and shows the route from question to topic to evidence before an answer appears.",
+      },
+      {
+        title: "Local memory conversation",
+        detail:
+          "An optional pinned 77M browser model turns retrieved evidence into a short conversational answer without receiving the full ZIP.",
+      },
+      {
+        title: "Six-stop evidence boundary",
+        detail:
+          "The local generator receives at most six labelled excerpts and four recent chat turns, keeping context inspectable and browser work bounded.",
+      },
+      {
+        title: "Citation grounding validator",
+        detail:
+          "Generated drafts must cite retrieved S1–S6 stops. An uncited draft is withheld while the source evidence remains available.",
+      },
+      {
+        title: "Change-aware and repeat-aware retrieval",
+        detail:
+          "Questions about changed, updated, refuted, or repeated memories prioritize the matching structured ledger state instead of relying on similarity alone.",
+      },
+      {
+        title: "Short conversational continuity",
+        detail:
+          "The panel retains only the four most recent turns for follow-ups; generated answers never become facts, graph edges, or saved memory.",
+      },
+      {
         title: "Typed, scored results",
         detail:
           "Each result identifies what it is, shows why it matched, includes a similarity score, and opens its topic or source.",
@@ -244,6 +279,26 @@ const capabilityRoutes = [
         title: "Visible progress and recovery",
         detail:
           "Parse, statistics, model, embedding, and clustering stages report progress; analysis can be cancelled, errors explain recovery, and a new archive resets the report.",
+      },
+      {
+        title: "Step-by-step wait estimates",
+        detail:
+          "A live six-stop route separates archive opening, parsing, initial insights, model preparation, semantic mapping, and final assembly, with elapsed time and a continuously revised remaining-time estimate.",
+      },
+      {
+        title: "Complete execution receipt",
+        detail:
+          "After the map is ready, a distinct end-to-end timer includes parsing, model download and preparation, embeddings, and report assembly alongside initial-insight time, compute route, and preserved candidate coverage.",
+      },
+      {
+        title: "Explicit chat-model lifecycle",
+        detail:
+          "The local generator loads only after consent, discloses its approximately 105 MB cached download and English focus, and can be unloaded independently at any time.",
+      },
+      {
+        title: "Single-tab compute guard",
+        detail:
+          "A browser lock prevents duplicate heavyweight archive analysis across tabs, while reset, unload, errors, and page exit terminate model workers and release the lock.",
       },
     ],
   },

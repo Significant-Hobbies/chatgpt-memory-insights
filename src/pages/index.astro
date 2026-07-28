@@ -46,6 +46,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
           <p class="map-key">Routes</p>
           <a href="#visual-atlas"><i class="route-dot route-red"></i>Visual atlas</a>
           <a href="#topic-map"><i class="route-dot route-blue"></i>Topic map</a>
+          <a href="#memory-chat"><i class="route-dot route-red"></i>Memory chat</a>
           <a href="#memory-ledger"><i class="route-dot route-teal"></i>Memory ledger</a>
           <a href="#evolution"><i class="route-dot route-violet"></i>How it changed</a>
           <a href="#question-lenses"><i class="route-dot route-amber"></i>Question lenses</a>
@@ -212,6 +213,40 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
           >
             Inspecting ZIP entries…
           </div>
+          <div class="timing-overview" aria-label="Analysis timing">
+            <div>
+              <span>Total elapsed</span>
+              <strong id="progress-elapsed">Under 1 sec</strong>
+            </div>
+            <div>
+              <span>Estimated remaining</span>
+              <strong id="progress-remaining">Estimating…</strong>
+            </div>
+            <div>
+              <span>Compute route</span>
+              <strong id="progress-runtime">Selecting…</strong>
+            </div>
+          </div>
+          <ol id="progress-stage-list" class="timing-stages" aria-label="Analysis stages">
+            <li data-timing-stage="discover">
+              <i></i><span>Open archive</span><time>Now</time>
+            </li>
+            <li data-timing-stage="parse">
+              <i></i><span>Read conversations</span><time>Waiting</time>
+            </li>
+            <li data-timing-stage="statistics">
+              <i></i><span>Initial insights</span><time>Waiting</time>
+            </li>
+            <li data-timing-stage="model">
+              <i></i><span>Prepare model</span><time>Waiting</time>
+            </li>
+            <li data-timing-stage="embed">
+              <i></i><span>Map semantic memory</span><time>Waiting</time>
+            </li>
+            <li data-timing-stage="cluster">
+              <i></i><span>Assemble report</span><time>Waiting</time>
+            </li>
+          </ol>
           <p class="progress-note">
             Statistics appear before embeddings finish. The first semantic run downloads and
             caches the selected model in your browser.
@@ -245,6 +280,69 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               <button id="reset-report" class="button-secondary" type="button">New archive</button>
             </div>
           </header>
+
+          <section
+            id="analysis-timing-board"
+            class="analysis-timing-board"
+            aria-labelledby="analysis-timing-heading"
+            hidden
+          >
+            <div class="analysis-timing-heading">
+              <div>
+                <p class="map-key">Live execution route</p>
+                <h2 id="analysis-timing-heading">How long your map took</h2>
+              </div>
+              <p id="report-timing-status" role="status" aria-live="polite">
+                Initial insights are ready. Semantic analysis is continuing.
+              </p>
+            </div>
+            <dl class="analysis-timing-metrics">
+              <div>
+                <dt>Initial insight</dt>
+                <dd id="report-timing-initial">—</dd>
+              </div>
+              <div class="timing-total">
+                <dt>End to end</dt>
+                <dd id="report-timing-total">Running…</dd>
+              </div>
+              <div>
+                <dt>Model preparation</dt>
+                <dd id="report-timing-model">Waiting</dd>
+              </div>
+              <div>
+                <dt>Semantic work</dt>
+                <dd id="report-timing-semantic">Waiting</dd>
+              </div>
+              <div>
+                <dt>Compute route</dt>
+                <dd id="report-timing-runtime">Selecting…</dd>
+              </div>
+              <div>
+                <dt>Candidate coverage</dt>
+                <dd id="report-timing-coverage">Forming…</dd>
+              </div>
+            </dl>
+            <ol id="report-stage-list" class="timing-stages timing-stages-report" aria-label="Analysis stage timings">
+              <li data-timing-stage="discover">
+                <i></i><span>Open archive</span><time>Waiting</time>
+              </li>
+              <li data-timing-stage="parse">
+                <i></i><span>Read conversations</span><time>Waiting</time>
+              </li>
+              <li data-timing-stage="statistics">
+                <i></i><span>Initial insights</span><time>Waiting</time>
+              </li>
+              <li data-timing-stage="model">
+                <i></i><span>Prepare model</span><time>Waiting</time>
+              </li>
+              <li data-timing-stage="embed">
+                <i></i><span>Map semantic memory</span><time>Waiting</time>
+              </li>
+              <li data-timing-stage="cluster">
+                <i></i><span>Assemble report</span><time>Waiting</time>
+              </li>
+            </ol>
+          </section>
 
           <form id="memory-search" class="memory-search" role="search">
             <label for="search-query">Search your mapped memory</label>
@@ -468,35 +566,132 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               <div id="topic-list" class="topic-list" aria-label="Accessible topic list"></div>
             </section>
 
-            <aside id="memory-ledger" class="ledger-panel" aria-labelledby="ledger-heading">
-              <div class="section-heading compact">
-                <div>
-                  <p class="map-key">Statement history</p>
-                  <h2 id="ledger-heading">Memory ledger</h2>
+            <div class="memory-sidecar">
+              <section
+                id="memory-chat"
+                class="memory-chat-panel"
+                aria-labelledby="memory-chat-heading"
+              >
+                <header>
+                  <div>
+                    <p class="map-key">Ask the graph</p>
+                    <h2 id="memory-chat-heading">Memory Chat</h2>
+                  </div>
+                  <button id="unload-memory-chat" type="button" hidden>Unload model</button>
+                </header>
+                <p class="memory-chat-promise">
+                  Your question traverses the map first. A small local model sees only the six
+                  retrieved evidence stops—not the full ZIP.
+                </p>
+
+                <div id="memory-chat-gate" class="memory-chat-gate">
+                  <dl>
+                    <div><dt>Model</dt><dd>LaMini-Flan-T5 77M</dd></div>
+                    <div><dt>Download</dt><dd>≈105 MB · cached by your browser</dd></div>
+                    <div><dt>Boundary</dt><dd>Local q8 synthesis · English-focused</dd></div>
+                  </dl>
+                  <button id="enable-memory-chat" class="button-primary" type="button" disabled>
+                    Available when the map is complete
+                  </button>
+                  <p id="memory-chat-model-status" role="status" aria-live="polite">
+                    The chat model has not been loaded.
+                  </p>
+                  <progress id="memory-chat-model-progress" max="100" value="0" hidden></progress>
                 </div>
-              </div>
-              <div id="ledger-tabs" class="ledger-tabs" role="tablist" aria-label="Fact states">
-                <button type="button" role="tab" data-status="current" aria-selected="true">
-                  Current <span>0</span>
-                </button>
-                <button type="button" role="tab" data-status="updated" aria-selected="false">
-                  Updated <span>0</span>
-                </button>
-                <button type="button" role="tab" data-status="refuted" aria-selected="false">
-                  Refuted <span>0</span>
-                </button>
-                <button type="button" role="tab" data-status="contradicted" aria-selected="false">
-                  Possible contradictions <span>0</span>
-                </button>
-              </div>
-              <div id="ledger-list" class="ledger-list">
-                <p class="empty-note">Fact candidates appear after semantic grouping.</p>
-              </div>
-              <p class="ledger-disclaimer">
-                Detected from explicit first-person wording. These are candidates, not verified
-                truths.
-              </p>
-            </aside>
+
+                <div id="memory-chat-session" class="memory-chat-session" hidden>
+                  <div
+                    id="memory-chat-transcript"
+                    class="memory-chat-transcript"
+                    role="log"
+                    aria-live="polite"
+                    aria-label="Memory chat conversation"
+                  >
+                    <article class="memory-chat-message assistant">
+                      <span>Local guide</span>
+                      <p>Ask what you returned to, changed, rejected, or worked on over time.</p>
+                    </article>
+                  </div>
+
+                  <section class="traversal-ledger" aria-labelledby="traversal-heading">
+                    <div>
+                      <p class="map-key">Visible retrieval route</p>
+                      <h3 id="traversal-heading">How the graph answered</h3>
+                    </div>
+                    <ol id="memory-chat-route">
+                      <li data-chat-stage="query"><i></i><span>Question received</span></li>
+                      <li data-chat-stage="search"><i></i><span>Searching semantic memory</span></li>
+                      <li data-chat-stage="topics"><i></i><span>Traversing topic routes</span></li>
+                      <li data-chat-stage="evidence"><i></i><span>Building evidence pack</span></li>
+                      <li data-chat-stage="answer"><i></i><span>Local synthesis</span></li>
+                    </ol>
+                    <div id="memory-chat-evidence" class="memory-chat-evidence"></div>
+                  </section>
+
+                  <form id="memory-chat-form">
+                    <label for="memory-chat-query">Ask your mapped memory</label>
+                    <textarea
+                      id="memory-chat-query"
+                      name="memory-question"
+                      rows="3"
+                      maxlength="600"
+                      placeholder="What have I changed my mind about?"
+                      required
+                    ></textarea>
+                    <button class="button-primary" type="submit">Traverse and answer</button>
+                  </form>
+                </div>
+
+                <details class="memory-architecture-note">
+                  <summary>Why this memory architecture is different</summary>
+                  <p>
+                    The retrieval route, sources, changed and refuted statements, confidence
+                    controls, and local model boundary stay visible. Generated prose never becomes
+                    a new memory automatically.
+                  </p>
+                  <p>
+                    This is a product-behavior prototype, not a claim about current ChatGPT
+                    internals. OpenAI’s own documentation says its legacy saved-memory experience
+                    could become stale or contradictory.
+                  </p>
+                  <a
+                    href="https://help.openai.com/en/articles/8590148-memory-faq"
+                    target="_blank"
+                    rel="noreferrer"
+                  >Read OpenAI’s Memory FAQ ↗</a>
+                </details>
+              </section>
+
+              <aside id="memory-ledger" class="ledger-panel" aria-labelledby="ledger-heading">
+                <div class="section-heading compact">
+                  <div>
+                    <p class="map-key">Statement history</p>
+                    <h2 id="ledger-heading">Memory ledger</h2>
+                  </div>
+                </div>
+                <div id="ledger-tabs" class="ledger-tabs" role="tablist" aria-label="Fact states">
+                  <button type="button" role="tab" data-status="current" aria-selected="true">
+                    Current <span>0</span>
+                  </button>
+                  <button type="button" role="tab" data-status="updated" aria-selected="false">
+                    Updated <span>0</span>
+                  </button>
+                  <button type="button" role="tab" data-status="refuted" aria-selected="false">
+                    Refuted <span>0</span>
+                  </button>
+                  <button type="button" role="tab" data-status="contradicted" aria-selected="false">
+                    Possible contradictions <span>0</span>
+                  </button>
+                </div>
+                <div id="ledger-list" class="ledger-list">
+                  <p class="empty-note">Fact candidates appear after semantic grouping.</p>
+                </div>
+                <p class="ledger-disclaimer">
+                  Detected from explicit first-person wording. These are candidates, not verified
+                  truths.
+                </p>
+              </aside>
+            </div>
           </div>
 
           <section id="evolution" class="platform-section evolution-section" aria-labelledby="evolution-heading">

@@ -7,6 +7,7 @@ import {
 } from "./analysis";
 import type {
   AnalysisResolution,
+  AnalysisRuntime,
   ConversationRecord,
   FactCandidate,
   FactGroup,
@@ -66,7 +67,13 @@ const TOPIC_ANCHORS = [
   ["Home & lifestyle", "home shopping clothes devices lifestyle routines"],
 ] as const;
 
-type Progress = (label: string, current: number, total: number) => void;
+type Progress = (
+  phase: "model" | "embed" | "cluster",
+  label: string,
+  current: number,
+  total: number,
+  runtime?: AnalysisRuntime,
+) => void;
 
 type TensorLike = {
   data: Float32Array | number[];
@@ -80,6 +87,58 @@ type Extractor = {
 
 let extractorPromise: Promise<Extractor> | null = null;
 let extractorProfile: AnalysisResolution["resolvedModelProfile"] | null = null;
+let extractorRuntimeKey: string | null = null;
+
+export const INFERENCE_BATCH_SIZE = {
+  webgpu: 128,
+  wasm: 32,
+} as const;
+
+export function supportsWebGpu(
+  scope: { navigator?: { gpu?: unknown } } = globalThis as { navigator?: { gpu?: unknown } },
+): boolean {
+  return Boolean(scope.navigator?.gpu);
+}
+
+export function preferredRuntime(
+  webGpuAvailable = supportsWebGpu(),
+  profile: AnalysisResolution["resolvedModelProfile"] = "compact",
+): AnalysisRuntime {
+  return webGpuAvailable && profile === "compact"
+    ? {
+      device: "webgpu",
+        dtype: "fp32",
+        batchSize: INFERENCE_BATCH_SIZE.webgpu,
+      }
+    : {
+        device: "wasm",
+        dtype: "q8",
+        batchSize: INFERENCE_BATCH_SIZE.wasm,
+      };
+}
+
+export function isMemoryPressure(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /allocation|array buffer|memory|out of bounds|too large/i.test(message);
+}
+
+export function prepareEmbeddingWork(texts: string[]): Array<{
+  text: string;
+  indexes: number[];
+}> {
+  const unique = new Map<string, number[]>();
+  texts.forEach((text, index) => {
+    const indexes = unique.get(text) ?? [];
+    indexes.push(index);
+    unique.set(text, indexes);
+  });
+  return [...unique.entries()]
+    .map(([text, indexes]) => ({ text, indexes }))
+    .sort(
+      (left, right) =>
+        left.text.length - right.text.length || left.indexes[0] - right.indexes[0],
+    );
+}
 
 function sourceOf(value: ConversationRecord | UserPrompt | FactCandidate): SourceRef {
   return {
@@ -140,19 +199,37 @@ function sampleQuestions(prompts: UserPrompt[]): UserPrompt[] {
 async function getExtractor(
   profile: AnalysisResolution["resolvedModelProfile"],
   progress: Progress,
+  runtime: AnalysisRuntime,
 ): Promise<Extractor> {
-  if (extractorPromise && extractorProfile !== profile) await disposeExtractor();
+  const runtimeKey = `${runtime.device}:${runtime.dtype}`;
+  if (
+    extractorPromise &&
+    (extractorProfile !== profile || extractorRuntimeKey !== runtimeKey)
+  ) {
+    await disposeExtractor();
+  }
   if (!extractorPromise) {
     extractorProfile = profile;
+    extractorRuntimeKey = runtimeKey;
     extractorPromise = (async () => {
       const { env, pipeline } = await import("@huggingface/transformers");
       env.allowLocalModels = false;
       env.allowRemoteModels = true;
       env.useBrowserCache = true;
       const model = MODEL_PROFILES[profile];
+      progress(
+        "model",
+        runtime.device === "webgpu"
+          ? "Starting accelerated browser inference"
+          : "Starting compatibility browser inference",
+        0,
+        100,
+        runtime,
+      );
       return (await pipeline("feature-extraction", model.id, {
         revision: model.revision,
-        dtype: "q8",
+        dtype: runtime.dtype,
+        ...(runtime.device === "webgpu" ? { device: "webgpu" as const } : {}),
         progress_callback: (event: {
           status: string;
           file?: string;
@@ -162,14 +239,21 @@ async function getExtractor(
         }) => {
           if (event.status === "progress") {
             progress(
+              "model",
               event.file ? `Downloading ${event.file}` : "Downloading embedding model",
               event.loaded ?? event.progress ?? 0,
               event.total ?? 100,
+              runtime,
             );
           }
         },
       })) as unknown as Extractor;
-    })();
+    })().catch((error) => {
+      extractorPromise = null;
+      extractorProfile = null;
+      extractorRuntimeKey = null;
+      throw error;
+    });
   }
   return extractorPromise;
 }
@@ -180,30 +264,100 @@ export async function disposeExtractor(): Promise<void> {
   await extractor.dispose();
   extractorPromise = null;
   extractorProfile = null;
+  extractorRuntimeKey = null;
+}
+
+async function embedWithRuntime(
+  texts: string[],
+  profile: AnalysisResolution["resolvedModelProfile"],
+  progress: Progress,
+  initialRuntime: AnalysisRuntime,
+): Promise<{ vectors: Float32Array[]; runtime: AnalysisRuntime }> {
+  const extractor = await getExtractor(profile, progress, initialRuntime);
+  const embeddings = new Array<Float32Array>(texts.length);
+  const work = prepareEmbeddingWork(texts);
+  let runtime = initialRuntime;
+  let start = 0;
+  let processedCandidates = 0;
+
+  while (start < work.length) {
+    const batchItems = work.slice(start, start + runtime.batchSize);
+    const batch = batchItems.map((item) => item.text);
+    try {
+      const output = await extractor(batch, { pooling: "mean", normalize: true });
+      const dimensions = output.dims.at(-1) ?? 384;
+      const data =
+        output.data instanceof Float32Array ? output.data : Float32Array.from(output.data);
+      for (let index = 0; index < batchItems.length; index += 1) {
+        const vector = data.slice(index * dimensions, (index + 1) * dimensions);
+        for (const originalIndex of batchItems[index].indexes) {
+          embeddings[originalIndex] = vector;
+        }
+      }
+      start += batchItems.length;
+      processedCandidates += batchItems.reduce(
+        (total, item) => total + item.indexes.length,
+        0,
+      );
+      progress(
+        "embed",
+        "Embedding memory candidates",
+        processedCandidates,
+        texts.length,
+        runtime,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    } catch (error) {
+      const minimumBatch = runtime.device === "webgpu" ? 16 : 12;
+      const canRetrySmaller =
+        runtime.batchSize > minimumBatch && (start === 0 || isMemoryPressure(error));
+      if (!canRetrySmaller) throw error;
+      runtime = {
+        ...runtime,
+        batchSize: Math.max(minimumBatch, Math.floor(runtime.batchSize / 2)),
+      };
+      progress(
+        "embed",
+        `Reducing inference batch to ${runtime.batchSize}`,
+        processedCandidates,
+        texts.length,
+        runtime,
+      );
+    }
+  }
+  return { vectors: embeddings, runtime };
 }
 
 async function embedTexts(
   texts: string[],
   profile: AnalysisResolution["resolvedModelProfile"],
   progress: Progress,
-): Promise<Float32Array[]> {
-  if (texts.length === 0) return [];
-  const extractor = await getExtractor(profile, progress);
-  const embeddings: Float32Array[] = [];
-  const batchSize = 24;
-
-  for (let start = 0; start < texts.length; start += batchSize) {
-    const batch = texts.slice(start, start + batchSize);
-    const output = await extractor(batch, { pooling: "mean", normalize: true });
-    const dimensions = output.dims.at(-1) ?? 384;
-    const data = output.data instanceof Float32Array ? output.data : Float32Array.from(output.data);
-    for (let index = 0; index < batch.length; index += 1) {
-      embeddings.push(data.slice(index * dimensions, (index + 1) * dimensions));
-    }
-    progress("Embedding memory candidates", Math.min(start + batch.length, texts.length), texts.length);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+): Promise<{ vectors: Float32Array[]; runtime: AnalysisRuntime }> {
+  if (texts.length === 0) {
+    return { vectors: [], runtime: preferredRuntime(false, profile) };
   }
-  return embeddings;
+  const preferred = preferredRuntime(supportsWebGpu(), profile);
+  if (preferred.device === "wasm") {
+    return embedWithRuntime(texts, profile, progress, preferred);
+  }
+  try {
+    return await embedWithRuntime(texts, profile, progress, preferred);
+  } catch (error) {
+    await disposeExtractor();
+    const fallbackReason = error instanceof Error ? error.message.slice(0, 180) : String(error);
+    const fallback: AnalysisRuntime = {
+      ...preferredRuntime(false, profile),
+      fallbackReason,
+    };
+    progress(
+      "model",
+      "GPU path unavailable; retrying with compatibility mode",
+      0,
+      100,
+      fallback,
+    );
+    return embedWithRuntime(texts, profile, progress, fallback);
+  }
 }
 
 export function cosine(left: Float32Array, right: Float32Array): number {
@@ -718,6 +872,11 @@ function segmentThreads(
         type: "strand",
         title: `${conversation.title} · ${strand.label}`,
         detail: `${strand.promptCount} prompts in one conversation strand`,
+        context: prompts
+          .slice(strand.firstPrompt, strand.lastPrompt + 1)
+          .map((prompt) => prompt.text)
+          .join("\n")
+          .slice(0, 1_600),
         source: strand.sources[0] ?? sourceOf(conversation),
         topicId: null,
         embedding: average(strandVectors),
@@ -758,7 +917,8 @@ export async function buildSemanticMemory(
     ...TOPIC_ANCHORS.map(([, description]) => description),
     ...threadPrompts.map((prompt) => prompt.text),
   ];
-  const vectors = await embedTexts(texts, analysis.resolvedModelProfile, progress);
+  const embedded = await embedTexts(texts, analysis.resolvedModelProfile, progress);
+  const { vectors, runtime } = embedded;
   const conversationVectors = vectors.slice(0, conversations.length);
   const promptVectors = vectors.slice(conversations.length, conversations.length + prompts.length);
   const factVectors = vectors.slice(conversations.length + prompts.length);
@@ -768,13 +928,13 @@ export async function buildSemanticMemory(
     conversations.length + prompts.length + facts.length + TOPIC_ANCHORS.length;
   const threadVectors = vectors.slice(threadVectorStart);
 
-  progress("Grouping repeated questions", 0, 4);
+  progress("cluster", "Grouping repeated questions", 0, 4, runtime);
   const repeats = semanticRepeats(prompts, promptVectors);
-  progress("Building fact history", 1, 4);
+  progress("cluster", "Building fact history", 1, 4, runtime);
   const groupedFacts = groupFacts(facts, boundedFactVectors);
-  progress("Laying out topic graph", 2, 4);
+  progress("cluster", "Laying out topic graph", 2, 4, runtime);
   const graph = topicGraph(conversations, conversationVectors, anchorVectors);
-  progress("Segmenting conversation strands", 3, 4);
+  progress("cluster", "Segmenting conversation strands", 3, 4, runtime);
   const segmented = segmentThreads(preparedThreads.threads, threadVectors);
 
   const searchIndex: SearchEntry[] = [
@@ -783,6 +943,7 @@ export async function buildSemanticMemory(
       type: "conversation" as const,
       title: conversation.title,
       detail: `${conversation.messageCount} messages`,
+      context: conversationFingerprint(conversation),
       source: sourceOf(conversation),
       topicId: `topic-${graph.assignments[index]}`,
       embedding: conversationVectors[index],
@@ -792,6 +953,7 @@ export async function buildSemanticMemory(
       type: "question" as const,
       title: prompt.text,
       detail: prompt.title,
+      context: prompt.text,
       source: sourceOf(prompt),
       topicId: null,
       embedding: promptVectors[index],
@@ -801,6 +963,7 @@ export async function buildSemanticMemory(
       type: "fact" as const,
       title: fact.text,
       detail: fact.cue === "statement" ? "Detected statement" : `Detected ${fact.cue}`,
+      context: fact.text,
       source: sourceOf(fact),
       topicId: null,
       embedding: factVectors[index],
@@ -810,6 +973,7 @@ export async function buildSemanticMemory(
       type: "topic" as const,
       title: topic.label,
       detail: `${topic.count} conversations · ${topic.terms.join(", ")}`,
+      context: `${topic.label}. ${topic.count} conversations. Distinctive terms: ${topic.terms.join(", ")}.`,
       source: topic.sources[0] ?? null,
       topicId: topic.id,
       embedding: graph.centroids[index],
@@ -818,7 +982,7 @@ export async function buildSemanticMemory(
   ];
 
   const model = MODEL_PROFILES[analysis.resolvedModelProfile];
-  progress("Semantic memory ready", 4, 4);
+  progress("cluster", "Semantic memory ready", 4, 4, runtime);
   return {
     report: {
       model: {
@@ -826,7 +990,10 @@ export async function buildSemanticMemory(
         revision: model.revision,
         requestedProfile: analysis.modelProfile,
         resolvedProfile: analysis.resolvedModelProfile,
-        approximateDownloadMb: model.approximateDownloadMb,
+        approximateDownloadMb:
+          runtime.dtype === "fp32" && analysis.resolvedModelProfile === "compact"
+            ? 90
+            : model.approximateDownloadMb,
         profileReason: analysis.profileReason,
         embeddedConversations: conversations.length,
         totalConversations: allConversations.length,
@@ -836,6 +1003,8 @@ export async function buildSemanticMemory(
         totalFacts: allFacts.length,
         embeddedThreadPrompts: threadPrompts.length,
         totalThreadPrompts: preparedThreads.totalPrompts,
+        embeddedTopicAnchors: TOPIC_ANCHORS.length,
+        runtime,
       },
       repeats,
       facts: groupedFacts,
@@ -854,7 +1023,8 @@ export async function searchMemory(
   profile: AnalysisResolution["resolvedModelProfile"],
   progress: Progress,
 ): Promise<Array<Omit<SearchEntry, "embedding"> & { similarity: number }>> {
-  const [queryVector] = await embedTexts([query], profile, progress);
+  const { vectors } = await embedTexts([query], profile, progress);
+  const [queryVector] = vectors;
   const semanticResults = index
     .map(({ embedding, ...entry }) => ({ ...entry, semanticScore: cosine(queryVector, embedding) }))
     .filter((entry) => entry.semanticScore > 0.18)
@@ -902,6 +1072,11 @@ export async function searchMemory(
     });
   }
 
+  const topicByConversation = new Map(
+    index
+      .filter((entry) => entry.source && entry.topicId)
+      .map((entry) => [entry.source!.conversationId, entry.topicId!] as const),
+  );
   return [...candidates.values()]
     .map(({ semanticScore, lexicalScore, ...entry }) => {
       const combined =
@@ -910,7 +1085,13 @@ export async function searchMemory(
           : semanticScore > 0
             ? semanticScore * 0.82
             : lexicalScore * 0.9;
-      return { ...entry, similarity: Math.min(0.99, combined) };
+      return {
+        ...entry,
+        topicId:
+          entry.topicId ??
+          (entry.source ? topicByConversation.get(entry.source.conversationId) ?? null : null),
+        similarity: Math.min(0.99, combined),
+      };
     })
     .sort((left, right) => right.similarity - left.similarity)
     .slice(0, 16);
@@ -927,6 +1108,7 @@ export function buildLexicalIndex(
       type: "conversation" as const,
       title: conversation.title,
       detail: `${conversation.messageCount} messages`,
+      context: conversationFingerprint(conversation),
       source: sourceOf(conversation),
       topicId: null,
     })),
@@ -935,6 +1117,7 @@ export function buildLexicalIndex(
       type: "question" as const,
       title: prompt.text,
       detail: prompt.title,
+      context: prompt.text,
       source: sourceOf(prompt),
       topicId: null,
     })),
@@ -943,6 +1126,7 @@ export function buildLexicalIndex(
       type: "fact" as const,
       title: fact.text,
       detail: fact.cue === "statement" ? "Detected statement" : `Detected ${fact.cue}`,
+      context: fact.text,
       source: sourceOf(fact),
       topicId: null,
     })),

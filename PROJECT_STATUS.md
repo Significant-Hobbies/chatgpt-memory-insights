@@ -12,11 +12,12 @@ history without uploading it to an application server.
 
 **IN scope:** Static Astro app; split `conversations*.json` ZIP parsing;
 deterministic and embedding-backed insight lenses; graph and source evidence;
-semantic/lexical search; optional device-local derived-memory persistence.
+semantic/lexical search; opt-in graph-routed local memory chat; optional
+device-local derived-memory persistence.
 
-**OUT of scope:** Attachments, assistant-authored facts, generative summaries,
-accounts, server uploads, cross-device sync, and verified medical, emotional,
-or personality claims.
+**OUT of scope:** Attachments, assistant-authored facts, hosted generation,
+general-purpose assistant behavior, accounts, server uploads, cross-device
+sync, and verified medical, emotional, or personality claims.
 
 ## Dependencies
 
@@ -24,7 +25,8 @@ or personality claims.
 
 - Cloudflare Pages for static hosting.
 - Hugging Face model files for the browser-loaded pinned
-  `Xenova/all-MiniLM-L6-v2` embedding model.
+  `Xenova/all-MiniLM-L6-v2` embedding model and opt-in
+  `Xenova/LaMini-Flan-T5-77M` local generator.
 - Observable Plot for typed, framework-independent SVG charts in the visual
   atlas.
 - npm packages listed in `package.json`; the runtime has no application API.
@@ -51,11 +53,19 @@ or personality claims.
   production domain
 - 2026-07-28 — official ChatGPT export instructions and Privacy Portal fallback
   added to the import onboarding
-- 2026-07-28 — public value proposition and exhaustive 39-capability atlas
+- 2026-07-28 — public value proposition and exhaustive 42-capability atlas
   added at `/about`
 - 2026-07-28 — period-aware six-chart visual atlas, evidence-linked starting
   insight, and seven-slide Story mode completed; production deployment was not
   performed in this change
+- 2026-07-28 — staged elapsed/remaining-time route, distinct end-to-end
+  execution receipt, WebGPU acceleration, portable fallback, and
+  order-preserving semantic batching completed and benchmarked on the
+  owner-supplied archive; production deployment was not performed
+- 2026-07-28 — graph-routed Memory Chat, bounded cited evidence packs,
+  structured change/repeat retrieval, grounding validation, independent model
+  unload, and single-tab analysis ownership completed; production deployment
+  was not performed
 
 ## Products
 
@@ -97,6 +107,22 @@ or personality claims.
 - Static public `/about` route with an illustrative memory-map mechanism,
   exhaustive shipped capability routes, privacy architecture, fit and limit
   guidance, export onboarding, and a direct path into analysis.
+- Six-stage live timing with elapsed time, estimated wait, initial-insight
+  arrival, and the resolved browser compute route.
+- A completed end-to-end execution receipt that includes model download and
+  preparation, semantic work, report assembly, runtime, batch size, and exact
+  embedded-candidate coverage.
+- Compact-model WebGPU acceleration with bounded device-aware batches and a
+  complete order-preserving WebAssembly compatibility fallback.
+- Opt-in 77M q8 local Memory Chat in a dedicated worker, with a disclosed
+  approximately 105 MB cached download and explicit unload control.
+- Visible question-to-topic-to-evidence graph traversal with a temporary query
+  node, a five-step text route, and direct source inspection.
+- Bounded six-stop evidence packs, four-turn conversational continuity,
+  structured changed/refuted/repeated-memory retrieval, and citation
+  validation that withholds unsupported drafts.
+- Single-tab heavyweight-analysis ownership plus worker termination and lock
+  release on error, reset, unload, and page exit.
 
 ## Todo / Planned / Deferred / Blocked
 

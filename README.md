@@ -19,9 +19,23 @@ histories. The visitor can override that choice before import.
 
 Production: <https://chatgpt.significanthobbies.com>
 
-The public `/about` capability atlas explains all 39 current product
+The public `/about` capability atlas explains all 50 current product
 capabilities, the browser-only data path, intended and unsupported use cases,
 and the complete path from ChatGPT export to searchable memory.
+
+Analysis is progressive: deterministic insights appear first, while a six-stage
+route shows elapsed time and an estimated wait for semantic mapping. The
+completed report keeps a separate end-to-end execution receipt that includes
+archive parsing, model download and preparation, embeddings, and report
+assembly. Supported compact-model runs use WebGPU acceleration with a complete
+WebAssembly fallback.
+
+After analysis, Memory Chat can optionally load the pinned
+`Xenova/LaMini-Flan-T5-77M` q8 model in a dedicated browser worker. Every
+question visibly traverses the semantic graph, the model receives at most six
+labelled evidence excerpts, and the app withholds drafts that do not cite those
+retrieved stops. The generator can be unloaded independently and its prose is
+never promoted into saved memory.
 
 ## Get your ChatGPT export
 

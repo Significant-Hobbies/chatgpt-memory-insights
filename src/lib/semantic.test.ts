@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { classifyFactHistory, cosine, MODEL_PROFILES } from "./semantic";
+import {
+  classifyFactHistory,
+  cosine,
+  INFERENCE_BATCH_SIZE,
+  isMemoryPressure,
+  MODEL_PROFILES,
+  preferredRuntime,
+  prepareEmbeddingWork,
+  supportsWebGpu,
+} from "./semantic";
 import type { FactCandidate } from "./types";
 
 describe("cosine", () => {
@@ -21,6 +30,39 @@ describe("browser model profiles", () => {
       revision: "2c4055b12046f11709e9df2c122e59ffbdc2f900",
       approximateDownloadMb: 135,
     });
+  });
+
+  it("prefers bounded GPU batches and keeps a portable fallback", () => {
+    expect(supportsWebGpu({ navigator: { gpu: {} } })).toBe(true);
+    expect(supportsWebGpu({ navigator: {} })).toBe(false);
+    expect(preferredRuntime(true)).toEqual({
+      device: "webgpu",
+      dtype: "fp32",
+      batchSize: INFERENCE_BATCH_SIZE.webgpu,
+    });
+    expect(preferredRuntime(false)).toEqual({
+      device: "wasm",
+      dtype: "q8",
+      batchSize: INFERENCE_BATCH_SIZE.wasm,
+    });
+    expect(preferredRuntime(true, "multilingual")).toEqual({
+      device: "wasm",
+      dtype: "q8",
+      batchSize: INFERENCE_BATCH_SIZE.wasm,
+    });
+  });
+
+  it("recognizes allocation failures without masking unrelated errors", () => {
+    expect(isMemoryPressure(new Error("out of memory allocating tensor"))).toBe(true);
+    expect(isMemoryPressure(new Error("network request failed"))).toBe(false);
+  });
+
+  it("deduplicates exact texts, sorts work by length, and retains original indexes", () => {
+    expect(prepareEmbeddingWork(["longer text", "a", "longer text", "mid"])).toEqual([
+      { text: "a", indexes: [1] },
+      { text: "mid", indexes: [3] },
+      { text: "longer text", indexes: [0, 2] },
+    ]);
   });
 });
 

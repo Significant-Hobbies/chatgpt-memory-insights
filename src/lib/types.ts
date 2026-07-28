@@ -263,12 +263,54 @@ export type SemanticReport = {
     totalFacts: number;
     embeddedThreadPrompts: number;
     totalThreadPrompts: number;
+    embeddedTopicAnchors?: number;
+    runtime?: AnalysisRuntime;
   };
   repeats: SemanticRepeat[];
   facts: FactGroup[];
   topics: TopicNode[];
   edges: TopicEdge[];
   threads: ThreadSegmentation[];
+};
+
+export type AnalysisPhase =
+  | "discover"
+  | "parse"
+  | "statistics"
+  | "model"
+  | "embed"
+  | "cluster";
+
+export type AnalysisRuntime = {
+  device: "webgpu" | "wasm";
+  dtype: "fp32" | "q8";
+  batchSize: number;
+  fallbackReason?: string;
+};
+
+export type AnalysisStageTiming = {
+  phase: AnalysisPhase;
+  label: string;
+  elapsedMs: number;
+};
+
+export type AnalysisProgressTiming = {
+  stageElapsedMs: number;
+  totalElapsedMs: number;
+  estimatedRemainingMs: number | null;
+  completedStages: AnalysisStageTiming[];
+  runtime?: AnalysisRuntime;
+};
+
+export type AnalysisPerformance = {
+  status: "running" | "complete";
+  totalMs: number | null;
+  initialInsightsMs: number;
+  modelMs: number;
+  semanticMs: number;
+  stages: AnalysisStageTiming[];
+  runtime?: AnalysisRuntime;
+  semanticCandidateCount?: number;
 };
 
 export type ReflectionQuestion = {
@@ -297,6 +339,7 @@ export type FullReport = {
   deterministic: DeterministicReport;
   semantic: SemanticReport | null;
   reflections: ReflectionQuestion[];
+  performance?: AnalysisPerformance;
 };
 
 export type SearchEntry = {
@@ -304,6 +347,7 @@ export type SearchEntry = {
   type: "conversation" | "question" | "fact" | "topic" | "strand";
   title: string;
   detail: string;
+  context?: string;
   source: SourceRef | null;
   topicId: string | null;
   embedding: Float32Array;
@@ -331,10 +375,11 @@ export type WorkerRequest =
 export type WorkerResponse =
   | {
       type: "progress";
-      phase: "discover" | "parse" | "statistics" | "model" | "embed" | "cluster";
+      phase: AnalysisPhase;
       label: string;
       current: number;
       total: number;
+      timing?: AnalysisProgressTiming;
     }
   | { type: "deterministic"; report: FullReport }
   | { type: "complete"; report: FullReport; snapshot: MemorySnapshot }

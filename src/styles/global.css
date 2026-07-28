@@ -646,6 +646,113 @@ h2 {
   font-size: clamp(1rem, 2vw, 1.4rem);
 }
 
+.timing-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 2rem;
+  border-block: 1px solid var(--ink);
+}
+
+.timing-overview > div {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem 1rem 1rem 0;
+}
+
+.timing-overview > div + div {
+  padding-left: 1rem;
+  border-left: 1px solid var(--rule);
+}
+
+.timing-overview span,
+.analysis-timing-metrics dt {
+  color: var(--ink-muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.65rem;
+}
+
+.timing-overview strong {
+  font-size: clamp(1rem, 2vw, 1.4rem);
+}
+
+.timing-stages {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin: 2.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timing-stages li {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.35rem 0.55rem;
+  min-width: 0;
+  padding: 0 0.8rem 0 0;
+  color: var(--ink-muted);
+}
+
+.timing-stages li::after {
+  position: absolute;
+  z-index: 0;
+  top: 0.42rem;
+  right: 0;
+  left: 0.75rem;
+  height: 1px;
+  background: var(--rule-strong);
+  content: "";
+}
+
+.timing-stages li:last-child::after {
+  display: none;
+}
+
+.timing-stages i {
+  z-index: 1;
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid var(--rule-strong);
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+.timing-stages span,
+.timing-stages time {
+  z-index: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timing-stages span {
+  padding-right: 0.45rem;
+  background: var(--paper);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.timing-stages time {
+  grid-column: 2;
+  color: var(--ink-muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.62rem;
+}
+
+.timing-stages li.is-active {
+  color: var(--cobalt);
+}
+
+.timing-stages li.is-active i {
+  border-color: var(--cobalt);
+  box-shadow: 0 0 0 6px rgb(33 87 213 / 10%);
+}
+
+.timing-stages li.is-complete i {
+  border-color: var(--teal);
+  background: var(--teal);
+}
+
 .progress-note {
   max-width: 60ch;
   margin-top: 1rem;
@@ -669,6 +776,93 @@ h2 {
   padding: 2.5rem 3rem;
   border-bottom: 1px solid var(--rule);
   background: var(--paper-raised);
+}
+
+.analysis-timing-board {
+  padding: 2rem 3rem 2.25rem;
+  border-bottom: 1px solid var(--ink);
+  background:
+    radial-gradient(circle at 1px 1px, rgb(33 87 213 / 9%) 0 0.8px, transparent 1px)
+      0 0 / 6px 6px,
+    var(--paper);
+}
+
+.analysis-timing-board[hidden] {
+  display: none;
+}
+
+.analysis-timing-heading {
+  display: flex;
+  gap: 2rem;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.analysis-timing-heading h2 {
+  max-width: 15ch;
+  font-size: clamp(1.9rem, 3.8vw, 3.6rem);
+}
+
+.analysis-timing-heading > p {
+  max-width: 54ch;
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.55;
+  text-align: right;
+}
+
+.analysis-timing-metrics {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin: 1.5rem 0 0;
+  border-block: 1px solid var(--ink);
+}
+
+.analysis-timing-metrics > div {
+  min-width: 0;
+  padding: 1rem;
+  border-left: 1px solid var(--rule);
+}
+
+.analysis-timing-metrics > div:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.analysis-timing-metrics dd {
+  margin: 0.5rem 0 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(0.92rem, 1.4vw, 1.16rem);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.analysis-timing-metrics .timing-total dd {
+  color: var(--cobalt);
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
+}
+
+@media (min-width: 721px) and (max-width: 1024px) {
+  .analysis-timing-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .analysis-timing-metrics > div:nth-child(4) {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .analysis-timing-metrics > div:nth-child(n + 4) {
+    border-top: 1px solid var(--rule);
+  }
+}
+
+.timing-stages-report {
+  margin-top: 1.5rem;
+}
+
+.timing-stages-report span {
+  background: var(--paper);
 }
 
 .report-meta {
@@ -1473,7 +1667,7 @@ h2 {
 
 .workbench {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-columns: minmax(0, 1fr) 430px;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -1493,6 +1687,306 @@ h2 {
   background-size: 54px 54px;
 }
 
+.memory-sidecar {
+  min-width: 0;
+  background: var(--paper-raised);
+}
+
+.memory-chat-panel {
+  scroll-margin-top: 9rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--ink);
+  background:
+    radial-gradient(circle at 1px 1px, rgb(33 87 213 / 8%) 0 0.8px, transparent 1px)
+      0 0 / 7px 7px,
+    var(--paper);
+}
+
+.memory-chat-panel > header {
+  display: flex;
+  gap: 1rem;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.memory-chat-panel h2 {
+  font-size: clamp(2rem, 3vw, 3rem);
+}
+
+.memory-chat-panel h3 {
+  font-size: 1.1rem;
+}
+
+.memory-chat-panel > header button,
+.memory-architecture-note a {
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  background: var(--paper-raised);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.memory-chat-promise {
+  margin: 1rem 0 0;
+  color: var(--ink-muted);
+  line-height: 1.55;
+}
+
+.memory-chat-gate {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ink);
+}
+
+.memory-chat-gate dl {
+  display: grid;
+  gap: 0;
+  margin: 0 0 1rem;
+}
+
+.memory-chat-gate dl > div {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.memory-chat-gate dt {
+  color: var(--ink-muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.65rem;
+}
+
+.memory-chat-gate dd {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.memory-chat-gate .button-primary,
+#memory-chat-form .button-primary {
+  width: 100%;
+}
+
+#memory-chat-model-status {
+  margin: 0.8rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+#memory-chat-model-progress {
+  width: 100%;
+  height: 0.45rem;
+  margin-top: 0.65rem;
+  accent-color: var(--cobalt);
+}
+
+.memory-chat-session {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--ink);
+}
+
+.memory-chat-transcript {
+  display: grid;
+  gap: 0.75rem;
+  max-height: 22rem;
+  padding: 1rem 0;
+  overflow: auto;
+}
+
+.memory-chat-message {
+  padding: 0.8rem;
+  border: 1px solid var(--rule);
+  background: var(--paper-raised);
+}
+
+.memory-chat-message.user {
+  margin-left: 2rem;
+  border-color: var(--cobalt);
+}
+
+.memory-chat-message.assistant {
+  margin-right: 1.25rem;
+  border-left: 4px solid var(--teal);
+}
+
+.memory-chat-message span {
+  color: var(--ink-muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.62rem;
+}
+
+.memory-chat-message p {
+  margin: 0.45rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.memory-chat-message small {
+  display: block;
+  margin-top: 0.55rem;
+  color: var(--ink-muted);
+  font-size: 0.62rem;
+}
+
+.traversal-ledger {
+  padding: 1rem 0;
+  border-block: 1px solid var(--ink);
+}
+
+.traversal-ledger > div:first-child {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.traversal-ledger ol {
+  display: grid;
+  gap: 0;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.traversal-ledger li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: center;
+  min-height: 2rem;
+  color: var(--ink-muted);
+  font-size: 0.7rem;
+}
+
+.traversal-ledger li:not(:last-child)::after {
+  position: absolute;
+  top: 1.2rem;
+  bottom: -0.8rem;
+  left: 0.38rem;
+  width: 1px;
+  content: "";
+  background: var(--rule-strong);
+}
+
+.traversal-ledger li i {
+  z-index: 1;
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 2px solid var(--rule-strong);
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+.traversal-ledger li.is-active {
+  color: var(--cobalt);
+  font-weight: 700;
+}
+
+.traversal-ledger li.is-active i {
+  border-color: var(--cobalt);
+  box-shadow: 0 0 0 5px rgb(33 87 213 / 10%);
+}
+
+.traversal-ledger li.is-complete i {
+  border-color: var(--teal);
+  background: var(--teal);
+}
+
+.memory-chat-evidence {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+}
+
+.memory-chat-evidence button {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: start;
+  padding: 0.7rem;
+  cursor: pointer;
+  border: 0;
+  background: var(--paper-raised);
+  text-align: left;
+}
+
+.memory-chat-evidence b,
+.memory-chat-evidence small {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.62rem;
+}
+
+.memory-chat-evidence b {
+  color: var(--cobalt);
+}
+
+.memory-chat-evidence span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.memory-chat-evidence small {
+  color: var(--ink-muted);
+}
+
+#memory-chat-form {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 1rem;
+}
+
+#memory-chat-form label {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+#memory-chat-form textarea {
+  width: 100%;
+  min-height: 5.5rem;
+  padding: 0.75rem;
+  resize: vertical;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  color: var(--ink);
+  background: var(--paper-raised);
+  font: inherit;
+  line-height: 1.45;
+}
+
+.memory-architecture-note {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--ink);
+}
+
+.memory-architecture-note summary {
+  min-height: 2.75rem;
+  padding: 0.8rem 0;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.memory-architecture-note p {
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.memory-architecture-note a {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.5rem;
+  text-decoration: none;
+}
+
 .graph-edge {
   fill: none;
   stroke: var(--rule-strong);
@@ -1501,6 +1995,48 @@ h2 {
   transition:
     opacity 180ms ease-out,
     stroke-width 180ms ease-out;
+}
+
+.graph-query-route path {
+  fill: none;
+  stroke: var(--cobalt);
+  stroke-width: 5;
+  stroke-dasharray: 12 10;
+  animation: graph-route-traverse 900ms ease-out both;
+}
+
+.graph-query-route circle {
+  fill: var(--ink);
+  stroke: var(--paper-raised);
+  stroke-width: 4;
+}
+
+.graph-query-route text {
+  fill: var(--paper-raised);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.graph-node.is-traversed circle {
+  fill: rgb(33 87 213 / 10%);
+  stroke-width: 9;
+  animation: graph-node-arrive 520ms ease-out both;
+}
+
+@keyframes graph-route-traverse {
+  from {
+    opacity: 0;
+    stroke-dashoffset: 180;
+  }
+}
+
+@keyframes graph-node-arrive {
+  from {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
 }
 
 .graph-node {
@@ -3003,6 +3539,70 @@ h2 {
   .error-view {
     width: min(100% - 2rem, 1180px);
     padding: 3rem 0;
+  }
+
+  .timing-overview {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .timing-overview > div:last-child {
+    grid-column: 1 / -1;
+    padding-left: 0;
+    border-top: 1px solid var(--rule);
+    border-left: 0;
+  }
+
+  .timing-stages {
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+    margin-top: 2rem;
+  }
+
+  .timing-stages li {
+    min-height: 2.1rem;
+    padding-right: 0;
+  }
+
+  .timing-stages li::after {
+    top: 0.75rem;
+    bottom: -1.1rem;
+    left: 0.42rem;
+    width: 1px;
+    height: auto;
+  }
+
+  .timing-stages span {
+    white-space: normal;
+  }
+
+  .analysis-timing-board {
+    padding: 2rem 1rem;
+  }
+
+  .analysis-timing-heading {
+    display: grid;
+    align-items: start;
+  }
+
+  .analysis-timing-heading > p {
+    text-align: left;
+  }
+
+  .analysis-timing-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .analysis-timing-metrics > div {
+    border-top: 1px solid var(--rule);
+  }
+
+  .analysis-timing-metrics > div:nth-child(-n + 2) {
+    border-top: 0;
+  }
+
+  .analysis-timing-metrics > div:nth-child(odd) {
+    padding-left: 0;
+    border-left: 0;
   }
 
   h1 {

@@ -1,4 +1,5 @@
 import { forgetSnapshot, loadSnapshot, saveSnapshot } from "../lib/storage";
+import { AnalysisLease } from "../lib/analysis-lease";
 import {
   buildThreadStrands,
   classifyTrend,
@@ -6,7 +7,25 @@ import {
   confidenceThreshold,
   normalizeSettings,
 } from "../lib/analysis";
+import { formatDuration } from "../lib/performance";
+import {
+  buildMemoryChatEvidence,
+  buildMemoryChatMessages,
+  buildGroundedFallback,
+  MEMORY_CHAT_MODEL,
+  planMemoryChatResults,
+  validateGroundedAnswer,
+  type MemoryChatEvidence,
+  type MemoryChatRuntime,
+  type MemoryChatTurn,
+  type MemoryChatWorkerRequest,
+  type MemoryChatWorkerResponse,
+} from "../lib/memory-chat";
 import type {
+  AnalysisPerformance,
+  AnalysisPhase,
+  AnalysisProgressTiming,
+  AnalysisRuntime,
   AnalysisSettings,
   EmotionBucket,
   FactGroup,
@@ -43,6 +62,10 @@ const dropZone = $("#drop-zone");
 const progressStatus = $("#progress-status");
 const progressPhase = $("#progress-phase");
 const progressFill = $<HTMLElement>("#progress-line-fill");
+const progressElapsed = $("#progress-elapsed");
+const progressRemaining = $("#progress-remaining");
+const progressRuntime = $("#progress-runtime");
+const analysisTimingBoard = $("#analysis-timing-board");
 const errorMessage = $("#error-message");
 const appStatus = $("#app-status");
 const graph = $<SVGSVGElement>("#topic-graph");
@@ -59,8 +82,23 @@ const reportConfidenceInput = $<HTMLInputElement>("#report-confidence-input");
 const reportConfidenceOutput = $<HTMLOutputElement>("#report-confidence-output");
 const atlasPeriod = $<HTMLSelectElement>("#atlas-period");
 const storyButton = $<HTMLButtonElement>("#open-story");
+const enableMemoryChatButton = $<HTMLButtonElement>("#enable-memory-chat");
+const unloadMemoryChatButton = $<HTMLButtonElement>("#unload-memory-chat");
+const memoryChatModelStatus = $("#memory-chat-model-status");
+const memoryChatModelProgress = $<HTMLProgressElement>("#memory-chat-model-progress");
+const memoryChatSession = $("#memory-chat-session");
+const memoryChatTranscript = $("#memory-chat-transcript");
+const memoryChatForm = $<HTMLFormElement>("#memory-chat-form");
+const memoryChatQuery = $<HTMLTextAreaElement>("#memory-chat-query");
+const memoryChatEvidence = $("#memory-chat-evidence");
 
+const analysisLease = new AnalysisLease(navigator.locks);
 let worker = createWorker();
+let memoryChatWorker: Worker | null = null;
+let memoryChatReady = false;
+let pendingMemoryQuestion: string | null = null;
+let pendingMemoryEvidence: MemoryChatEvidence[] = [];
+let memoryChatHistory: MemoryChatTurn[] = [];
 let currentReport: FullReport | null = null;
 let currentSnapshot: MemorySnapshot | null = null;
 let ledgerStatus: FactGroup["status"] = "current";
@@ -68,6 +106,17 @@ let activeConfidence = 65;
 let evolutionKind: "topics" | "domains" | "language" = "topics";
 let activePeriodMonths: number | null = 12;
 let evidenceReturnFocus: HTMLElement | SVGElement | null = null;
+let timingInterval: number | null = null;
+let latestTiming:
+  | {
+      phase: AnalysisPhase;
+      label: string;
+      current: number;
+      total: number;
+      timing: AnalysisProgressTiming;
+      receivedAt: number;
+    }
+  | null = null;
 const storyController = createStoryController({ showEvidence });
 
 function createWorker() {
@@ -81,8 +130,25 @@ function createWorker() {
   return nextWorker;
 }
 
+function createMemoryChatWorker() {
+  const nextWorker = new Worker(new URL("../workers/memory-chat.worker.ts", import.meta.url), {
+    type: "module",
+  });
+  nextWorker.addEventListener("message", onMemoryChatWorkerMessage);
+  nextWorker.addEventListener("error", () => {
+    memoryChatModelStatus.textContent =
+      "The local chat worker stopped. The retrieved evidence remains available.";
+    unloadMemoryChatModel(false);
+  });
+  return nextWorker;
+}
+
 function send(request: WorkerRequest) {
   worker.postMessage(request);
+}
+
+function sendMemoryChat(request: MemoryChatWorkerRequest) {
+  memoryChatWorker?.postMessage(request);
 }
 
 function showOnly(view: HTMLElement) {
@@ -110,6 +176,151 @@ function formatPercent(value: number): string {
   return new Intl.NumberFormat(undefined, { style: "percent", maximumFractionDigits: 1 }).format(
     value,
   );
+}
+
+function runtimeLabel(runtime?: AnalysisRuntime): string {
+  if (!runtime) return "Selecting…";
+  const route = runtime.device === "webgpu" ? "Accelerated GPU" : "Compatibility mode";
+  return `${route} · ${runtime.dtype} · batch ${runtime.batchSize}`;
+}
+
+function stageDuration(
+  stages: AnalysisProgressTiming["completedStages"],
+  phase: AnalysisPhase,
+): number {
+  return stages
+    .filter((stage) => stage.phase === phase)
+    .reduce((total, stage) => total + stage.elapsedMs, 0);
+}
+
+function renderStageTimings(
+  completedStages: AnalysisProgressTiming["completedStages"],
+  currentPhase: AnalysisPhase | null,
+  currentElapsedMs: number,
+) {
+  for (const list of [
+    $<HTMLOListElement>("#progress-stage-list"),
+    $<HTMLOListElement>("#report-stage-list"),
+  ]) {
+    for (const item of list.querySelectorAll<HTMLLIElement>("[data-timing-stage]")) {
+      const phase = item.dataset.timingStage as AnalysisPhase;
+      const complete = completedStages.find((stage) => stage.phase === phase);
+      const active = phase === currentPhase;
+      item.classList.toggle("is-complete", Boolean(complete));
+      item.classList.toggle("is-active", active);
+      const time = item.querySelector("time");
+      if (time) {
+        time.textContent = complete
+          ? formatDuration(complete.elapsedMs)
+          : active
+            ? formatDuration(currentElapsedMs)
+            : "Waiting";
+      }
+    }
+  }
+}
+
+function renderLiveTiming(
+  phase: AnalysisPhase,
+  label: string,
+  current: number,
+  total: number,
+  timing: AnalysisProgressTiming,
+) {
+  const percent = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+  progressElapsed.textContent = formatDuration(timing.totalElapsedMs);
+  progressRemaining.textContent =
+    timing.estimatedRemainingMs === null
+      ? "Estimating…"
+      : `About ${formatDuration(timing.estimatedRemainingMs)}`;
+  progressRuntime.textContent = runtimeLabel(timing.runtime);
+  renderStageTimings(timing.completedStages, phase, timing.stageElapsedMs);
+
+  if (currentReport) {
+    analysisTimingBoard.hidden = false;
+    $("#report-timing-initial").textContent = formatDuration(
+      currentReport.performance?.initialInsightsMs ?? timing.totalElapsedMs,
+    );
+    $("#report-timing-total").textContent =
+      timing.estimatedRemainingMs === null
+        ? `${formatDuration(timing.totalElapsedMs)} elapsed`
+        : `${formatDuration(timing.totalElapsedMs)} elapsed · about ${formatDuration(
+            timing.estimatedRemainingMs,
+          )} left`;
+    const modelMs =
+      stageDuration(timing.completedStages, "model") +
+      (phase === "model" ? timing.stageElapsedMs : 0);
+    const semanticMs =
+      stageDuration(timing.completedStages, "embed") +
+      stageDuration(timing.completedStages, "cluster") +
+      (phase === "embed" || phase === "cluster" ? timing.stageElapsedMs : 0);
+    $("#report-timing-model").textContent = modelMs > 0 ? formatDuration(modelMs) : "Waiting";
+    $("#report-timing-semantic").textContent =
+      semanticMs > 0 ? formatDuration(semanticMs) : "Waiting";
+    $("#report-timing-runtime").textContent = runtimeLabel(timing.runtime);
+    $("#report-timing-coverage").textContent =
+      phase === "embed" && total > 0
+        ? `${formatNumber(current)} of ${formatNumber(total)} vectors`
+        : "Preparing selected candidates";
+    $("#report-timing-status").textContent =
+      `${label}${total > 0 ? ` · ${percent}%` : ""}${
+        timing.estimatedRemainingMs === null
+          ? ""
+          : ` · about ${formatDuration(timing.estimatedRemainingMs)} left`
+      }`;
+  }
+}
+
+function renderPerformanceSummary(performance: AnalysisPerformance | undefined, restored = false) {
+  if (!performance) {
+    analysisTimingBoard.hidden = true;
+    return;
+  }
+  analysisTimingBoard.hidden = false;
+  $("#report-timing-initial").textContent = formatDuration(performance.initialInsightsMs);
+  $("#report-timing-total").textContent =
+    performance.totalMs === null ? "Running…" : `Complete in ${formatDuration(performance.totalMs)}`;
+  $("#report-timing-model").textContent =
+    performance.modelMs > 0 ? formatDuration(performance.modelMs) : "Waiting";
+  $("#report-timing-semantic").textContent =
+    performance.semanticMs > 0 ? formatDuration(performance.semanticMs) : "Waiting";
+  $("#report-timing-runtime").textContent = runtimeLabel(performance.runtime);
+  $("#report-timing-coverage").textContent = performance.semanticCandidateCount
+    ? `${formatNumber(performance.semanticCandidateCount)} vectors · selected set preserved`
+    : "Preparing selected candidates";
+  $("#report-timing-status").textContent =
+    performance.status === "complete"
+      ? `${restored ? "Original analysis run" : "Complete map ready"}. Total includes archive parsing, model preparation, embedding, and report assembly.`
+      : "Initial insights are ready. Semantic analysis is continuing.";
+  renderStageTimings(performance.stages, null, 0);
+}
+
+function stopTimingTicker() {
+  if (timingInterval !== null) window.clearInterval(timingInterval);
+  timingInterval = null;
+}
+
+function startTimingTicker() {
+  stopTimingTicker();
+  timingInterval = window.setInterval(() => {
+    if (!latestTiming) return;
+    const delta = performance.now() - latestTiming.receivedAt;
+    renderLiveTiming(
+      latestTiming.phase,
+      latestTiming.label,
+      latestTiming.current,
+      latestTiming.total,
+      {
+        ...latestTiming.timing,
+        stageElapsedMs: latestTiming.timing.stageElapsedMs + delta,
+        totalElapsedMs: latestTiming.timing.totalElapsedMs + delta,
+        estimatedRemainingMs:
+          latestTiming.timing.estimatedRemainingMs === null
+            ? null
+            : Math.max(0, latestTiming.timing.estimatedRemainingMs - delta),
+      },
+    );
+  }, 1_000);
 }
 
 function truncate(value: string, length: number): string {
@@ -166,7 +377,12 @@ function resetWorker() {
 
 function resetApp() {
   storyController.close();
+  unloadMemoryChatModel();
+  clearGraphTraversal();
   resetWorker();
+  void analysisLease.release();
+  stopTimingTicker();
+  latestTiming = null;
   currentReport = null;
   currentSnapshot = null;
   archiveInput.value = "";
@@ -199,21 +415,36 @@ function closeEvidencePanel(restoreFocus = true) {
   evidenceReturnFocus = null;
 }
 
-function analyzeFile(file: File) {
+async function analyzeFile(file: File) {
   if (!file.name.toLocaleLowerCase().endsWith(".zip")) {
     showError("Choose the original .zip file from your ChatGPT data export.");
     return;
   }
+  if (!(await analysisLease.acquire())) {
+    archiveInput.value = "";
+    showError(
+      "Memory Map is already analyzing or retaining a searchable model in another tab. Close or reset that tab, then try again.",
+    );
+    return;
+  }
   currentReport = null;
   currentSnapshot = null;
+  latestTiming = null;
   progressFill.style.transform = "scaleX(0.02)";
   progressPhase.textContent = "Reading archive";
   progressStatus.textContent = `Opening ${file.name}…`;
+  progressElapsed.textContent = "Under 1 sec";
+  progressRemaining.textContent = "Estimating…";
+  progressRuntime.textContent = "Selecting…";
+  renderStageTimings([], "discover", 0);
+  analysisTimingBoard.hidden = true;
+  startTimingTicker();
   showOnly(progressView);
   send({ type: "analyze", file, settings: readAnalysisSettings() });
 }
 
 function showError(message: string, keepReport = false) {
+  stopTimingTicker();
   errorMessage.textContent = message;
   appStatus.textContent = message;
   if (!keepReport) showOnly(errorView);
@@ -223,13 +454,49 @@ function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
   const message = event.data;
   if (message.type === "progress") {
     const percent = message.total > 0 ? Math.min(100, (message.current / message.total) * 100) : 4;
-    progressPhase.textContent = message.phase === "embed" ? "Semantic analysis" : message.phase;
+    const phaseLabels: Record<AnalysisPhase, string> = {
+      discover: "Opening archive",
+      parse: "Reading conversations",
+      statistics: "Building initial insights",
+      model: "Preparing the model",
+      embed: "Mapping semantic memory",
+      cluster: "Assembling your report",
+    };
+    progressPhase.textContent = phaseLabels[message.phase];
     progressStatus.textContent = message.label;
     progressFill.style.transform = `scaleX(${Math.max(4, percent) / 100})`;
     appStatus.textContent = `${message.label} ${Math.round(percent)}%`;
-    if (currentReport && !currentReport.semantic && ["model", "embed"].includes(message.phase)) {
+    if (message.timing) {
+      latestTiming = {
+        phase: message.phase,
+        label: message.label,
+        current: message.current,
+        total: message.total,
+        timing: message.timing,
+        receivedAt: performance.now(),
+      };
+      renderLiveTiming(
+        message.phase,
+        message.label,
+        message.current,
+        message.total,
+        message.timing,
+      );
+    }
+    if (
+      currentReport &&
+      !currentReport.semantic &&
+      ["model", "embed", "cluster"].includes(message.phase)
+    ) {
+      const timingNote = message.timing
+        ? ` · ${formatDuration(message.timing.totalElapsedMs)} elapsed${
+            message.timing.estimatedRemainingMs === null
+              ? ""
+              : ` · about ${formatDuration(message.timing.estimatedRemainingMs)} left`
+          }`
+        : "";
       $("#sampling-note").textContent =
-        `${message.label} · ${Math.round(percent)}%. Deterministic insights remain available while this finishes.`;
+        `${message.label} · ${Math.round(percent)}%${timingNote}. Deterministic insights remain available while this finishes.`;
     }
     return;
   }
@@ -238,6 +505,15 @@ function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
     setConfidence(message.report.analysis.confidence, false);
     renderReport(message.report);
     showOnly(reportView);
+    if (latestTiming) {
+      renderLiveTiming(
+        latestTiming.phase,
+        latestTiming.label,
+        latestTiming.current,
+        latestTiming.total,
+        latestTiming.timing,
+      );
+    }
     appStatus.textContent = "Initial statistics are ready. Semantic analysis is still running.";
     return;
   }
@@ -246,6 +522,8 @@ function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
     currentSnapshot = message.snapshot;
     setConfidence(message.report.analysis.confidence, false);
     renderReport(message.report);
+    stopTimingTicker();
+    latestTiming = null;
     appStatus.textContent = "Your semantic memory map is ready.";
     return;
   }
@@ -253,6 +531,9 @@ function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
     currentReport = message.report;
     setConfidence(message.report.analysis.confidence, false);
     renderReport(message.report);
+    renderPerformanceSummary(message.report.performance, true);
+    stopTimingTicker();
+    latestTiming = null;
     forgetButton.hidden = false;
     saveButton.textContent = "Saved on this device";
     saveButton.disabled = true;
@@ -260,15 +541,27 @@ function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
     return;
   }
   if (message.type === "search-results") {
+    if (pendingMemoryQuestion && message.query === pendingMemoryQuestion) {
+      handleMemoryChatSearch(message.results);
+      return;
+    }
     renderSearchResults(message.results);
     return;
   }
+  resetWorker();
+  void analysisLease.release();
   showError(message.message, message.recoverable && Boolean(currentReport));
 }
 
 function renderReport(report: FullReport) {
   const deterministic = report.deterministic;
   const model = report.semantic?.model;
+  if (!memoryChatReady) {
+    enableMemoryChatButton.disabled = !report.semantic;
+    enableMemoryChatButton.textContent = report.semantic
+      ? `Load local chat · ≈${MEMORY_CHAT_MODEL.approximateDownloadMb} MB`
+      : "Available when the map is complete";
+  }
   $("#model-profile-note").textContent = model
     ? `${report.analysis.modelProfile === "auto" ? "Automatic" : "Selected"} → ${model.resolvedProfile}. ${model.id}@${model.revision.slice(0, 8)} · ≈${model.approximateDownloadMb} MB. ${model.profileReason}`
     : `${report.analysis.modelProfile === "auto" ? `Automatic → ${report.analysis.resolvedModelProfile}.` : `${report.analysis.modelProfile} profile selected.`} ${report.analysis.profileReason}`;
@@ -276,6 +569,7 @@ function renderReport(report: FullReport) {
     `${report.fileName} · ${formatDate(deterministic.dateRange.start)} to ${formatDate(
       deterministic.dateRange.end,
     )} · analyzed ${new Date(report.generatedAt).toLocaleString()}`;
+  renderPerformanceSummary(report.performance);
 
   const stats = [
     ["Conversations", deterministic.totals.conversations],
@@ -384,7 +678,8 @@ function renderGraph(
     path.setAttribute("class", "graph-edge");
     path.setAttribute("data-source", edge.source);
     path.setAttribute("data-target", edge.target);
-    path.style.opacity = String(Math.max(0.35, edge.similarity));
+    path.dataset.opacity = String(Math.max(0.35, edge.similarity));
+    path.style.opacity = path.dataset.opacity;
     graph.append(path);
   }
 
@@ -392,6 +687,8 @@ function renderGraph(
     const group = svgElement("g");
     group.setAttribute("class", "graph-node");
     group.setAttribute("data-id", topic.id);
+    group.setAttribute("data-x", String(topic.x * 1_000));
+    group.setAttribute("data-y", String(topic.y * 620));
     group.setAttribute("tabindex", "0");
     group.setAttribute("role", "button");
     group.setAttribute(
@@ -456,6 +753,252 @@ function selectTopic(topic: TopicNode) {
     `${formatNumber(topic.count)} conversations`,
     topic.terms.length ? `Distinctive terms: ${topic.terms.join(", ")}` : "",
   ]);
+}
+
+const MEMORY_CHAT_STAGES = ["query", "search", "topics", "evidence", "answer"] as const;
+
+function setMemoryChatStage(active: (typeof MEMORY_CHAT_STAGES)[number] | null) {
+  const activeIndex = active === null ? MEMORY_CHAT_STAGES.length : MEMORY_CHAT_STAGES.indexOf(active);
+  for (const item of document.querySelectorAll<HTMLElement>("[data-chat-stage]")) {
+    const index = MEMORY_CHAT_STAGES.indexOf(
+      item.dataset.chatStage as (typeof MEMORY_CHAT_STAGES)[number],
+    );
+    item.classList.toggle("is-complete", index < activeIndex);
+    item.classList.toggle("is-active", index === activeIndex);
+  }
+}
+
+function clearGraphTraversal() {
+  graph.querySelector(".graph-query-route")?.remove();
+  for (const node of graph.querySelectorAll(".graph-node")) {
+    node.classList.remove("is-traversed");
+  }
+  for (const edge of graph.querySelectorAll<SVGPathElement>(".graph-edge")) {
+    edge.style.opacity = edge.dataset.opacity ?? "";
+    edge.style.strokeWidth = "2";
+  }
+}
+
+function renderGraphTraversal(question: string, evidence: MemoryChatEvidence[]) {
+  clearGraphTraversal();
+  const topicIds = [
+    ...new Set(evidence.map((item) => item.topicId).filter((id): id is string => Boolean(id))),
+  ].slice(0, 4);
+  if (topicIds.length === 0) return;
+
+  const route = svgElement("g");
+  route.setAttribute("class", "graph-query-route");
+  route.setAttribute("aria-hidden", "true");
+  for (const [index, topicId] of topicIds.entries()) {
+    const node = graph.querySelector<SVGGElement>(`.graph-node[data-id="${CSS.escape(topicId)}"]`);
+    if (!node) continue;
+    node.classList.add("is-traversed");
+    node.style.animationDelay = `${index * 120}ms`;
+    const x = Number(node.dataset.x);
+    const y = Number(node.dataset.y);
+    const path = svgElement("path");
+    const bendX = 500 + (x - 500) * 0.35;
+    const bendY = Math.max(74, y * 0.48);
+    path.setAttribute("d", `M 500 50 Q ${bendX} ${bendY} ${x} ${y}`);
+    path.style.animationDelay = `${index * 120}ms`;
+    route.append(path);
+  }
+  const queryCircle = svgElement("circle");
+  queryCircle.setAttribute("cx", "500");
+  queryCircle.setAttribute("cy", "28");
+  queryCircle.setAttribute("r", "32");
+  const queryLabel = svgElement("text");
+  queryLabel.setAttribute("x", "500");
+  queryLabel.setAttribute("y", "33");
+  queryLabel.textContent = "QUERY";
+  const title = svgElement("title");
+  title.textContent = `Traversal for: ${question}`;
+  route.append(queryCircle, queryLabel, title);
+  const firstNode = graph.querySelector(".graph-node");
+  graph.insertBefore(route, firstNode);
+
+  const traversed = new Set(topicIds);
+  for (const edge of graph.querySelectorAll<SVGPathElement>(".graph-edge")) {
+    const connected =
+      traversed.has(edge.dataset.source ?? "") || traversed.has(edge.dataset.target ?? "");
+    edge.style.opacity = connected ? "0.9" : "0.1";
+    edge.style.strokeWidth = connected ? "4" : "2";
+  }
+}
+
+function appendMemoryChatMessage(
+  role: "user" | "assistant",
+  content: string,
+  detail?: string,
+) {
+  const message = document.createElement("article");
+  message.className = `memory-chat-message ${role}`;
+  message.append(
+    text("span", role === "user" ? "You" : "Grounded answer"),
+    text("p", content),
+  );
+  if (detail) message.append(text("small", detail));
+  memoryChatTranscript.append(message);
+  memoryChatTranscript.scrollTop = memoryChatTranscript.scrollHeight;
+}
+
+function renderMemoryChatEvidence(evidence: MemoryChatEvidence[]) {
+  if (evidence.length === 0) {
+    memoryChatEvidence.replaceChildren(
+      text("p", "No mapped evidence cleared the search floor.", "empty-note"),
+    );
+    return;
+  }
+  memoryChatEvidence.replaceChildren(
+    ...evidence.map((item) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.append(
+        text("b", item.reference),
+        text("span", item.title),
+        text("small", `${Math.round(item.similarity * 100)}%`),
+      );
+      button.addEventListener("click", () =>
+        showEvidence(item.title, item.source ? [item.source] : [], [
+          item.excerpt,
+          `${item.type} match · ${Math.round(item.similarity * 100)}% combined similarity`,
+          item.topicId ? `Traversed through ${item.topicId}.` : "Evidence-only stop.",
+        ]),
+      );
+      return button;
+    }),
+  );
+}
+
+function handleMemoryChatSearch(results: SearchResult[]) {
+  if (!pendingMemoryQuestion || !memoryChatReady) return;
+  const plannedResults = currentReport
+    ? planMemoryChatResults(
+        pendingMemoryQuestion,
+        results,
+        currentReport,
+        currentSnapshot?.searchIndex,
+      )
+    : results;
+  pendingMemoryEvidence = buildMemoryChatEvidence(plannedResults);
+  renderGraphTraversal(pendingMemoryQuestion, pendingMemoryEvidence);
+  renderMemoryChatEvidence(pendingMemoryEvidence);
+  const topicCount = new Set(
+    pendingMemoryEvidence.map((item) => item.topicId).filter(Boolean),
+  ).size;
+  const topicStage = $<HTMLElement>('[data-chat-stage="topics"] span');
+  const graphTopicCount = Math.min(4, topicCount);
+  topicStage.textContent =
+    topicCount > 0
+      ? topicCount > graphTopicCount
+        ? `Traversed ${graphTopicCount} of ${topicCount} matched topic routes`
+        : `Traversed ${graphTopicCount} topic route${graphTopicCount === 1 ? "" : "s"}`
+      : "Evidence-only route";
+  const evidenceStage = $<HTMLElement>('[data-chat-stage="evidence"] span');
+  evidenceStage.textContent = `Packed ${pendingMemoryEvidence.length} cited evidence stop${
+    pendingMemoryEvidence.length === 1 ? "" : "s"
+  }`;
+  setMemoryChatStage("answer");
+  const historyBeforeQuestion = memoryChatHistory.slice(0, -1);
+  sendMemoryChat({
+    type: "generate",
+    messages: buildMemoryChatMessages(
+      pendingMemoryQuestion,
+      pendingMemoryEvidence,
+      historyBeforeQuestion,
+    ),
+  });
+}
+
+function onMemoryChatWorkerMessage(event: MessageEvent<MemoryChatWorkerResponse>) {
+  const message = event.data;
+  if (message.type === "progress") {
+    const percent =
+      message.total > 0 ? Math.max(0, Math.min(100, (message.current / message.total) * 100)) : 0;
+    if (message.phase === "model") {
+      memoryChatModelProgress.hidden = false;
+      memoryChatModelProgress.value = percent;
+      memoryChatModelStatus.textContent = `${message.label} · ${Math.round(percent)}%`;
+    } else {
+      memoryChatModelStatus.textContent = message.label;
+    }
+    return;
+  }
+  if (message.type === "ready") {
+    memoryChatReady = true;
+    enableMemoryChatButton.hidden = true;
+    unloadMemoryChatButton.hidden = false;
+    memoryChatModelProgress.hidden = true;
+    memoryChatSession.hidden = false;
+    memoryChatModelStatus.textContent = `Ready · ${memoryChatRuntimeLabel(message.runtime)} · model stays local`;
+    memoryChatQuery.disabled = false;
+    memoryChatForm.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled = false;
+    memoryChatQuery.focus();
+    return;
+  }
+  if (message.type === "answer") {
+    const validation = validateGroundedAnswer(message.answer, pendingMemoryEvidence);
+    const displayedAnswer = validation.valid
+      ? message.answer
+      : buildGroundedFallback(pendingMemoryEvidence);
+    appendMemoryChatMessage(
+      "assistant",
+      displayedAnswer,
+      validation.valid
+        ? `${memoryChatRuntimeLabel(message.runtime)} · ${formatDuration(message.elapsedMs)} · ${validation.citations.join(", ")} verified`
+        : `${memoryChatRuntimeLabel(message.runtime)} · ${formatDuration(message.elapsedMs)} · grounding validator withheld the draft`,
+    );
+    memoryChatHistory.push({ role: "assistant", content: displayedAnswer });
+    pendingMemoryQuestion = null;
+    setMemoryChatStage(null);
+    memoryChatModelStatus.textContent = `Answer ready in ${formatDuration(message.elapsedMs)}. The model remains loaded until you unload or reset it.`;
+    memoryChatQuery.disabled = false;
+    memoryChatForm.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled = false;
+    memoryChatQuery.focus();
+    return;
+  }
+  if (message.type === "disposed") {
+    unloadMemoryChatModel();
+    return;
+  }
+  memoryChatModelStatus.textContent = `Local synthesis failed: ${message.message}. The retrieved evidence is still available.`;
+  if (!memoryChatSession.hidden || pendingMemoryQuestion) {
+    appendMemoryChatMessage(
+      "assistant",
+      "I could not synthesize an answer locally. Review the retrieved evidence stops below.",
+    );
+  }
+  pendingMemoryQuestion = null;
+  unloadMemoryChatModel(false);
+}
+
+function memoryChatRuntimeLabel(runtime: MemoryChatRuntime): string {
+  return `local WASM · ${runtime.dtype}`;
+}
+
+function unloadMemoryChatModel(clearSession = true) {
+  memoryChatWorker?.terminate();
+  memoryChatWorker = null;
+  memoryChatReady = false;
+  pendingMemoryQuestion = null;
+  pendingMemoryEvidence = [];
+  unloadMemoryChatButton.hidden = true;
+  enableMemoryChatButton.hidden = false;
+  enableMemoryChatButton.disabled = !currentReport?.semantic;
+  enableMemoryChatButton.textContent = currentReport?.semantic
+    ? `Load local chat · ≈${MEMORY_CHAT_MODEL.approximateDownloadMb} MB`
+    : "Available when the map is complete";
+  memoryChatModelProgress.hidden = true;
+  memoryChatModelProgress.value = 0;
+  memoryChatQuery.disabled = true;
+  memoryChatForm.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled = true;
+  if (clearSession) {
+    memoryChatSession.hidden = true;
+    memoryChatHistory = [];
+    memoryChatEvidence.replaceChildren();
+    clearGraphTraversal();
+    memoryChatModelStatus.textContent = "The chat model has not been loaded.";
+  }
 }
 
 function showEvidence(title: string, sources: SourceRef[], notes: string[] = []) {
@@ -1231,7 +1774,7 @@ setConfidence(65, false);
 
 archiveInput.addEventListener("change", () => {
   const file = archiveInput.files?.[0];
-  if (file) analyzeFile(file);
+  if (file) void analyzeFile(file);
 });
 
 for (const eventName of ["dragenter", "dragover"]) {
@@ -1250,7 +1793,7 @@ for (const eventName of ["dragleave", "drop"]) {
 
 dropZone.addEventListener("drop", (event) => {
   const file = (event as DragEvent).dataTransfer?.files[0];
-  if (file) analyzeFile(file);
+  if (file) void analyzeFile(file);
 });
 
 $("#cancel-analysis").addEventListener("click", resetApp);
@@ -1311,6 +1854,40 @@ forgetButton.addEventListener("click", async () => {
   appStatus.textContent = "Saved memory forgotten.";
 });
 
+enableMemoryChatButton.addEventListener("click", () => {
+  if (!currentReport?.semantic || memoryChatWorker) return;
+  memoryChatWorker = createMemoryChatWorker();
+  enableMemoryChatButton.disabled = true;
+  enableMemoryChatButton.textContent = "Loading local model…";
+  memoryChatModelProgress.hidden = false;
+  memoryChatModelProgress.value = 0;
+  memoryChatModelStatus.textContent =
+    "Starting the opt-in local q8 model. This may download about 105 MB once.";
+  sendMemoryChat({ type: "load" });
+});
+
+unloadMemoryChatButton.addEventListener("click", () => {
+  unloadMemoryChatModel();
+  appStatus.textContent = "The local chat model and its inference buffers were unloaded.";
+});
+
+memoryChatForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const question = memoryChatQuery.value.trim();
+  if (!question || !memoryChatReady || pendingMemoryQuestion) return;
+  pendingMemoryQuestion = question;
+  memoryChatHistory.push({ role: "user", content: question });
+  appendMemoryChatMessage("user", question);
+  memoryChatQuery.value = "";
+  memoryChatQuery.disabled = true;
+  memoryChatForm.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled = true;
+  memoryChatEvidence.replaceChildren();
+  clearGraphTraversal();
+  setMemoryChatStage("search");
+  memoryChatModelStatus.textContent = "Searching the derived semantic memory first…";
+  send({ type: "search", query: question });
+});
+
 void loadSnapshot()
   .then(async (snapshot) => {
     if (!snapshot) return;
@@ -1335,10 +1912,18 @@ if (import.meta.env.DEV) {
       .then(async (response) => {
         if (!response.ok) throw new Error(`Sample server returned ${response.status}.`);
         const blob = await response.blob();
-        analyzeFile(new File([blob], "development-sample.zip", { type: "application/zip" }));
+        await analyzeFile(new File([blob], "development-sample.zip", { type: "application/zip" }));
       })
       .catch((error) => {
         showError(error instanceof Error ? error.message : "The development sample could not load.");
       });
   }
 }
+
+window.addEventListener("pagehide", () => {
+  stopTimingTicker();
+  memoryChatWorker?.terminate();
+  memoryChatWorker = null;
+  worker.terminate();
+  void analysisLease.release();
+});
