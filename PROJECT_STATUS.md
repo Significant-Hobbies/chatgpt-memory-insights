@@ -69,6 +69,9 @@ sync, and verified medical, emotional, or personality claims.
 - 2026-07-28 — visual atlas, execution timing, and graph-routed Memory Chat
   release deployed and smoke-tested at
   `https://chatgpt.significanthobbies.com`
+- 2026-07-28 — progressive conversation-by-conversation graph formation added
+  to ingestion and verified against all 1,061 conversations in the owner
+  archive; production deployment was not performed
 
 ## Products
 
@@ -126,6 +129,9 @@ sync, and verified medical, emotional, or personality claims.
   validation that withholds unsupported drafts.
 - Single-tab heavyweight-analysis ownership plus worker termination and lock
   release on error, reset, unload, and page exit.
+- Progressive ingestion sketch with one distinct stop per parsed conversation,
+  deterministic multi-route attribution, continuous parsing-to-report state,
+  reduced-motion behavior, and automatic handoff to the final semantic graph.
 
 ## Todo / Planned / Deferred / Blocked
 

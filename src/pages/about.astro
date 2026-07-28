@@ -79,6 +79,11 @@ const capabilityRoutes = [
           "Uses WebGPU with larger bounded batches when the compact model and browser support it, then retries the complete ordered workload in portable WebAssembly mode when needed.",
       },
       {
+        title: "Progressive conversation graph",
+        detail:
+          "Every parsed conversation becomes a distinct stop in a live deterministic route sketch, which stays visible through semantic analysis and hands off to the final embedding-backed topology.",
+      },
+      {
         title: "Semantic topic clusters",
         detail:
           "Groups sampled conversations by meaning and names them against 20 broad topic anchors plus distinctive terms from your history.",

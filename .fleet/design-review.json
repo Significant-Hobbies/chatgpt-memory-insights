@@ -2,7 +2,7 @@
   "$schema": "fleet.design-review.v1",
   "version": 1,
   "project": "chatgpt-memory-insights",
-  "target": "analysis performance and graph memory workbench",
+  "target": "progressive conversation graph formation",
   "mode": "preserve",
   "register": "product",
   "context": {
@@ -14,21 +14,21 @@
     "probes": [],
     "selected": "existing-design",
     "approval": "not-required",
-    "before": "artifacts/design/performance-before.png"
+    "before": "artifacts/design/performance-after-1440.png"
   },
   "evidence": {
     "screenshots": [
       {
         "width": 390,
-        "path": "artifacts/design/graph-chat-after-390.png"
+        "path": "artifacts/design/graph-formation-after-390.png"
       },
       {
         "width": 768,
-        "path": "artifacts/design/graph-chat-after-768.png"
+        "path": "artifacts/design/graph-formation-after-768.png"
       },
       {
         "width": 1440,
-        "path": "artifacts/design/graph-chat-after-1440.png"
+        "path": "artifacts/design/graph-formation-after-1440.png"
       }
     ],
     "projectCheck": {
@@ -54,6 +54,6 @@
   },
   "ownerFeedback": {
     "decision": "delegated",
-    "note": "Owner approved the full graph-memory direction, local conversation layer, retrieval visualization, performance work, and UI polish."
+    "note": "Owner explicitly requested that the graph visibly form after each conversation is added."
   }
 }

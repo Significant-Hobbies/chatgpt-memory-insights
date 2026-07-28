@@ -9,6 +9,12 @@ import {
 } from "../lib/analysis";
 import { formatDuration } from "../lib/performance";
 import {
+  FORMATION_ROUTES,
+  formationPoint,
+  formationRoute,
+  formationRouteIds,
+} from "../lib/graph-formation";
+import {
   buildMemoryChatEvidence,
   buildMemoryChatMessages,
   buildGroundedFallback,
@@ -30,6 +36,7 @@ import type {
   EmotionBucket,
   FactGroup,
   FullReport,
+  GraphFormationConversation,
   MemorySnapshot,
   ModelProfile,
   SearchResult,
@@ -91,6 +98,13 @@ const memoryChatTranscript = $("#memory-chat-transcript");
 const memoryChatForm = $<HTMLFormElement>("#memory-chat-form");
 const memoryChatQuery = $<HTMLTextAreaElement>("#memory-chat-query");
 const memoryChatEvidence = $("#memory-chat-evidence");
+const graphLoading = $("#graph-loading");
+const graphFormationProgressSlot = $("#graph-formation-progress-slot");
+const graphFormation = $("#graph-formation");
+const graphFormationCanvas = $<HTMLCanvasElement>("#graph-formation-canvas");
+const graphFormationCount = $<HTMLOutputElement>("#graph-formation-count");
+const graphFormationLatest = $("#graph-formation-latest");
+const graphFormationRoutes = $("#graph-formation-routes");
 
 const analysisLease = new AnalysisLease(navigator.locks);
 let worker = createWorker();
@@ -117,6 +131,12 @@ let latestTiming:
       receivedAt: number;
     }
   | null = null;
+let graphFormationQueue: GraphFormationConversation[] = [];
+let graphFormationCursor = 0;
+let graphFormationRendered: GraphFormationConversation[] = [];
+let graphFormationProcessed = 0;
+let graphFormationFrame: number | null = null;
+const reduceGraphFormationMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const storyController = createStoryController({ showEvidence });
 
 function createWorker() {
@@ -375,6 +395,174 @@ function resetWorker() {
   worker = createWorker();
 }
 
+function drawGraphFormation() {
+  const context = graphFormationCanvas.getContext("2d");
+  if (!context) return;
+  const cssWidth = Math.max(300, graphFormationCanvas.clientWidth || 900);
+  const cssHeight = Math.max(280, graphFormationCanvas.clientHeight || Math.min(420, cssWidth * 0.45));
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  const width = Math.round(cssWidth * pixelRatio);
+  const height = Math.round(cssHeight * pixelRatio);
+  if (graphFormationCanvas.width !== width || graphFormationCanvas.height !== height) {
+    graphFormationCanvas.width = width;
+    graphFormationCanvas.height = height;
+  }
+  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  context.clearRect(0, 0, cssWidth, cssHeight);
+  context.fillStyle = "#f3f5f2";
+  context.fillRect(0, 0, cssWidth, cssHeight);
+
+  context.strokeStyle = "#dce1df";
+  context.lineWidth = 1;
+  for (let x = 0; x <= cssWidth; x += 54) {
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x, cssHeight);
+    context.stroke();
+  }
+  for (let y = 0; y <= cssHeight; y += 54) {
+    context.beginPath();
+    context.moveTo(0, y);
+    context.lineTo(cssWidth, y);
+    context.stroke();
+  }
+
+  const routeCounts = new Map(FORMATION_ROUTES.map((route) => [route.id, 0]));
+  graphFormationRendered.forEach((conversation, index) => {
+    const point = formationPoint(conversation, index);
+    const routeIds = formationRouteIds(conversation);
+    for (const routeId of routeIds) {
+      routeCounts.set(routeId, (routeCounts.get(routeId) ?? 0) + 1);
+      const route = formationRoute(routeId);
+      context.beginPath();
+      context.moveTo(point.x * cssWidth, point.y * cssHeight);
+      context.lineTo(route.x * cssWidth, route.y * cssHeight);
+      context.strokeStyle = `${route.color}20`;
+      context.lineWidth = 0.7;
+      context.stroke();
+    }
+    const primary = formationRoute(routeIds[0]);
+    context.beginPath();
+    context.arc(point.x * cssWidth, point.y * cssHeight, 1.8, 0, Math.PI * 2);
+    context.fillStyle = `${primary.color}a6`;
+    context.fill();
+  });
+
+  const latest = graphFormationRendered.at(-1);
+  if (latest) {
+    const point = formationPoint(latest, graphFormationRendered.length - 1);
+    const primary = formationRoute(formationRouteIds(latest)[0]);
+    context.beginPath();
+    context.arc(point.x * cssWidth, point.y * cssHeight, 5.5, 0, Math.PI * 2);
+    context.strokeStyle = primary.color;
+    context.lineWidth = 2.5;
+    context.stroke();
+  }
+
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  for (const route of FORMATION_ROUTES) {
+    const count = routeCounts.get(route.id) ?? 0;
+    const radius = Math.min(25, 9 + Math.sqrt(count) * 0.5);
+    context.beginPath();
+    context.arc(route.x * cssWidth, route.y * cssHeight, radius, 0, Math.PI * 2);
+    context.fillStyle = "#ffffff";
+    context.fill();
+    context.strokeStyle = route.color;
+    context.lineWidth = count > 0 ? 3 : 1.5;
+    context.stroke();
+    context.fillStyle = "#101b24";
+    context.font = "700 11px Arial, sans-serif";
+    context.fillText(route.label, route.x * cssWidth, route.y * cssHeight - radius - 10);
+    context.fillStyle = "#5d6970";
+    context.font = '10px ui-monospace, "SFMono-Regular", Consolas, monospace';
+    context.fillText(String(count), route.x * cssWidth, route.y * cssHeight);
+  }
+}
+
+function updateGraphFormationText() {
+  const count = graphFormationRendered.length;
+  graphFormationCount.textContent =
+    count === 0
+      ? "Waiting for the first conversation…"
+      : count < graphFormationProcessed
+        ? `${formatNumber(count)} of ${formatNumber(graphFormationProcessed)} stops drawn`
+        : `${formatNumber(count)} conversations routed`;
+  graphFormationLatest.textContent =
+    graphFormationRendered.at(-1)?.title || "Opening the archive";
+  const activeRoutes = new Set(
+    graphFormationRendered.flatMap((conversation) => formationRouteIds(conversation)),
+  ).size;
+  graphFormationRoutes.textContent = `${activeRoutes} of ${FORMATION_ROUTES.length}`;
+}
+
+function renderGraphFormationFrame() {
+  graphFormationFrame = null;
+  const remaining = graphFormationQueue.length - graphFormationCursor;
+  if (remaining <= 0) return;
+  const perFrame = reduceGraphFormationMotion.matches
+    ? remaining
+    : Math.max(1, Math.ceil(Math.max(graphFormationProcessed, remaining) / 240));
+  const end = Math.min(graphFormationQueue.length, graphFormationCursor + perFrame);
+  while (graphFormationCursor < end) {
+    graphFormationRendered.push(graphFormationQueue[graphFormationCursor]);
+    graphFormationCursor += 1;
+  }
+  updateGraphFormationText();
+  drawGraphFormation();
+  if (graphFormationCursor < graphFormationQueue.length) {
+    graphFormationFrame = window.requestAnimationFrame(renderGraphFormationFrame);
+  }
+}
+
+function queueGraphFormation(
+  conversations: GraphFormationConversation[],
+  processed: number,
+) {
+  graphFormationQueue.push(...conversations);
+  graphFormationProcessed = Math.max(graphFormationProcessed, processed);
+  if (reduceGraphFormationMotion.matches) {
+    renderGraphFormationFrame();
+    return;
+  }
+  if (graphFormationFrame === null) {
+    graphFormationFrame = window.requestAnimationFrame(renderGraphFormationFrame);
+  }
+}
+
+function finishGraphFormation() {
+  if (graphFormationFrame !== null) window.cancelAnimationFrame(graphFormationFrame);
+  graphFormationFrame = null;
+  while (graphFormationCursor < graphFormationQueue.length) {
+    graphFormationRendered.push(graphFormationQueue[graphFormationCursor]);
+    graphFormationCursor += 1;
+  }
+  updateGraphFormationText();
+  drawGraphFormation();
+}
+
+function mountGraphFormationInReport() {
+  graphLoading.classList.add("has-formation");
+  graphLoading.replaceChildren(graphFormation);
+}
+
+function resetGraphFormation() {
+  if (graphFormationFrame !== null) window.cancelAnimationFrame(graphFormationFrame);
+  graphFormationFrame = null;
+  graphFormationQueue = [];
+  graphFormationCursor = 0;
+  graphFormationRendered = [];
+  graphFormationProcessed = 0;
+  graphLoading.classList.remove("has-formation");
+  graphFormationProgressSlot.append(graphFormation);
+  updateGraphFormationText();
+  drawGraphFormation();
+}
+
+const graphFormationResizeObserver = new ResizeObserver(() => drawGraphFormation());
+graphFormationResizeObserver.observe(graphFormationCanvas);
+drawGraphFormation();
+
 function resetApp() {
   storyController.close();
   unloadMemoryChatModel();
@@ -383,6 +571,7 @@ function resetApp() {
   void analysisLease.release();
   stopTimingTicker();
   latestTiming = null;
+  resetGraphFormation();
   currentReport = null;
   currentSnapshot = null;
   archiveInput.value = "";
@@ -430,6 +619,7 @@ async function analyzeFile(file: File) {
   currentReport = null;
   currentSnapshot = null;
   latestTiming = null;
+  resetGraphFormation();
   progressFill.style.transform = "scaleX(0.02)";
   progressPhase.textContent = "Reading archive";
   progressStatus.textContent = `Opening ${file.name}…`;
@@ -500,6 +690,10 @@ function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
     }
     return;
   }
+  if (message.type === "graph-formation") {
+    queueGraphFormation(message.conversations, message.processed);
+    return;
+  }
   if (message.type === "deterministic") {
     currentReport = message.report;
     setConfidence(message.report.analysis.confidence, false);
@@ -518,6 +712,7 @@ function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
     return;
   }
   if (message.type === "complete") {
+    finishGraphFormation();
     currentReport = message.report;
     currentSnapshot = message.snapshot;
     setConfidence(message.report.analysis.confidence, false);
@@ -528,6 +723,7 @@ function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
     return;
   }
   if (message.type === "restored") {
+    resetGraphFormation();
     currentReport = message.report;
     setConfidence(message.report.analysis.confidence, false);
     renderReport(message.report);
@@ -550,6 +746,8 @@ function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
   }
   resetWorker();
   void analysisLease.release();
+  if (graphFormationFrame !== null) window.cancelAnimationFrame(graphFormationFrame);
+  graphFormationFrame = null;
   showError(message.message, message.recoverable && Boolean(currentReport));
 }
 
@@ -624,7 +822,8 @@ function renderReport(report: FullReport) {
     renderLedger(report);
   } else {
     $("#sampling-note").textContent = "Full totals are ready. Embeddings are still being built.";
-    $("#graph-loading").hidden = false;
+    graphLoading.hidden = false;
+    mountGraphFormationInReport();
     graph.classList.add("is-hidden");
   }
 }
@@ -633,7 +832,7 @@ function renderGraph(
   topics: NonNullable<FullReport["semantic"]>["topics"],
   edges: NonNullable<FullReport["semantic"]>["edges"],
 ) {
-  $("#graph-loading").hidden = true;
+  graphLoading.hidden = true;
   graph.classList.remove("is-hidden");
   graph.setAttribute(
     "viewBox",
@@ -1922,6 +2121,9 @@ if (import.meta.env.DEV) {
 
 window.addEventListener("pagehide", () => {
   stopTimingTicker();
+  if (graphFormationFrame !== null) window.cancelAnimationFrame(graphFormationFrame);
+  graphFormationFrame = null;
+  graphFormationResizeObserver.disconnect();
   memoryChatWorker?.terminate();
   memoryChatWorker = null;
   worker.terminate();

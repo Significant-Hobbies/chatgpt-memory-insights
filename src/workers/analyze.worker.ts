@@ -3,7 +3,7 @@
 import { BlobReader, TextWriter, ZipReader, type FileEntry } from "@zip.js/zip.js";
 import { normalizeConversationChunk } from "../lib/export";
 import { resolveAnalysisSettings } from "../lib/analysis";
-import { buildDeterministicReport } from "../lib/insights";
+import { buildDeterministicReport, classifyQuestionLensIds } from "../lib/insights";
 import { buildReflectionQuestions } from "../lib/reflections";
 import { AnalysisRunTimer } from "../lib/performance";
 import {
@@ -101,7 +101,20 @@ async function analyze(file: File, settings: AnalysisSettings) {
       progress("parse", `Parsing ${entry.filename}`, index, conversationEntries.length);
       const text = await entry.getData(new TextWriter());
       const value: unknown = JSON.parse(text);
-      conversations.push(...normalizeConversationChunk(value));
+      const normalized = normalizeConversationChunk(value);
+      conversations.push(...normalized);
+      post({
+        type: "graph-formation",
+        conversations: normalized.map((conversation) => ({
+          id: conversation.conversationId,
+          title: conversation.title,
+          date: conversation.date,
+          routeIds: classifyQuestionLensIds(
+            conversation.prompts.map((prompt) => prompt.text),
+          ),
+        })),
+        processed: conversations.length,
+      });
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
 

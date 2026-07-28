@@ -366,6 +366,13 @@ export type SearchResult = Omit<SearchEntry, "embedding"> & {
   similarity: number;
 };
 
+export type GraphFormationConversation = {
+  id: string;
+  title: string;
+  date: number;
+  routeIds: QuestionLens["id"][];
+};
+
 export type WorkerRequest =
   | { type: "analyze"; file: File; settings: AnalysisSettings }
   | { type: "search"; query: string }
@@ -380,6 +387,11 @@ export type WorkerResponse =
       current: number;
       total: number;
       timing?: AnalysisProgressTiming;
+    }
+  | {
+      type: "graph-formation";
+      conversations: GraphFormationConversation[];
+      processed: number;
     }
   | { type: "deterministic"; report: FullReport }
   | { type: "complete"; report: FullReport; snapshot: MemorySnapshot }

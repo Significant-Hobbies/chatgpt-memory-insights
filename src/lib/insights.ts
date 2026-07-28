@@ -144,6 +144,15 @@ const QUESTION_LENSES: Array<
   },
 ];
 
+export function classifyQuestionLensIds(
+  values: Iterable<string>,
+): QuestionLens["id"][] {
+  const texts = [...values];
+  return QUESTION_LENSES.filter(({ patterns }) =>
+    texts.some((value) => patterns.some((pattern) => pattern.test(value))),
+  ).map(({ id }) => id);
+}
+
 const TYPO_SUGGESTIONS: Record<string, string> = {
   alot: "a lot",
   becuase: "because",

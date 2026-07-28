@@ -104,6 +104,13 @@ archive opening, parsing, model download and preparation, semantic mapping, and
 report assembly. Runtime, batch size, and preserved semantic-candidate coverage
 remain visible so a fast result does not hide reduced analysis.
 
+The timing route shares the wait with a progressive ingestion sketch. Every
+normalized conversation becomes a small station connected to one or more
+disclosed question-domain interchanges. The sketch begins during parsing, moves
+intact into the topic-map loading region when initial insights arrive, and
+yields to the final embedding-backed SVG without delaying completion. Copy
+must keep the deterministic preview distinct from semantic topology.
+
 ### Topic map
 
 An SVG map uses labelled circular nodes, straight or gently bent edges, and a
@@ -229,6 +236,8 @@ navigation aids, not quality scores.
 ## Interaction and Motion
 
 - Motion communicates route progress, graph selection, or drawer movement.
+- The ingestion sketch is the one authored accumulation sequence: conversation
+  stations appear in processed order while hub counts grow.
 - New graph edges draw once after analysis; they do not continuously animate.
 - Hover alone never reveals required information.
 - Reduced-motion users receive all final states immediately.

@@ -75,7 +75,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               then builds a searchable semantic graph with a browser-loaded embedding model.
             </p>
             <a class="product-tour-link" href="/about"
-              >See all 36 things Memory Map can find →</a
+              >See all 51 things Memory Map can find →</a
             >
           </div>
 
@@ -226,6 +226,41 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               <span>Compute route</span>
               <strong id="progress-runtime">Selecting…</strong>
             </div>
+          </div>
+          <div id="graph-formation-progress-slot" class="graph-formation-slot">
+            <section
+              id="graph-formation"
+              class="graph-formation"
+              aria-labelledby="graph-formation-heading"
+            >
+              <header>
+                <div>
+                  <p class="map-key">Ingestion sketch · deterministic routes</p>
+                  <h2 id="graph-formation-heading">Every conversation becomes a stop.</h2>
+                </div>
+                <output id="graph-formation-count">Waiting for the first conversation…</output>
+              </header>
+              <canvas
+                id="graph-formation-canvas"
+                width="1000"
+                height="420"
+                aria-hidden="true"
+              ></canvas>
+              <footer>
+                <div>
+                  <span>Latest stop</span>
+                  <strong id="graph-formation-latest">Opening the archive</strong>
+                </div>
+                <div>
+                  <span>Active routes</span>
+                  <strong id="graph-formation-routes">0 of 11</strong>
+                </div>
+                <p>
+                  This preliminary sketch uses disclosed question-domain rules. The embedding
+                  model replaces it with the final semantic topology.
+                </p>
+              </footer>
+            </section>
           </div>
           <ol id="progress-stage-list" class="timing-stages" aria-label="Analysis stages">
             <li data-timing-stage="discover">
