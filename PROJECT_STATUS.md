@@ -141,11 +141,9 @@ sync, and verified medical, emotional, or personality claims.
   deterministic multi-route attribution, continuous parsing-to-report state,
   reduced-motion behavior, and automatic handoff to the final semantic graph.
 
-## Todo / Planned / Deferred / Blocked
+## Work queue
 
-1. Deferred: attachment and exported-memory-file analysis until those schemas
-   are validated independently.
-2. Deferred: cross-device sync and server-side analysis; both would change the
-   product's private static-site boundary.
-3. Owner confirmation needed before adding the optional Fleet
-   `docs/learning/new-things.md` study queue for the browser ML stack.
+Open work is tracked only in
+[GitHub Issues](https://github.com/sarthakagrawal927/chatgpt-memory-insights/issues).
+An open issue is a to-do, a linked pull request is in progress, and merge plus
+issue closure makes the work done.

@@ -9,6 +9,15 @@ Also read and follow the shared fleet-level agent standard at `../AGENTS.md`. Tr
 - **Check**: `npm run check`
 - **Deploy**: `npm run deploy` from clean, synced `main`
 
+## Work tracking
+
+- GitHub Issues is the sole operational work queue.
+- An open issue is a to-do; a linked pull request is in progress; a merged
+  pull request plus a closed issue is done.
+- Use `PROJECT_STATUS.md` only for durable current/shipped product truth and
+  its GitHub Issues pointer. Do not duplicate planned, deferred, or blocked
+  work there.
+
 ## Visual work
 
 For meaningful visual work, use the Fleet-local `$design-workflow` skill and
