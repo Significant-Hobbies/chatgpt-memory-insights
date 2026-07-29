@@ -38,6 +38,8 @@ sync, and verified medical, emotional, or personality claims.
 
 ## Timeline
 
+- 2026-07-29 — added an owned `/changelog` with verified release outcomes and
+  direct GitHub Roadmap and Source links
 - 2026-07-28 — project scaffolded
 - 2026-07-28 — browser ZIP pipeline, semantic memory, evidence-led report,
   query lenses, and responsive product surface implemented and validated

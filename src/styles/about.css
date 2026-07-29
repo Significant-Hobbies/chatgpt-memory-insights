@@ -40,6 +40,81 @@
   text-decoration: none;
 }
 
+.changelog-main {
+  width: min(100% - 2.5rem, 960px);
+  margin: 0 auto;
+  padding: clamp(3rem, 8vw, 7rem) 0;
+}
+
+.changelog-intro {
+  max-width: 720px;
+}
+
+.changelog-intro h1 {
+  margin: 0.6rem 0 0;
+  font-size: clamp(3rem, 9vw, 6rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.changelog-intro > p:last-of-type {
+  max-width: 62ch;
+  margin: 1.5rem 0 0;
+  color: var(--ink-muted);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.changelog-intro nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.changelog-intro nav a {
+  color: var(--cobalt);
+  font-weight: 700;
+}
+
+.changelog-list {
+  display: grid;
+  gap: 1px;
+  margin: 4rem 0 0;
+  padding: 0;
+  background: var(--rule);
+  list-style: none;
+}
+
+.changelog-list article {
+  padding: clamp(1.5rem, 5vw, 2.75rem);
+  background: var(--paper-raised);
+}
+
+.changelog-list time {
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.changelog-list h2 {
+  margin: 0.6rem 0 0;
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  line-height: 1.15;
+}
+
+.changelog-list ul {
+  max-width: 70ch;
+  margin: 1rem 0 0;
+  padding-left: 1.2rem;
+  color: var(--ink-muted);
+  line-height: 1.7;
+}
+
+.changelog-list li + li {
+  margin-top: 0.6rem;
+}
+
 .about-nav > .brand,
 .about-footer > .brand {
   min-height: 2.75rem;

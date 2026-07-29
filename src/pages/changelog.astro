@@ -1,0 +1,120 @@
+---
+import "../styles/global.css";
+import "../styles/about.css";
+
+const repository = "https://github.com/Significant-Hobbies/chatgpt-memory-insights";
+const releases = [
+  {
+    date: "2026-07-28",
+    title: "Memory Map launched",
+    outcomes: [
+      "ChatGPT export ZIPs can be analyzed entirely in the browser without uploading conversation history to an application server.",
+      "The first report connected recurring questions, themes, activity, language signals, and source evidence.",
+    ],
+  },
+  {
+    date: "2026-07-28",
+    title: "A visual atlas and seven-slide story",
+    outcomes: [
+      "Six period-aware charts make activity, question mix, language, repeats, topic movement, and conversation shape explorable.",
+      "Story mode turns the report into a keyboard-, touch-, and swipe-friendly guided view with evidence detours.",
+    ],
+  },
+  {
+    date: "2026-07-28",
+    title: "Graph-routed, local Memory Chat",
+    outcomes: [
+      "An opt-in local model can answer through a visible question-to-topic-to-evidence route.",
+      "Bounded evidence packs and citation validation withhold unsupported drafts rather than presenting them as grounded.",
+    ],
+  },
+  {
+    date: "2026-07-28",
+    title: "Faster analysis with clearer timing",
+    outcomes: [
+      "WebGPU acceleration and an order-preserving WebAssembly fallback reduce semantic analysis time across supported devices.",
+      "The progress view now separates stages, elapsed time, estimated wait, and the final execution receipt.",
+    ],
+  },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="description"
+      content="Meaningful improvements to Memory Map’s private ChatGPT-history analysis."
+    />
+    <meta name="theme-color" content="#f3f5f2" />
+    <link rel="canonical" href="https://chatgpt.significanthobbies.com/changelog" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>Changelog · Memory Map</title>
+  </head>
+  <body class="about-page changelog-page">
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <header class="about-nav">
+      <a class="brand" href="/" aria-label="Memory Map analysis app">
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <path d="M7 8 17 15 29 7M17 15l1 14M7 27l11 2 11-9" />
+          <circle cx="7" cy="8" r="3" />
+          <circle cx="29" cy="7" r="3" />
+          <circle cx="17" cy="15" r="3" />
+          <circle cx="7" cy="27" r="3" />
+          <circle cx="18" cy="29" r="3" />
+          <circle cx="29" cy="20" r="3" />
+        </svg>
+        <span>Memory Map</span>
+      </a>
+      <nav aria-label="Site">
+        <a href="/about">What it finds</a>
+        <a aria-current="page" href="/changelog">Changelog</a>
+      </nav>
+      <a class="about-nav-action" href="/">Analyze my ZIP</a>
+    </header>
+
+    <main id="main" class="changelog-main">
+      <header class="changelog-intro">
+        <p class="map-key">Product history</p>
+        <h1>Changelog</h1>
+        <p>
+          Meaningful improvements to private analysis, evidence navigation, and local memory.
+        </p>
+        <nav aria-label="Project links">
+          <a href={`${repository}/issues`}>Roadmap</a>
+          <a href={repository}>Source</a>
+        </nav>
+      </header>
+
+      <ol class="changelog-list">
+        {
+          releases.map((release) => (
+            <li>
+              <article>
+                <time datetime={release.date}>
+                  {new Date(`${release.date}T00:00:00`).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </time>
+                <h2>{release.title}</h2>
+                <ul>
+                  {release.outcomes.map((outcome) => <li>{outcome}</li>)}
+                </ul>
+              </article>
+            </li>
+          ))
+        }
+      </ol>
+    </main>
+
+    <footer class="about-footer">
+      <a class="brand" href="/">Memory Map</a>
+      <p>Your history, made navigable on your device.</p>
+      <a href="/">Analyze my ChatGPT ZIP →</a>
+    </footer>
+  </body>
+</html>

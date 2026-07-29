@@ -2,7 +2,7 @@
   "$schema": "fleet.design-review.v1",
   "version": 1,
   "project": "chatgpt-memory-insights",
-  "target": "period-aware rhythms, activity calendar, evidence drawer, and route rail",
+  "target": "Owned product changelog",
   "mode": "preserve",
   "register": "product",
   "context": {
@@ -14,25 +14,25 @@
     "probes": [],
     "selected": "existing-design",
     "approval": "not-required",
-    "before": "artifacts/design/report-top-before.png"
+    "before": "artifacts/design/before.png"
   },
   "evidence": {
     "screenshots": [
       {
         "width": 390,
-        "path": "artifacts/design/period-report-after-390.png"
+        "path": "artifacts/design/after-390.png"
       },
       {
         "width": 768,
-        "path": "artifacts/design/period-report-after-768.png"
+        "path": "artifacts/design/after-768.png"
       },
       {
         "width": 1440,
-        "path": "artifacts/design/period-report-after-1440.png"
+        "path": "artifacts/design/after-1440.png"
       }
     ],
     "projectCheck": {
-      "command": "npm run check",
+      "command": "npm run check && git diff --check",
       "status": "pass"
     },
     "critique": {
@@ -40,7 +40,7 @@
       "maximum": 40
     },
     "audit": {
-      "score": 19,
+      "score": 18,
       "maximum": 20
     },
     "unresolved": {
@@ -49,11 +49,13 @@
     },
     "detector": {
       "posture": "advisory",
-      "findings": []
+      "findings": [
+        "The detector reported one pre-existing side-tab treatment in the capability-route timeline, outside the changelog surface."
+      ]
     }
   },
   "ownerFeedback": {
     "decision": "delegated",
-    "note": "Owner explicitly requested the period fixes, filterable cadence graph, spacing and rail polish, relocated search, collapsed one-time details, and favicon."
+    "note": "The owner explicitly delegated changelog implementation across all projects on 2026-07-29."
   }
 }
