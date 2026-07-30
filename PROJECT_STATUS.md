@@ -38,6 +38,9 @@ sync, and verified medical, emotional, or personality claims.
 
 ## Timeline
 
+- 2026-07-31 — prepared and locally verified public agent discovery,
+  JavaScript-independent product/about/changelog Markdown, and sitemap/robots
+  coverage; production deployment remains a separate manual step
 - 2026-07-29 — added an owned `/changelog` with verified release outcomes and
   direct GitHub Roadmap and Source links
 - 2026-07-28 — project scaffolded
