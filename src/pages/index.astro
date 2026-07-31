@@ -4,6 +4,32 @@ import "../styles/global.css";
 const title = "Memory Map — Explore your ChatGPT history";
 const description =
   "Turn a ChatGPT export ZIP into a private topic graph, searchable memory, repeated-question report, and fact history in your browser.";
+const siteUrl = "https://chatgpt.significanthobbies.com/";
+const socialImage =
+  "https://raw.githubusercontent.com/Significant-Hobbies/chatgpt-memory-insights/main/artifacts/design/after-1440.png";
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: "Memory Map",
+      url: siteUrl,
+      description,
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: "Memory Map",
+      applicationCategory: "ProductivityApplication",
+      operatingSystem: "Web",
+      url: siteUrl,
+      image: socialImage,
+      description,
+      sameAs: [
+        "https://github.com/Significant-Hobbies/chatgpt-memory-insights",
+      ],
+    },
+  ],
+};
 ---
 
 <!--
@@ -22,6 +48,18 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
     <meta name="description" content={description} />
     <meta name="theme-color" content="#f3f5f2" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href={siteUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Memory Map" />
+    <meta property="og:url" content={siteUrl} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={socialImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
     <title>{title}</title>
   </head>
   <body>
@@ -197,7 +235,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
           <div class="progress-heading-row">
             <div>
               <p id="progress-phase" class="map-key">Reading archive</p>
-              <h1 id="progress-heading">Building your memory map</h1>
+              <h2 id="progress-heading">Building your memory map</h2>
             </div>
             <button id="cancel-analysis" class="button-secondary" type="button">Cancel</button>
           </div>
@@ -292,7 +330,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
 
         <section id="error-view" class="error-view" hidden aria-labelledby="error-heading">
           <p class="map-key">Route interrupted</p>
-          <h1 id="error-heading">This archive could not be mapped.</h1>
+          <h2 id="error-heading">This archive could not be mapped.</h2>
           <p id="error-message"></p>
           <button id="error-reset" class="button-primary" type="button">Choose another ZIP</button>
         </section>
@@ -301,7 +339,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
           <header class="report-header">
             <div>
               <p class="map-key">Mapped memory</p>
-              <h1>Your conversation history, connected.</h1>
+              <h2>Your conversation history, connected.</h2>
               <p id="report-meta" class="report-meta"></p>
             </div>
             <div class="report-actions">
