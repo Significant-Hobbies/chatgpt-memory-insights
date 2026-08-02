@@ -8,9 +8,9 @@ and record durable follow-up in this repository's GitHub Issues.
 ## Project
 
 - **Stack**: Astro + TypeScript + Tailwind CSS + Transformers.js + Cloudflare Pages
-- **Local dev**: `npm install && npm run dev`
-- **Check**: `npm run check`
-- **Deploy**: `npm run deploy` from clean, synced `main`
+- **Local dev**: `pnpm install && pnpm run dev`
+- **Check**: `pnpm run check`
+- **Deploy**: `pnpm run deploy` from clean, synced `main`
 
 ## Work tracking
 

@@ -63,14 +63,14 @@ or use the [Privacy Portal](https://privacy.openai.com/).
 ## Develop
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 ## Verify
 
 ```bash
-npm run check
+pnpm run check
 ```
 
 ## Deploy
@@ -78,7 +78,7 @@ npm run check
 Production deployment is intentionally manual and guarded:
 
 ```bash
-npm run deploy
+pnpm run deploy
 ```
 
 The deploy command only runs from a clean `main` branch that matches
