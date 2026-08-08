@@ -22,6 +22,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "lint": "ultracite check .",
     "preview": "astro preview",
     "typecheck": "astro check",
     "test": "vitest run",
@@ -36,10 +37,12 @@
   },
   "devDependencies": {
     "@astrojs/check": "0.9.6",
+    "@biomejs/biome": "2.5.5",
     "@tailwindcss/vite": "4.3.3",
     "lightningcss": "1.30.2",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
+    "ultracite": "7.10.2",
     "vitest": "4.1.0",
     "wrangler": "4.114.0"
   }

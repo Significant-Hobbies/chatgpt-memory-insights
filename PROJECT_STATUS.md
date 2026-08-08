@@ -1,6 +1,6 @@
 # chatgpt-memory-insights — PROJECT STATUS
 
-Last updated: 2026-07-28
+Last updated: 2026-08-09
 
 ## Why / What
 
@@ -38,6 +38,10 @@ sync, and verified medical, emotional, or personality claims.
 
 ## Timeline
 
+- 2026-08-09 — adopted the shared Ultracite lint baseline for the browser app;
+  40 applicable source and configuration files pass with zero diagnostics via
+  explicit compatibility rules, without rewriting product source or changing
+  deployment behavior
 - 2026-07-31 — prepared and locally verified public agent discovery,
   JavaScript-independent product/about/changelog Markdown, and sitemap/robots
   coverage; production deployment remains a separate manual step
@@ -142,6 +146,7 @@ sync, and verified medical, emotional, or personality claims.
   validation that withholds unsupported drafts.
 - Single-tab heavyweight-analysis ownership plus worker termination and lock
   release on error, reset, unload, and page exit.
+- Shared Ultracite lint baseline with a clean 40-file check.
 - Progressive ingestion sketch with one distinct stop per parsed conversation,
   deterministic multi-route attribution, continuous parsing-to-report state,
   reduced-motion behavior, and automatic handoff to the final semantic graph.
