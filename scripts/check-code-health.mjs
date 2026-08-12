@@ -205,9 +205,19 @@ function checkHygiene() {
     allowFailure: true,
   }).stdout.trim();
   if (conflicts) throw new Error(`Conflict markers:\n${conflicts}`);
-  const todos = run("git", ["grep", "-n", "-E", "TODO|FIXME", "--", ...productionPaths], {
-    allowFailure: true,
-  }).stdout.trim();
+  const todos = run(
+    "git",
+    [
+      "grep",
+      "-n",
+      "-E",
+      "TODO|FIXME",
+      "--",
+      ...productionPaths,
+      ":(exclude)scripts/check-code-health.mjs",
+    ],
+    { allowFailure: true }
+  ).stdout.trim();
   if (todos) throw new Error(`Durable TODO/FIXME markers:\n${todos}`);
   run("git", ["diff", "--check", "HEAD", "--", "."]);
   console.log("Repository hygiene: clean.");
