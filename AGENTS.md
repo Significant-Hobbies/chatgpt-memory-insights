@@ -12,6 +12,12 @@ and record durable follow-up in this repository's GitHub Issues.
 - **Check**: `pnpm run check`
 - **Deploy**: `pnpm run deploy` from clean, synced `main`
 
+The check is the complete Fleet quality boundary. Use its narrower
+`format:check`, `lint`, `typecheck`, `test:coverage`, `quality:*`, or `build`
+scripts while iterating. Existing ratcheted debt is tracked in GitHub issue
+#12; improve its checked-in ceilings and floors in the same change that reduces
+them, and do not add inline suppression directives.
+
 ## Work tracking
 
 - GitHub Issues is the sole operational work queue.
