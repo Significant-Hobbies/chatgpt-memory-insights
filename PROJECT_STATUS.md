@@ -38,6 +38,10 @@ sync, and verified medical, emotional, or personality claims.
 
 ## Timeline
 
+- 2026-08-12 — adopted the complete Fleet JavaScript/TypeScript code-health
+  boundary with coverage, unused-code, complexity, duplication, cycle,
+  dependency-risk, suppression, hygiene, and build ratchets; removed two dead
+  constants and nine unnecessary public exports
 - 2026-08-09 — adopted the shared Ultracite lint baseline for the browser app;
   40 applicable source and configuration files pass with zero diagnostics via
   explicit compatibility rules, without rewriting product source or changing
@@ -146,7 +150,11 @@ sync, and verified medical, emotional, or personality claims.
   validation that withholds unsupported drafts.
 - Single-tab heavyweight-analysis ownership plus worker termination and lock
   release on error, reset, unload, and page exit.
-- Shared Ultracite lint baseline with a clean 40-file check.
+- Shared Ultracite lint baseline with a clean repository check.
+- Repository-owned quality automation spanning format and lint, types, 41
+  tests with coverage floors, unused code and packages, complexity,
+  duplication, cycles, dependency advisories, suppressions, hygiene, and the
+  production build.
 - Progressive ingestion sketch with one distinct stop per parsed conversation,
   deterministic multi-route attribution, continuous parsing-to-report state,
   reduced-motion behavior, and automatic handoff to the final semantic graph.

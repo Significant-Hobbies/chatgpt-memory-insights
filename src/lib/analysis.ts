@@ -11,7 +11,7 @@ import type {
   TrendState,
 } from "./types";
 
-export const CONFIDENCE_PRESETS = {
+const CONFIDENCE_PRESETS = {
   exploratory: 45,
   balanced: 65,
   conservative: 82,
@@ -51,7 +51,7 @@ const THREAD_STOP_WORDS = new Set([
   "your",
 ]);
 
-export function clampConfidence(value: number): number {
+function clampConfidence(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 

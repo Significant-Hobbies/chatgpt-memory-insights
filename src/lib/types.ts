@@ -39,11 +39,11 @@ export type CountDatum = {
   value: number;
 };
 
-export type ActivityDay = CountDatum & {
+type ActivityDay = CountDatum & {
   sources: SourceRef[];
 };
 
-export type ActivityRhythmDatum = {
+type ActivityRhythmDatum = {
   label: string;
   conversations: number;
   messages: number;
@@ -51,7 +51,7 @@ export type ActivityRhythmDatum = {
   words: number;
 };
 
-export type ActivityRhythmSeries = {
+type ActivityRhythmSeries = {
   id: "all" | QuestionLens["id"];
   label: string;
   byMonth: ActivityRhythmDatum[];
@@ -68,7 +68,7 @@ export type ExactRepeat = {
 
 export type ToneBucket = "positive" | "neutral" | "negative";
 
-export type ToneReport = {
+type ToneReport = {
   counts: Record<ToneBucket, number>;
   byMonth: Array<{ month: string; positive: number; neutral: number; negative: number }>;
   negativeRate: number;
@@ -84,7 +84,7 @@ export type EmotionBucket =
   | "appreciation"
   | "neutral";
 
-export type EmotionReport = {
+type EmotionReport = {
   counts: Record<EmotionBucket, number>;
   byMonth: Array<{ month: string; counts: Record<EmotionBucket, number> }>;
   sources: Record<EmotionBucket, SourceRef[]>;
@@ -111,14 +111,14 @@ export type QuestionLens = {
   sources: SourceRef[];
 };
 
-export type TypoSignal = {
+type TypoSignal = {
   token: string;
   suggestion: string;
   count: number;
   sources: SourceRef[];
 };
 
-export type ThreadShiftCandidate = {
+type ThreadShiftCandidate = {
   id: string;
   title: string;
   date: number;

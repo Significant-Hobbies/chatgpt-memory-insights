@@ -73,6 +73,12 @@ pnpm run dev
 pnpm run check
 ```
 
+This runs the repository's full Fleet quality boundary: formatting and lint,
+Astro/TypeScript checks, 41 tests with coverage floors, Knip unused-code and
+cycle checks, complexity, exact duplication, dependency advisories,
+suppression and repository hygiene checks, and the production build. Existing
+debt is regression-gated in [issue #12](https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/12).
+
 ## Deploy
 
 Production deployment is intentionally manual and guarded:

@@ -36,8 +36,6 @@ export const MODEL_PROFILES = {
     approximateDownloadMb: 135,
   },
 } as const;
-export const MODEL_ID = MODEL_PROFILES.compact.id;
-export const MODEL_REVISION = MODEL_PROFILES.compact.revision;
 const CONVERSATION_CAP = 600;
 const QUESTION_CAP = 800;
 const FACT_CAP = 1_500;
