@@ -34,7 +34,7 @@ describe("analysis timing", () => {
     const summary = timer.summary(
       "complete",
       { device: "webgpu", dtype: "fp32", batchSize: 128 },
-      3_573,
+      3_573
     );
 
     expect(summary.totalMs).toBe(9_900);

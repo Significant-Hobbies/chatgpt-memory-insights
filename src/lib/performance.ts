@@ -18,7 +18,7 @@ const STAGE_LABELS: Record<AnalysisPhase, string> = {
 export function estimateRemainingMs(
   elapsedMs: number,
   current: number,
-  total: number,
+  total: number
 ): number | null {
   if (elapsedMs < 750 || current <= 0 || total <= current) return null;
   const unitsPerMs = current / elapsedMs;
@@ -46,7 +46,7 @@ export class AnalysisRunTimer {
     phase: AnalysisPhase,
     current: number,
     total: number,
-    runtime?: AnalysisRuntime,
+    runtime?: AnalysisRuntime
   ): AnalysisProgressTiming {
     const timestamp = this.now();
     if (phase !== this.currentPhase) {
@@ -85,7 +85,7 @@ export class AnalysisRunTimer {
   summary(
     status: AnalysisPerformance["status"],
     runtime?: AnalysisRuntime,
-    semanticCandidateCount?: number,
+    semanticCandidateCount?: number
   ): AnalysisPerformance {
     const timestamp = this.now();
     const stages = [...this.completedStages];

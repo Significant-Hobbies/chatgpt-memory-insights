@@ -14,10 +14,7 @@ function parseMonth(label: string): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-export function activityMonthWindow(
-  source: PeriodSource,
-  periodMonths: number | null,
-): string[] {
+export function activityMonthWindow(source: PeriodSource, periodMonths: number | null): string[] {
   const activityLabels = source.activityByMonth
     .map((datum) => datum.label)
     .filter((label) => /^\d{4}-\d{2}$/.test(label))

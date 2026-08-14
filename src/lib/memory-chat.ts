@@ -61,7 +61,7 @@ function compactText(value: string, limit: number): string {
 
 export function buildMemoryChatEvidence(
   results: SearchResult[],
-  limit = MEMORY_CHAT_MODEL.maxEvidence,
+  limit = MEMORY_CHAT_MODEL.maxEvidence
 ): MemoryChatEvidence[] {
   return results.slice(0, limit).map((result, index) => ({
     id: result.id,
@@ -80,7 +80,7 @@ function topicByConversation(index: SearchEntry[]): Map<string, string> {
   return new Map(
     index
       .filter((entry) => entry.source && entry.topicId)
-      .map((entry) => [entry.source!.conversationId, entry.topicId!] as const),
+      .map((entry) => [entry.source!.conversationId, entry.topicId!] as const)
   );
 }
 
@@ -88,19 +88,17 @@ export function planMemoryChatResults(
   question: string,
   rankedResults: SearchResult[],
   report: FullReport,
-  index: SearchEntry[] = [],
+  index: SearchEntry[] = []
 ): SearchResult[] {
   const normalized = question.toLocaleLowerCase();
   const sourceTopics = topicByConversation(index);
   const structured: SearchResult[] = [];
   const changeIntent =
     /\b(chang(?:e|ed|ing)|changed my mind|update(?:d)?|no longer|refut|contradic)\b/.test(
-      normalized,
+      normalized
     );
   const contradictionIntent = /\bcontradic/.test(normalized);
-  const repeatIntent = /\b(repeat|repeated|keep asking|return to|same question)\b/.test(
-    normalized,
-  );
+  const repeatIntent = /\b(repeat|repeated|keep asking|return to|same question)\b/.test(normalized);
 
   if (changeIntent) {
     for (const fact of (report.semantic?.facts ?? [])
@@ -108,7 +106,7 @@ export function planMemoryChatResults(
         (item) =>
           item.status === "updated" ||
           item.status === "refuted" ||
-          (contradictionIntent && item.status === "contradicted"),
+          (contradictionIntent && item.status === "contradicted")
       )
       .sort((left, right) => right.confidence - left.confidence || right.lastSeen - left.lastSeen)
       .slice(0, 4)) {
@@ -122,7 +120,7 @@ export function planMemoryChatResults(
           .map((item) => item.text)
           .join(" → ")}`,
         source,
-        topicId: source ? sourceTopics.get(source.conversationId) ?? null : null,
+        topicId: source ? (sourceTopics.get(source.conversationId) ?? null) : null,
         similarity: Math.max(0.84, fact.confidence),
       });
     }
@@ -138,7 +136,7 @@ export function planMemoryChatResults(
         detail: `${repeat.count} asks · semantic repeat`,
         context: `Repeated question group: ${repeat.questions.join(" | ")}`,
         source,
-        topicId: source ? sourceTopics.get(source.conversationId) ?? null : null,
+        topicId: source ? (sourceTopics.get(source.conversationId) ?? null) : null,
         similarity: Math.max(0.82, repeat.confidence),
       });
     }
@@ -152,7 +150,7 @@ export function planMemoryChatResults(
 export function buildMemoryChatMessages(
   question: string,
   evidence: MemoryChatEvidence[],
-  history: MemoryChatTurn[],
+  history: MemoryChatTurn[]
 ): ChatMessage[] {
   const boundedHistory = history
     .slice(-MEMORY_CHAT_MODEL.maxHistoryTurns)
@@ -164,7 +162,7 @@ export function buildMemoryChatMessages(
             (item) =>
               `[${item.reference}] ${item.type}: ${item.excerpt} (${item.detail}${
                 item.source ? `; source: ${item.source.title}` : ""
-              })`,
+              })`
           )
           .join("\n")
       : "[No matching memory evidence was retrieved.]";
@@ -211,16 +209,15 @@ export function extractGeneratedAnswer(output: unknown): string {
   if (Array.isArray(generated)) {
     const lastAssistant = [...generated]
       .reverse()
-      .find(
-        (message): message is { role: string; content: string } =>
-          Boolean(
-            message &&
-              typeof message === "object" &&
-              "role" in message &&
-              message.role === "assistant" &&
-              "content" in message &&
-              typeof message.content === "string",
-          ),
+      .find((message): message is { role: string; content: string } =>
+        Boolean(
+          message &&
+            typeof message === "object" &&
+            "role" in message &&
+            message.role === "assistant" &&
+            "content" in message &&
+            typeof message.content === "string"
+        )
       );
     if (lastAssistant?.content.trim()) return lastAssistant.content.trim();
   }
@@ -229,14 +226,14 @@ export function extractGeneratedAnswer(output: unknown): string {
 
 export function validateGroundedAnswer(
   answer: string,
-  evidence: MemoryChatEvidence[],
+  evidence: MemoryChatEvidence[]
 ): { valid: boolean; citations: string[]; reason: string | null } {
   const allowed = new Set(evidence.map((item) => item.reference));
   const citations = [
     ...new Set(
       [...answer.matchAll(/\[(S\d+)\]/g)]
         .map((match) => match[1])
-        .filter((reference) => allowed.has(reference)),
+        .filter((reference) => allowed.has(reference))
     ),
   ];
   if (citations.length === 0) {
@@ -255,6 +252,6 @@ export function buildGroundedFallback(evidence: MemoryChatEvidence[]): string {
   }
   return `The small local model’s draft was withheld because it did not stay source-grounded. The strongest mapped evidence is [${evidence[0].reference}] ${compactText(
     evidence[0].excerpt,
-    260,
+    260
   )}${evidence[1] ? ` A second relevant stop is [${evidence[1].reference}] ${compactText(evidence[1].excerpt, 180)}` : ""}`;
 }

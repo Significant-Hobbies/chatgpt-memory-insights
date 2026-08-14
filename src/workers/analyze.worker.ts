@@ -55,7 +55,7 @@ function progress(
   label: string,
   current: number,
   total: number,
-  runtime?: AnalysisRuntime,
+  runtime?: AnalysisRuntime
 ) {
   if (runtime) analysisRuntime = runtime;
   post({
@@ -83,14 +83,13 @@ async function analyze(file: File, settings: AnalysisSettings) {
     const conversationEntries = entries
       .filter(
         (entry): entry is FileEntry =>
-          !entry.directory &&
-          /(^|\/)conversations(?:-\d+)?\.json$/i.test(entry.filename),
+          !entry.directory && /(^|\/)conversations(?:-\d+)?\.json$/i.test(entry.filename)
       )
       .sort((left, right) => left.filename.localeCompare(right.filename));
 
     if (conversationEntries.length === 0) {
       throw new Error(
-        "No conversations JSON was found. Choose the original ChatGPT export ZIP containing conversations.json or conversations-000.json.",
+        "No conversations JSON was found. Choose the original ChatGPT export ZIP containing conversations.json or conversations-000.json."
       );
     }
 
@@ -109,9 +108,7 @@ async function analyze(file: File, settings: AnalysisSettings) {
           id: conversation.conversationId,
           title: conversation.title,
           date: conversation.date,
-          routeIds: classifyQuestionLensIds(
-            conversation.prompts.map((prompt) => prompt.text),
-          ),
+          routeIds: classifyQuestionLensIds(conversation.prompts.map((prompt) => prompt.text)),
         })),
         processed: conversations.length,
       });
@@ -122,7 +119,7 @@ async function analyze(file: File, settings: AnalysisSettings) {
     const deterministic = buildDeterministicReport(conversations);
     const analysis = resolveAnalysisSettings(
       settings,
-      deterministic.prompts.map((prompt) => prompt.text),
+      deterministic.prompts.map((prompt) => prompt.text)
     );
     lexicalIndex = buildLexicalIndex(conversations, deterministic.prompts, deterministic.facts);
     currentReport = {
@@ -138,20 +135,14 @@ async function analyze(file: File, settings: AnalysisSettings) {
     currentReport.reflections = buildReflectionQuestions(currentReport, deterministic.prompts);
     post({ type: "deterministic", report: currentReport });
 
-    progress(
-      "model",
-      `Loading the ${analysis.resolvedModelProfile} embedding model`,
-      0,
-      100,
-    );
+    progress("model", `Loading the ${analysis.resolvedModelProfile} embedding model`, 0, 100);
     const semantic = await buildSemanticMemory(
       conversations,
       deterministic.prompts,
       deterministic.facts,
       deterministic.report.lenses.threads.candidates.map((candidate) => candidate.id),
       analysis,
-      (phase, label, current, total, runtime) =>
-        progress(phase, label, current, total, runtime),
+      (phase, label, current, total, runtime) => progress(phase, label, current, total, runtime)
     );
     if (activeGeneration !== generation) return;
 
@@ -168,7 +159,7 @@ async function analyze(file: File, settings: AnalysisSettings) {
     currentReport.performance = analysisTimer.summary(
       "complete",
       model.runtime,
-      semanticCandidateCount,
+      semanticCandidateCount
     );
     const snapshot: MemorySnapshot = {
       version: 3,
@@ -212,8 +203,7 @@ worker.addEventListener("message", async (event: MessageEvent<WorkerRequest>) =>
         searchIndex,
         lexicalIndex,
         currentReport?.analysis.resolvedModelProfile ?? "compact",
-        (phase, label, current, total, runtime) =>
-          progress(phase, label, current, total, runtime),
+        (phase, label, current, total, runtime) => progress(phase, label, current, total, runtime)
       );
       post({ type: "search-results", query: request.query, results });
     } catch (error) {
@@ -233,7 +223,8 @@ worker.addEventListener("message", async (event: MessageEvent<WorkerRequest>) =>
     ) {
       post({
         type: "error",
-        message: "This saved memory uses an unsupported version. Forget it and import the archive again.",
+        message:
+          "This saved memory uses an unsupported version. Forget it and import the archive again.",
         recoverable: false,
       });
       return;

@@ -46,15 +46,13 @@ describe("normalizeConversation", () => {
     expect(result?.messageCount).toBe(2);
     expect(result?.userMessageCount).toBe(1);
     expect(result?.assistantMessageCount).toBe(1);
-    expect(result?.prompts.map((prompt) => prompt.text)).toEqual([
-      "How should I organize this?",
-    ]);
+    expect(result?.prompts.map((prompt) => prompt.text)).toEqual(["How should I organize this?"]);
     expect(result?.model).toBe("gpt-test");
   });
 
   it("rejects non-array conversation chunks", () => {
     expect(() => normalizeConversationChunk({ conversations: [] })).toThrow(
-      "Conversation JSON must contain an array.",
+      "Conversation JSON must contain an array."
     );
   });
 });

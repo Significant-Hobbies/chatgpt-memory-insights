@@ -288,13 +288,7 @@ export type SemanticReport = {
   threads: ThreadSegmentation[];
 };
 
-export type AnalysisPhase =
-  | "discover"
-  | "parse"
-  | "statistics"
-  | "model"
-  | "embed"
-  | "cluster";
+export type AnalysisPhase = "discover" | "parse" | "statistics" | "model" | "embed" | "cluster";
 
 export type AnalysisRuntime = {
   device: "webgpu" | "wasm";

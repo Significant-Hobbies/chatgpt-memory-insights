@@ -56,7 +56,7 @@ function activeNodes(conversation: RawConversation): RawNode[] {
   return Object.values(mapping).sort(
     (left, right) =>
       (left.message?.create_time ?? Number.MAX_SAFE_INTEGER) -
-      (right.message?.create_time ?? Number.MAX_SAFE_INTEGER),
+      (right.message?.create_time ?? Number.MAX_SAFE_INTEGER)
   );
 }
 
@@ -64,17 +64,28 @@ function countWords(text: string): number {
   return text.match(/\p{L}[\p{L}\p{N}'’-]*/gu)?.length ?? 0;
 }
 
-export function normalizeConversation(raw: RawConversation): ConversationRecord | null {
-  const conversationId = raw.id ?? raw.conversation_id;
-  if (!conversationId) return null;
+type ConversationAccumulator = {
+  prompts: UserPrompt[];
+  userMessageCount: number;
+  assistantMessageCount: number;
+  messageCount: number;
+  wordCount: number;
+  detectedModel: string;
+};
 
-  const nodes = activeNodes(raw);
+function accumulateMessages(
+  nodes: RawNode[],
+  conversationId: string,
+  fallbackTitle: string,
+  fallbackDate: number,
+  defaultModel: string
+): ConversationAccumulator {
   const prompts: UserPrompt[] = [];
   let userMessageCount = 0;
   let assistantMessageCount = 0;
   let messageCount = 0;
   let wordCount = 0;
-  let detectedModel = raw.default_model_slug ?? "unknown";
+  let detectedModel = defaultModel;
 
   for (const node of nodes) {
     const message = node.message;
@@ -93,8 +104,8 @@ export function normalizeConversation(raw: RawConversation): ConversationRecord 
       prompts.push({
         id: message.id ?? `${conversationId}:user:${userMessageCount}`,
         conversationId,
-        title: raw.title?.trim() || "Untitled conversation",
-        date: message.create_time ?? raw.create_time ?? 0,
+        title: fallbackTitle,
+        date: message.create_time ?? fallbackDate,
         text: text.slice(0, 2_400),
       });
     } else {
@@ -102,20 +113,53 @@ export function normalizeConversation(raw: RawConversation): ConversationRecord 
     }
   }
 
-  if (messageCount === 0) return null;
-
   return {
-    conversationId,
-    title: raw.title?.trim() || "Untitled conversation",
-    date: raw.create_time ?? prompts[0]?.date ?? 0,
-    updatedAt: raw.update_time ?? prompts.at(-1)?.date ?? raw.create_time ?? 0,
-    model: detectedModel,
-    messageCount,
+    prompts,
     userMessageCount,
     assistantMessageCount,
+    messageCount,
     wordCount,
-    prompts,
+    detectedModel,
   };
+}
+
+function buildConversationRecord(
+  raw: RawConversation,
+  conversationId: string,
+  fallbackTitle: string,
+  acc: ConversationAccumulator
+): ConversationRecord {
+  return {
+    conversationId,
+    title: fallbackTitle,
+    date: raw.create_time ?? acc.prompts[0]?.date ?? 0,
+    updatedAt: raw.update_time ?? acc.prompts.at(-1)?.date ?? raw.create_time ?? 0,
+    model: acc.detectedModel,
+    messageCount: acc.messageCount,
+    userMessageCount: acc.userMessageCount,
+    assistantMessageCount: acc.assistantMessageCount,
+    wordCount: acc.wordCount,
+    prompts: acc.prompts,
+  };
+}
+
+export function normalizeConversation(raw: RawConversation): ConversationRecord | null {
+  const conversationId = raw.id ?? raw.conversation_id;
+  if (!conversationId) return null;
+
+  const fallbackTitle = raw.title?.trim() || "Untitled conversation";
+  const fallbackDate = raw.create_time ?? 0;
+  const acc = accumulateMessages(
+    activeNodes(raw),
+    conversationId,
+    fallbackTitle,
+    fallbackDate,
+    raw.default_model_slug ?? "unknown"
+  );
+
+  if (acc.messageCount === 0) return null;
+
+  return buildConversationRecord(raw, conversationId, fallbackTitle, acc);
 }
 
 export function normalizeConversationChunk(value: unknown): ConversationRecord[] {

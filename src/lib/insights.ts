@@ -13,38 +13,32 @@ import type {
 
 const STOP_WORDS = new Set(
   "about after again against also and anything are because been before being between both but can could details did does doing down during each few for from further good had has have having here how into its itself just know like make maybe more most much need okay other our out over own please really right same should show some something such tell than that the their theirs them themselves then there these they thing things think this those through too under until use using very want was way were what when where which while who why will with would yes you your yours yourself yourselves give explain create build".split(
-    " ",
-  ),
+    " "
+  )
 );
 
 const POSITIVE_WORDS = new Set(
   "awesome best better calm clear confident effective excited excellent good great happy helpful improve improved love nice perfect progress proud ready relieved success useful win wonderful".split(
-    " ",
-  ),
+    " "
+  )
 );
 
 const NEGATIVE_WORDS = new Set(
   "angry annoyed anxious awful bad broken confused difficult disappointed error fail failed failing frustrated hate hard horrible issue negative problem sad scared stuck terrible tired unhappy useless worse worst wrong".split(
-    " ",
-  ),
+    " "
+  )
 );
 
 const NEGATIONS = new Set(["not", "never", "no", "hardly", "without", "isn't", "don't", "can't"]);
 
 const EMOTION_TERMS: Record<Exclude<EmotionBucket, "neutral">, RegExp[]> = {
-  curiosity: [
-    /\b(?:why|how|what|wonder|curious|explain|understand|learn|explore|discover)\b/i,
-  ],
+  curiosity: [/\b(?:why|how|what|wonder|curious|explain|understand|learn|explore|discover)\b/i],
   frustration: [
     /\b(?:stuck|broken|fail(?:ed|ing)?|error|annoyed|frustrat(?:ed|ing)|hate|wrong|again|useless|doesn'?t work|not working)\b/i,
   ],
   urgency: [/\b(?:urgent|asap|quickly|right now|immediately|deadline|hurry|today)\b/i],
-  uncertainty: [
-    /\b(?:unsure|maybe|might|could|perhaps|confused|not sure|uncertain|i guess)\b/i,
-  ],
-  excitement: [
-    /\b(?:excited|amazing|awesome|love|can'?t wait|great|wonderful|super excited)\b/i,
-  ],
+  uncertainty: [/\b(?:unsure|maybe|might|could|perhaps|confused|not sure|uncertain|i guess)\b/i],
+  excitement: [/\b(?:excited|amazing|awesome|love|can'?t wait|great|wonderful|super excited)\b/i],
   appreciation: [/\b(?:thanks|thank you|appreciate|helpful|grateful)\b/i],
 };
 
@@ -64,7 +58,8 @@ const QUESTION_LENSES: Array<
   {
     id: "math",
     label: "Math & quantitative",
-    description: "Calculations, equations, probability, statistics, ratios, and mathematical notation",
+    description:
+      "Calculations, equations, probability, statistics, ratios, and mathematical notation",
     patterns: [
       /\b(?:calculate|calculation|equation|algebra|geometry|probability|statistics|derivative|integral|matrix|percentage|percent|ratio|average|median|maths?|arithmetic)\b/i,
       /\d+(?:\.\d+)?\s*(?:[+\-*/^=]|percent of)\s*\d+/i,
@@ -144,12 +139,10 @@ const QUESTION_LENSES: Array<
   },
 ];
 
-export function classifyQuestionLensIds(
-  values: Iterable<string>,
-): QuestionLens["id"][] {
+export function classifyQuestionLensIds(values: Iterable<string>): QuestionLens["id"][] {
   const texts = [...values];
   return QUESTION_LENSES.filter(({ patterns }) =>
-    texts.some((value) => patterns.some((pattern) => pattern.test(value))),
+    texts.some((value) => patterns.some((pattern) => pattern.test(value)))
   ).map(({ id }) => id);
 }
 
@@ -289,7 +282,7 @@ export function promptEmotion(text: string): EmotionBucket {
   >) {
     scores.set(
       bucket,
-      patterns.reduce((sum, pattern) => sum + (pattern.test(text) ? 1 : 0), 0),
+      patterns.reduce((sum, pattern) => sum + (pattern.test(text) ? 1 : 0), 0)
     );
   }
   return EMOTION_PRIORITY.reduce((best, candidate) => {
@@ -315,7 +308,7 @@ function buildEmotions(prompts: UserPrompt[]): DeterministicReport["emotions"] {
   const counts = emptyEmotionCounts();
   const monthly = new Map<string, Record<EmotionBucket, number>>();
   const sourcePrompts = new Map<EmotionBucket, UserPrompt[]>(
-    (Object.keys(counts) as EmotionBucket[]).map((bucket) => [bucket, []]),
+    (Object.keys(counts) as EmotionBucket[]).map((bucket) => [bucket, []])
   );
   for (const prompt of prompts) {
     const emotion = promptEmotion(prompt.text);
@@ -345,7 +338,7 @@ function buildEmotions(prompts: UserPrompt[]): DeterministicReport["emotions"] {
           .slice(0, 12)
           .map(({ conversationId, title, date }) => ({ conversationId, title, date }));
         return [bucket, sources];
-      }),
+      })
     ) as Record<EmotionBucket, SourceRef[]>,
     method:
       "Local vocabulary cues assign one dominant language signal per query. They describe wording—not your feelings, mood, personality, or mental state.",
@@ -378,12 +371,7 @@ function contentTerms(value: string): Set<string> {
   return new Set(
     normalizeText(value)
       .split(" ")
-      .filter(
-        (term) =>
-          term.length > 2 &&
-          !STOP_WORDS.has(term) &&
-          !/^\d+$/.test(term),
-      ),
+      .filter((term) => term.length > 2 && !STOP_WORDS.has(term) && !/^\d+$/.test(term))
   );
 }
 
@@ -395,10 +383,12 @@ function termOverlap(left: Set<string>, right: Set<string>): number {
 
 function buildQuestionLenses(
   conversations: ConversationRecord[],
-  prompts: UserPrompt[],
+  prompts: UserPrompt[]
 ): QuestionLensReport {
   const categories = QUESTION_LENSES.map(({ patterns, ...lens }) => {
-    const matches = prompts.filter((prompt) => patterns.some((pattern) => pattern.test(prompt.text)));
+    const matches = prompts.filter((prompt) =>
+      patterns.some((pattern) => pattern.test(prompt.text))
+    );
     const monthly = new Map<string, number>();
     for (const prompt of matches) {
       const month = monthKey(prompt.date);
@@ -447,43 +437,39 @@ function buildQuestionLenses(
     .sort((left, right) => right.count - left.count || left.token.localeCompare(right.token))
     .slice(0, 24);
 
-  const threadCandidates = conversations
-    .map((conversation) => {
-      const ordered = conversation.prompts.slice().sort((left, right) => left.date - right.date);
-      let compared = 0;
-      let shiftCount = 0;
-      for (let index = 1; index < ordered.length; index += 1) {
-        const left = contentTerms(ordered[index - 1].text);
-        const right = contentTerms(ordered[index].text);
-        if (left.size < 4 || right.size < 4) continue;
-        compared += 1;
-        if (termOverlap(left, right) < 0.035) shiftCount += 1;
-      }
-      const likely =
-        ordered.length >= 6 &&
-        compared >= 3 &&
-        shiftCount >= 3 &&
-        shiftCount / compared >= 0.6;
-      return {
-        candidate: {
-          id: conversation.conversationId,
-          title: conversation.title,
-          date: conversation.date,
-          promptCount: ordered.length,
-          shiftCount,
-          estimatedThreads: Math.min(Math.max(2, Math.round(1 + Math.sqrt(shiftCount))), 8),
-          sources: [
-            {
-              conversationId: conversation.conversationId,
-              title: conversation.title,
-              date: conversation.date,
-            },
-          ],
-        },
-        eligible: ordered.length >= 6 && compared >= 3,
-        likely,
-      };
-    });
+  const threadCandidates = conversations.map((conversation) => {
+    const ordered = conversation.prompts.slice().sort((left, right) => left.date - right.date);
+    let compared = 0;
+    let shiftCount = 0;
+    for (let index = 1; index < ordered.length; index += 1) {
+      const left = contentTerms(ordered[index - 1].text);
+      const right = contentTerms(ordered[index].text);
+      if (left.size < 4 || right.size < 4) continue;
+      compared += 1;
+      if (termOverlap(left, right) < 0.035) shiftCount += 1;
+    }
+    const likely =
+      ordered.length >= 6 && compared >= 3 && shiftCount >= 3 && shiftCount / compared >= 0.6;
+    return {
+      candidate: {
+        id: conversation.conversationId,
+        title: conversation.title,
+        date: conversation.date,
+        promptCount: ordered.length,
+        shiftCount,
+        estimatedThreads: Math.min(Math.max(2, Math.round(1 + Math.sqrt(shiftCount))), 8),
+        sources: [
+          {
+            conversationId: conversation.conversationId,
+            title: conversation.title,
+            date: conversation.date,
+          },
+        ],
+      },
+      eligible: ordered.length >= 6 && compared >= 3,
+      likely,
+    };
+  });
   const eligible = threadCandidates.filter((item) => item.eligible);
   const likely = eligible
     .filter((item) => item.likely)
@@ -492,7 +478,7 @@ function buildQuestionLenses(
       (left, right) =>
         right.shiftCount - left.shiftCount ||
         right.promptCount - left.promptCount ||
-        right.date - left.date,
+        right.date - left.date
     )
     .slice(0, 40);
 
@@ -550,7 +536,7 @@ function buildRecurringTerms(conversations: ConversationRecord[]) {
     const terms = new Set(
       normalizeText(text)
         .split(" ")
-        .filter((term) => term.length > 3 && !STOP_WORDS.has(term) && !/^\d+$/.test(term)),
+        .filter((term) => term.length > 3 && !STOP_WORDS.has(term) && !/^\d+$/.test(term))
     );
     for (const term of terms) {
       documentFrequency.set(term, (documentFrequency.get(term) ?? 0) + 1);
@@ -578,10 +564,10 @@ export function extractFactCandidates(prompts: UserPrompt[]): FactCandidate[] {
       if (
         sentence.includes("?") ||
         /^(?:if|what|when|where|why|how|can|could|would|should|do|does|did|is|are|will)\b/i.test(
-          sentence,
+          sentence
         ) ||
         /\bif\s+i\s+(?:am|have|use|prefer|like|want|need|work|live|own|believe|value)\b/i.test(
-          sentence,
+          sentence
         )
       ) {
         continue;
@@ -605,9 +591,7 @@ export function extractFactCandidates(prompts: UserPrompt[]): FactCandidate[] {
   return candidates;
 }
 
-export function buildDeterministicReport(
-  conversations: ConversationRecord[],
-): {
+export function buildDeterministicReport(conversations: ConversationRecord[]): {
   report: DeterministicReport;
   prompts: UserPrompt[];
   facts: FactCandidate[];
@@ -653,7 +637,7 @@ export function buildDeterministicReport(
     activity.set(monthKey(conversation.date), (activity.get(monthKey(conversation.date)) ?? 0) + 1);
     addRhythm("all", conversation);
     for (const routeId of classifyQuestionLensIds(
-      conversation.prompts.map((prompt) => prompt.text),
+      conversation.prompts.map((prompt) => prompt.text)
     )) {
       addRhythm(routeId, conversation);
     }
@@ -670,7 +654,7 @@ export function buildDeterministicReport(
 
   const short = conversations.filter((conversation) => conversation.messageCount <= 4).length;
   const medium = conversations.filter(
-    (conversation) => conversation.messageCount > 4 && conversation.messageCount <= 14,
+    (conversation) => conversation.messageCount > 4 && conversation.messageCount <= 14
   ).length;
   const deep = conversations.filter((conversation) => conversation.messageCount > 14).length;
 
@@ -732,8 +716,16 @@ export function buildDeterministicReport(
 }
 
 export function lexicalSimilarity(left: string, right: string): number {
-  const leftTerms = new Set(normalizeText(left).split(" ").filter((term) => !STOP_WORDS.has(term)));
-  const rightTerms = new Set(normalizeText(right).split(" ").filter((term) => !STOP_WORDS.has(term)));
+  const leftTerms = new Set(
+    normalizeText(left)
+      .split(" ")
+      .filter((term) => !STOP_WORDS.has(term))
+  );
+  const rightTerms = new Set(
+    normalizeText(right)
+      .split(" ")
+      .filter((term) => !STOP_WORDS.has(term))
+  );
   if (leftTerms.size === 0 || rightTerms.size === 0) return 0;
   const intersection = [...leftTerms].filter((term) => rightTerms.has(term)).length;
   const union = new Set([...leftTerms, ...rightTerms]).size;
@@ -752,7 +744,7 @@ export function distinctiveTitleTerms(records: ConversationRecord[]): string[] {
     const terms = new Set(
       normalizeText(record.title)
         .split(" ")
-        .filter((term) => term.length > 3 && !STOP_WORDS.has(term) && !/^\d+$/.test(term)),
+        .filter((term) => term.length > 3 && !STOP_WORDS.has(term) && !/^\d+$/.test(term))
     );
     for (const term of terms) counts.set(term, (counts.get(term) ?? 0) + 1);
   }

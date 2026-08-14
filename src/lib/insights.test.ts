@@ -11,7 +11,7 @@ function prompt(
   id: string,
   text: string,
   date: number,
-  conversationId = `conversation-${id}`,
+  conversationId = `conversation-${id}`
 ): UserPrompt {
   return {
     id,
@@ -26,7 +26,7 @@ function conversation(
   id: string,
   date: number,
   prompts: UserPrompt[],
-  messageCount = prompts.length * 2,
+  messageCount = prompts.length * 2
 ): ConversationRecord {
   return {
     conversationId: id,
@@ -147,9 +147,7 @@ describe("deterministic insights", () => {
       prompt("seven", "Explain this class constructor and object prototype.", 107, "mixed"),
     ];
 
-    const { report } = buildDeterministicReport([
-      conversation("mixed", 100, prompts, 12),
-    ]);
+    const { report } = buildDeterministicReport([conversation("mixed", 100, prompts, 12)]);
 
     expect(report.lenses.categories.find((lens) => lens.id === "math")?.queryCount).toBe(1);
     expect(report.lenses.categories.find((lens) => lens.id === "health")?.queryCount).toBe(1);
@@ -165,11 +163,9 @@ describe("deterministic insights", () => {
   it("bounds daily evidence while preserving the full activity count", () => {
     const day = 1_700_000_000;
     const conversations = Array.from({ length: 15 }, (_, index) =>
-      conversation(
-        `day-${index}`,
-        day + index,
-        [prompt(`day-${index}`, `Question number ${index}?`, day + index, `day-${index}`)],
-      ),
+      conversation(`day-${index}`, day + index, [
+        prompt(`day-${index}`, `Question number ${index}?`, day + index, `day-${index}`),
+      ])
     );
 
     const { report } = buildDeterministicReport(conversations);
@@ -191,16 +187,16 @@ describe("deterministic insights", () => {
             "mixed",
             "Calculate the average calories for this nutrition plan.",
             november,
-            "mixed",
+            "mixed"
           ),
         ],
-        6,
+        6
       ),
       conversation(
         "software",
         december,
         [prompt("software", "Debug this TypeScript API.", december, "software")],
-        4,
+        4
       ),
     ];
     conversations[0].wordCount = 240;
@@ -237,8 +233,8 @@ describe("deterministic insights", () => {
     expect(
       lexicalSimilarity(
         "How do I improve focus while working?",
-        "What helps me focus better at work?",
-      ),
+        "What helps me focus better at work?"
+      )
     ).toBeGreaterThan(0);
     expect(lexicalSimilarity("Plan a trip", "Debug this database")).toBe(0);
   });

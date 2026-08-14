@@ -1,14 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { classifyQuestionLensIds } from "./insights";
-import {
-  FORMATION_ROUTES,
-  formationPoint,
-  formationRouteIds,
-} from "./graph-formation";
+import { FORMATION_ROUTES, formationPoint, formationRouteIds } from "./graph-formation";
 import type { GraphFormationConversation } from "./types";
 
 function conversation(
-  routeIds: GraphFormationConversation["routeIds"],
+  routeIds: GraphFormationConversation["routeIds"]
 ): GraphFormationConversation {
   return {
     id: "conversation-1",
@@ -23,7 +19,7 @@ describe("progressive graph formation", () => {
     expect(
       classifyQuestionLensIds([
         "Help me debug this TypeScript API and plan the next deployment step",
-      ]),
+      ])
     ).toEqual(["software", "planning"]);
   });
 
@@ -32,9 +28,11 @@ describe("progressive graph formation", () => {
   });
 
   it("caps visual edges while retaining a stable primary route", () => {
-    expect(
-      formationRouteIds(conversation(["health", "learning", "planning", "career"])),
-    ).toEqual(["health", "learning", "planning"]);
+    expect(formationRouteIds(conversation(["health", "learning", "planning", "career"]))).toEqual([
+      "health",
+      "learning",
+      "planning",
+    ]);
   });
 
   it("places every conversation deterministically within the canvas bounds", () => {

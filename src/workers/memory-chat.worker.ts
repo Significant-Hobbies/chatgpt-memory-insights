@@ -19,7 +19,7 @@ type Generator = {
       do_sample: false;
       repetition_penalty: number;
       no_repeat_ngram_size: number;
-    },
+    }
   ): Promise<unknown>;
   dispose(): Promise<void>;
 };

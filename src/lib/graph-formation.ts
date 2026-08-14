@@ -41,17 +41,13 @@ function stableHash(value: string): number {
   return hash >>> 0;
 }
 
-export function formationRouteIds(
-  conversation: GraphFormationConversation,
-): FormationRouteId[] {
-  return conversation.routeIds.length > 0
-    ? conversation.routeIds.slice(0, 3)
-    : ["other"];
+export function formationRouteIds(conversation: GraphFormationConversation): FormationRouteId[] {
+  return conversation.routeIds.length > 0 ? conversation.routeIds.slice(0, 3) : ["other"];
 }
 
 export function formationPoint(
   conversation: GraphFormationConversation,
-  index: number,
+  index: number
 ): { x: number; y: number } {
   const primary = ROUTE_BY_ID.get(formationRouteIds(conversation)[0]) ?? ROUTE_BY_ID.get("other")!;
   const hash = stableHash(`${conversation.id}:${index}`);

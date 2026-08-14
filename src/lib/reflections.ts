@@ -1,9 +1,4 @@
-import type {
-  FullReport,
-  ReflectionQuestion,
-  SourceRef,
-  UserPrompt,
-} from "./types";
+import type { FullReport, ReflectionQuestion, SourceRef, UserPrompt } from "./types";
 import { promptEmotion } from "./insights";
 
 const SIX_MONTHS = 60 * 60 * 24 * 183;
@@ -17,7 +12,7 @@ function clip(value: string, length = 120): string {
 function monthLabel(month: string): string {
   const [year, monthIndex] = month.split("-").map(Number);
   return new Intl.DateTimeFormat("en", { month: "long", year: "numeric", timeZone: "UTC" }).format(
-    new Date(Date.UTC(year, monthIndex - 1, 1)),
+    new Date(Date.UTC(year, monthIndex - 1, 1))
   );
 }
 
@@ -35,7 +30,7 @@ function uniqueSources(sources: SourceRef[], limit = 12): SourceRef[] {
 
 export function buildReflectionQuestions(
   report: FullReport,
-  prompts: UserPrompt[],
+  prompts: UserPrompt[]
 ): ReflectionQuestion[] {
   const questions: ReflectionQuestion[] = [];
   const latestDate = report.deterministic.dateRange.end;
@@ -139,7 +134,7 @@ export function buildReflectionQuestions(
       .filter(
         (prompt) =>
           new Date(prompt.date * 1_000).toISOString().slice(0, 7) === frustrationMonths.month &&
-          promptEmotion(prompt.text) === "frustration",
+          promptEmotion(prompt.text) === "frustration"
       )
       .map(({ conversationId, title, date }) => ({ conversationId, title, date }));
     questions.push({
@@ -159,7 +154,7 @@ export function buildReflectionQuestions(
         fact.status === "current" &&
         latestDate > 0 &&
         fact.lastSeen > 0 &&
-        latestDate - fact.lastSeen >= ONE_YEAR,
+        latestDate - fact.lastSeen >= ONE_YEAR
     )
     .sort((left, right) => left.lastSeen - right.lastSeen)[0];
   if (stale) {
@@ -181,7 +176,7 @@ export function buildReflectionQuestions(
     }))
     .filter(
       ({ topic, lastSeen }) =>
-        topic.count >= 3 && latestDate > 0 && lastSeen > 0 && latestDate - lastSeen >= SIX_MONTHS,
+        topic.count >= 3 && latestDate > 0 && lastSeen > 0 && latestDate - lastSeen >= SIX_MONTHS
     )
     .sort((left, right) => right.topic.count - left.topic.count)[0];
   if (dormant) {
@@ -190,7 +185,8 @@ export function buildReflectionQuestions(
       kind: "dormant-theme",
       eyebrow: "A line that went quiet",
       question: `You explored ${dormant.topic.label} across ${dormant.topic.count} conversations, then the trail went quiet. Finished—or dormant?`,
-      reason: "This substantial topic has no supporting conversation in the final six months of the export.",
+      reason:
+        "This substantial topic has no supporting conversation in the final six months of the export.",
       confidence: Math.min(0.92, 0.62 + dormant.topic.count / 100),
       sources: uniqueSources(dormant.topic.sources),
     });
@@ -200,7 +196,7 @@ export function buildReflectionQuestions(
   if (recurringTerm) {
     const termPattern = new RegExp(
       `\\b${recurringTerm.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
-      "i",
+      "i"
     );
     const sources = prompts
       .filter((prompt) => termPattern.test(`${prompt.title} ${prompt.text}`))
@@ -222,7 +218,7 @@ export function buildReflectionQuestions(
   if (busiestMonth && report.deterministic.activityByMonth.length > 1) {
     const sources = prompts
       .filter(
-        (prompt) => new Date(prompt.date * 1_000).toISOString().slice(0, 7) === busiestMonth.label,
+        (prompt) => new Date(prompt.date * 1_000).toISOString().slice(0, 7) === busiestMonth.label
       )
       .map(({ conversationId, title, date }) => ({ conversationId, title, date }));
     questions.push({
