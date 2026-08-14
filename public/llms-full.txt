@@ -24,8 +24,8 @@ Private, browser-local analysis of a ChatGPT export.
 ## Product links
 
 - Home: https://chatgpt.significanthobbies.com/ — Local ChatGPT export analysis
-- What it finds: https://chatgpt.significanthobbies.com/about — Capabilities and privacy architecture
-- Changelog: https://chatgpt.significanthobbies.com/changelog — Verified product releases
+- What it finds: https://chatgpt.significanthobbies.com/about/ — Capabilities and privacy architecture
+- Changelog: https://chatgpt.significanthobbies.com/changelog/ — Verified product releases
 
 ## Machine surfaces
 
