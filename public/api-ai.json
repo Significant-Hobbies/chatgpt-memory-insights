@@ -20,14 +20,14 @@
     },
     {
       "id": "what-it-finds",
-      "url": "https://chatgpt.significanthobbies.com/about",
+      "url": "https://chatgpt.significanthobbies.com/about/",
       "md": "https://chatgpt.significanthobbies.com/about.md",
       "kind": "static",
       "description": "Capabilities and privacy architecture"
     },
     {
       "id": "changelog",
-      "url": "https://chatgpt.significanthobbies.com/changelog",
+      "url": "https://chatgpt.significanthobbies.com/changelog/",
       "md": "https://chatgpt.significanthobbies.com/changelog.md",
       "kind": "static",
       "description": "Verified product releases"

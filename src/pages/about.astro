@@ -5,6 +5,7 @@ import "../styles/about.css";
 const title = "What Memory Map finds in your ChatGPT history";
 const description =
   "See every insight Memory Map can find in a ChatGPT export: recurring questions, topic connections, memory changes, query patterns, conversation strands, and private semantic search.";
+const canonical = "https://chatgpt.significanthobbies.com/about/";
 
 const capabilityRoutes = [
   {
@@ -317,6 +318,7 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
+    <link rel="canonical" href={canonical} />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#f3f5f2" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -342,7 +344,7 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
         <a href="#capabilities">What it finds</a>
         <a href="#privacy">Privacy</a>
         <a href="#export">Get the ZIP</a>
-        <a href="/changelog">Changelog</a>
+        <a href="/changelog/">Changelog</a>
       </nav>
       <a class="about-nav-action" href="/">Analyze my ZIP</a>
     </header>
@@ -661,7 +663,7 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
         <span>Memory Map</span>
       </a>
       <p>Not a wrapped. Not a diagnosis. A map back to your own evidence.</p>
-      <a href="/changelog">Changelog</a>
+      <a href="/changelog/">Changelog</a>
       <a href="/">Analyze my ChatGPT ZIP →</a>
     </footer>
   </body>
