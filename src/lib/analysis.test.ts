@@ -12,20 +12,18 @@ const source = { conversationId: "conversation", title: "Conversation", date: 1 
 
 describe("analysis settings", () => {
   it("resolves supported non-Latin script histories to multilingual in auto mode", () => {
-    const result = resolveAnalysisSettings(
-      { modelProfile: "auto", confidence: 65 },
-      ["मैं अपने स्वास्थ्य और व्यायाम के बारे में कई सवाल पूछता हूं।".repeat(8)],
-    );
+    const result = resolveAnalysisSettings({ modelProfile: "auto", confidence: 65 }, [
+      "मैं अपने स्वास्थ्य और व्यायाम के बारे में कई सवाल पूछता हूं।".repeat(8),
+    ]);
 
     expect(result.resolvedModelProfile).toBe("multilingual");
     expect(result.confidencePreset).toBe("balanced");
   });
 
   it("keeps explicit model choices and custom confidence", () => {
-    const result = resolveAnalysisSettings(
-      { modelProfile: "multilingual", confidence: 71 },
-      ["Only English text"],
-    );
+    const result = resolveAnalysisSettings({ modelProfile: "multilingual", confidence: 71 }, [
+      "Only English text",
+    ]);
 
     expect(result.resolvedModelProfile).toBe("multilingual");
     expect(result.confidence).toBe(71);
@@ -69,7 +67,7 @@ describe("trend classification", () => {
         ["2026-04", 100],
         ["2026-05", 100],
         ["2026-06", 100],
-      ]),
+      ])
     );
 
     expect(result.trend).toBe("fading");

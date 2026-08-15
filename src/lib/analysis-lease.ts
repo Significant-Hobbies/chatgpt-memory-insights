@@ -4,7 +4,7 @@ type LockManagerLike = {
   request(
     name: string,
     options: { mode: "exclusive"; ifAvailable: true },
-    callback: (lock: LockLike | null) => Promise<void>,
+    callback: (lock: LockLike | null) => Promise<void>
   ): Promise<unknown>;
 };
 

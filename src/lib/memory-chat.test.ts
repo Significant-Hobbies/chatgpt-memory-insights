@@ -31,17 +31,10 @@ function result(index: number): SearchResult {
 describe("memory chat context", () => {
   it("bounds and labels the retrieval pack without changing result order", () => {
     const evidence = buildMemoryChatEvidence(
-      Array.from({ length: 9 }, (_, index) => result(index)),
+      Array.from({ length: 9 }, (_, index) => result(index))
     );
     expect(evidence).toHaveLength(MEMORY_CHAT_MODEL.maxEvidence);
-    expect(evidence.map((item) => item.reference)).toEqual([
-      "S1",
-      "S2",
-      "S3",
-      "S4",
-      "S5",
-      "S6",
-    ]);
+    expect(evidence.map((item) => item.reference)).toEqual(["S1", "S2", "S3", "S4", "S5", "S6"]);
     expect(evidence[0]).toMatchObject({
       id: "question:0",
       excerpt: "Evidence excerpt 0",
@@ -65,7 +58,7 @@ describe("memory chat context", () => {
 
   it("extracts string and message-style generation results", () => {
     expect(extractGeneratedAnswer([{ generated_text: "  Grounded answer [S1]. " }])).toBe(
-      "Grounded answer [S1].",
+      "Grounded answer [S1]."
     );
     expect(
       extractGeneratedAnswer([
@@ -75,7 +68,7 @@ describe("memory chat context", () => {
             { role: "assistant", content: "Answer [S2]." },
           ],
         },
-      ]),
+      ])
     ).toBe("Answer [S2].");
   });
 

@@ -1,5 +1,6 @@
 import type { EmotionBucket, FullReport, SourceRef } from "../lib/types";
 import { activityMonthWindow } from "../lib/period";
+import { formatNumber, truncate } from "./dom-utils";
 
 type StoryContext = {
   showEvidence: (title: string, sources: SourceRef[], notes?: string[]) => void;
@@ -24,7 +25,6 @@ type StorySlide = {
   };
 };
 
-const numberFormat = new Intl.NumberFormat();
 const monthFormat = new Intl.DateTimeFormat(undefined, {
   month: "long",
   year: "numeric",
@@ -45,16 +45,12 @@ function $(selector: string): HTMLElement {
 function element<K extends keyof HTMLElementTagNameMap>(
   tag: K,
   value?: string,
-  className?: string,
+  className?: string
 ): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
   if (value !== undefined) node.textContent = value;
   if (className) node.className = className;
   return node;
-}
-
-function formatNumber(value: number): string {
-  return numberFormat.format(value);
 }
 
 function formatMonth(label: string): string {
@@ -64,13 +60,6 @@ function formatMonth(label: string): string {
 
 function formatDate(timestamp: number): string {
   return timestamp ? dateFormat.format(new Date(timestamp * 1_000)) : "Unknown date";
-}
-
-function truncate(value: string, length: number): string {
-  const normalized = value.replace(/\s+/g, " ").trim();
-  return normalized.length > length
-    ? `${normalized.slice(0, length - 1).trimEnd()}…`
-    : normalized;
 }
 
 function statGrid(values: Array<{ label: string; value: string }>): HTMLElement {
@@ -83,9 +72,7 @@ function statGrid(values: Array<{ label: string; value: string }>): HTMLElement 
   return grid;
 }
 
-function rankedBars(
-  values: Array<{ label: string; value: number; color?: string }>,
-): HTMLElement {
+function rankedBars(values: Array<{ label: string; value: number; color?: string }>): HTMLElement {
   const list = element("div", undefined, "story-ranked-bars");
   const max = Math.max(1, ...values.map((datum) => datum.value));
   values.forEach((datum, index) => {
@@ -105,7 +92,7 @@ function rankedBars(
 function buildSlides(
   report: FullReport,
   periodMonths: number | null,
-  clearsConfidence: (score: number) => boolean,
+  clearsConfidence: (score: number) => boolean
 ): StorySlide[] {
   const deterministic = report.deterministic;
   const months = activityMonthWindow(report.deterministic, periodMonths);
@@ -115,9 +102,7 @@ function buildSlides(
       ? `${formatDate(deterministic.dateRange.start)} — ${formatDate(deterministic.dateRange.end)}`
       : `Recent ${periodMonths} months`;
   const activity = deterministic.activityByMonth.filter((datum) => monthSet.has(datum.label));
-  const busiestMonth = activity
-    .slice()
-    .sort((left, right) => right.value - left.value)[0];
+  const busiestMonth = activity.slice().sort((left, right) => right.value - left.value)[0];
   const periodStarts = activity.reduce((sum, datum) => sum + datum.value, 0);
   const lenses = deterministic.lenses.categories
     .map((lens) => ({
@@ -133,7 +118,7 @@ function buildSlides(
     .filter(
       (repeat) =>
         periodMonths === null ||
-        monthSet.has(new Date(repeat.lastAsked * 1_000).toISOString().slice(0, 7)),
+        monthSet.has(new Date(repeat.lastAsked * 1_000).toISOString().slice(0, 7))
     )
     .map((repeat) => ({
       label: repeat.representative,
@@ -150,8 +135,8 @@ function buildSlides(
       (repeat) =>
         periodMonths === null ||
         repeat.sources.some((source) =>
-          monthSet.has(new Date(source.date * 1_000).toISOString().slice(0, 7)),
-        ),
+          monthSet.has(new Date(source.date * 1_000).toISOString().slice(0, 7))
+        )
     )
     .map((repeat) => {
       const dates = repeat.sources.map((source) => source.date).filter(Boolean);
@@ -166,7 +151,7 @@ function buildSlides(
       };
     });
   const topRepeat = [...exactRepeats, ...semanticRepeats].sort(
-    (left, right) => right.count - left.count,
+    (left, right) => right.count - left.count
   )[0];
   const emotionCounts = deterministic.emotions.byMonth
     .filter((datum) => monthSet.has(datum.month))
@@ -185,7 +170,7 @@ function buildSlides(
         excitement: 0,
         appreciation: 0,
         neutral: 0,
-      },
+      }
     );
   const emotionMeta: Record<EmotionBucket, { label: string; color: string }> = {
     curiosity: { label: "Curiosity", color: "#2157d5" },
@@ -213,7 +198,7 @@ function buildSlides(
         neutral: totals.neutral + datum.neutral,
         negative: totals.negative + datum.negative,
       }),
-      { positive: 0, neutral: 0, negative: 0 },
+      { positive: 0, neutral: 0, negative: 0 }
     );
   const toneTotal = tone.positive + tone.neutral + tone.negative;
   const topics = (report.semantic?.topics ?? [])
@@ -240,9 +225,18 @@ function buildSlides(
       lede: `${periodLabel}. A private story assembled in this browser from your derived report.`,
       renderBody: () =>
         statGrid([
-          { label: "Conversations · all history", value: formatNumber(deterministic.totals.conversations) },
-          { label: "Your prompts · all history", value: formatNumber(deterministic.totals.userPrompts) },
-          { label: "Active days · all history", value: formatNumber(deterministic.totals.activeDays) },
+          {
+            label: "Conversations · all history",
+            value: formatNumber(deterministic.totals.conversations),
+          },
+          {
+            label: "Your prompts · all history",
+            value: formatNumber(deterministic.totals.userPrompts),
+          },
+          {
+            label: "Active days · all history",
+            value: formatNumber(deterministic.totals.activeDays),
+          },
         ]),
     },
     {
@@ -268,7 +262,9 @@ function buildSlides(
     },
     {
       eyebrow: "What you asked about",
-      title: topLens ? `${topLens.lens.label} led the question routes.` : "Your questions crossed many routes.",
+      title: topLens
+        ? `${topLens.lens.label} led the question routes.`
+        : "Your questions crossed many routes.",
       lede: "These are overlapping local query lenses: one prompt can count in more than one route.",
       renderBody: () =>
         rankedBars(
@@ -276,14 +272,14 @@ function buildSlides(
             label: lens.label,
             value,
             color: ["#2157d5", "#168579", "#ef4b3e", "#7554c8", "#dc8700"][index],
-          })),
+          }))
         ),
       evidence: topLens
         ? {
             label: "Open leading-route sources",
             title: topLens.lens.label,
             sources: topLens.lens.sources.filter((source) =>
-              monthSet.has(new Date(source.date * 1_000).toISOString().slice(0, 7)),
+              monthSet.has(new Date(source.date * 1_000).toISOString().slice(0, 7))
             ),
             notes: [
               `${formatNumber(topLens.value)} matching queries in the selected period.`,
@@ -295,7 +291,9 @@ function buildSlides(
     },
     {
       eyebrow: "The return journey",
-      title: topRepeat ? `You asked this ${formatNumber(topRepeat.count)} times.` : "No repeated question dominated this period.",
+      title: topRepeat
+        ? `You asked this ${formatNumber(topRepeat.count)} times.`
+        : "No repeated question dominated this period.",
       lede: topRepeat
         ? `“${truncate(topRepeat.label, 180)}”`
         : "Exact wording and meaning-match repeats stay separate and confidence-filtered.",
@@ -315,38 +313,40 @@ function buildSlides(
                     : `${Math.round(topRepeat.confidence * 100)}%`,
               },
             ])
-          : element("p", "This can mean your recurring questions were phrased differently—or simply did not recur.", "story-note"),
+          : element(
+              "p",
+              "This can mean your recurring questions were phrased differently—or simply did not recur.",
+              "story-note"
+            ),
       evidence: topRepeat
         ? {
             label: "Open repeat sources",
             title: topRepeat.label,
             sources: topRepeat.sources,
-            notes: [
-              `${formatNumber(topRepeat.count)} asks in this repeat group.`,
-              topRepeat.kind,
-            ],
+            notes: [`${formatNumber(topRepeat.count)} asks in this repeat group.`, topRepeat.kind],
           }
         : undefined,
     },
     {
       eyebrow: "How your prompts sounded",
-      title: topEmotion ? `${topEmotion.label} was the most common wording signal.` : "Your wording signals stayed quiet.",
-      lede:
-        "These are local vocabulary cues in your queries—not feelings, personality, diagnosis, or a claim about why you wrote them.",
+      title: topEmotion
+        ? `${topEmotion.label} was the most common wording signal.`
+        : "Your wording signals stayed quiet.",
+      lede: "These are local vocabulary cues in your queries—not feelings, personality, diagnosis, or a claim about why you wrote them.",
       renderBody: () =>
         rankedBars(
           orderedEmotions.slice(0, 5).map(({ label, value, color }) => ({
             label,
             value,
             color,
-          })),
+          }))
         ),
       evidence: topEmotion
         ? {
             label: `Open ${topEmotion.label.toLowerCase()} wording sources`,
             title: `${topEmotion.label} wording`,
             sources: deterministic.emotions.sources[topEmotion.bucket].filter((source) =>
-              monthSet.has(new Date(source.date * 1_000).toISOString().slice(0, 7)),
+              monthSet.has(new Date(source.date * 1_000).toISOString().slice(0, 7))
             ),
             notes: [
               `${formatNumber(topEmotion.value)} queries matched this dominant wording signal in the selected period.`,
@@ -372,7 +372,11 @@ function buildSlides(
               { label: "Momentum", value: topTopic.topic.momentum.toFixed(2) },
               { label: "Sampled conversations", value: formatNumber(topTopic.selectedCount) },
             ])
-          : element("p", "Return to the report for question routes, activity, repeats, and language signals.", "story-note"),
+          : element(
+              "p",
+              "Return to the report for question routes, activity, repeats, and language signals.",
+              "story-note"
+            ),
       evidence: topTopic
         ? {
             label: "Open topic sources",
@@ -388,8 +392,7 @@ function buildSlides(
     {
       eyebrow: "The map stays open",
       title: "The best insight is the one you can verify.",
-      lede:
-        "Search the full mapped memory, change the period or confidence lens, and open the conversations behind any pattern.",
+      lede: "Search the full mapped memory, change the period or confidence lens, and open the conversations behind any pattern.",
       renderBody: () =>
         statGrid([
           {
@@ -519,7 +522,7 @@ export function createStoryController(context: StoryContext) {
             render();
           });
           return button;
-        }),
+        })
       );
       dialog.showModal();
       render();

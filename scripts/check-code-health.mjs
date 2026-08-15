@@ -60,7 +60,7 @@ function checkFormat() {
   const observed = { files: report.summary.errors };
   console.log(`Format: ${observed.files} files differ from the enabled Biome formatter.`);
   // Ratcheted legacy debt: https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/12
-  failRegressions("Format", observed, { files: 26 });
+  failRegressions("Format", observed, { files: 0 });
 }
 
 function checkComplexity() {
@@ -94,9 +94,9 @@ function checkComplexity() {
   );
   // Ratcheted legacy debt: https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/12
   failRegressions("Complexity", observed, {
-    violations: 15,
-    maxCcn: 34,
-    maxLength: 262,
+    violations: 14,
+    maxCcn: 28,
+    maxLength: 208,
     maxParams: 6,
   });
 }
@@ -133,9 +133,9 @@ function checkDuplication() {
   );
   // Ratcheted legacy debt: https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/12
   failRegressions("Duplication", observed, {
-    clones: 4,
-    duplicatedLines: 57,
-    percentage: 0.7323654117949376,
+    clones: 3,
+    duplicatedLines: 43,
+    percentage: 0.553624307969615,
   });
 }
 

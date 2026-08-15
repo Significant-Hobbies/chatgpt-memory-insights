@@ -129,16 +129,14 @@ let activeRhythmRouteId: "all" | QuestionLens["id"] = "all";
 let analysisDetailsAutoSettled = false;
 let evidenceReturnFocus: HTMLElement | SVGElement | null = null;
 let timingInterval: number | null = null;
-let latestTiming:
-  | {
-      phase: AnalysisPhase;
-      label: string;
-      current: number;
-      total: number;
-      timing: AnalysisProgressTiming;
-      receivedAt: number;
-    }
-  | null = null;
+let latestTiming: {
+  phase: AnalysisPhase;
+  label: string;
+  current: number;
+  total: number;
+  timing: AnalysisProgressTiming;
+  receivedAt: number;
+} | null = null;
 let graphFormationQueue: GraphFormationConversation[] = [];
 let graphFormationCursor = 0;
 let graphFormationRendered: GraphFormationConversation[] = [];
@@ -187,9 +185,7 @@ function showOnly(view: HTMLElement) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-const reportRouteLinks = [
-  ...reportNav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]'),
-];
+const reportRouteLinks = [...reportNav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')];
 const reportRouteSections = reportRouteLinks
   .map((link) => {
     const target = document.querySelector<HTMLElement>(link.hash);
@@ -213,11 +209,11 @@ const reportRouteObserver = new IntersectionObserver(
       .filter((entry) => entry.isIntersecting)
       .sort(
         (left, right) =>
-          Math.abs(left.boundingClientRect.top) - Math.abs(right.boundingClientRect.top),
+          Math.abs(left.boundingClientRect.top) - Math.abs(right.boundingClientRect.top)
       )[0];
     if (visible?.target instanceof HTMLElement) setCurrentReportRoute(visible.target.id);
   },
-  { rootMargin: "-18% 0px -68% 0px", threshold: 0 },
+  { rootMargin: "-18% 0px -68% 0px", threshold: 0 }
 );
 for (const { link, target } of reportRouteSections) {
   reportRouteObserver.observe(target);
@@ -248,7 +244,7 @@ function formatMonth(month: string): string {
 
 function formatPercent(value: number): string {
   return new Intl.NumberFormat(undefined, { style: "percent", maximumFractionDigits: 1 }).format(
-    value,
+    value
   );
 }
 
@@ -260,7 +256,7 @@ function runtimeLabel(runtime?: AnalysisRuntime): string {
 
 function stageDuration(
   stages: AnalysisProgressTiming["completedStages"],
-  phase: AnalysisPhase,
+  phase: AnalysisPhase
 ): number {
   return stages
     .filter((stage) => stage.phase === phase)
@@ -270,7 +266,7 @@ function stageDuration(
 function renderStageTimings(
   completedStages: AnalysisProgressTiming["completedStages"],
   currentPhase: AnalysisPhase | null,
-  currentElapsedMs: number,
+  currentElapsedMs: number
 ) {
   for (const list of [
     $<HTMLOListElement>("#progress-stage-list"),
@@ -299,7 +295,7 @@ function renderLiveTiming(
   label: string,
   current: number,
   total: number,
-  timing: AnalysisProgressTiming,
+  timing: AnalysisProgressTiming
 ) {
   const percent = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
   progressElapsed.textContent = formatDuration(timing.totalElapsedMs);
@@ -315,13 +311,13 @@ function renderLiveTiming(
     analysisDetailsAutoSettled = false;
     analysisTimingBoard.hidden = false;
     $("#report-timing-initial").textContent = formatDuration(
-      currentReport.performance?.initialInsightsMs ?? timing.totalElapsedMs,
+      currentReport.performance?.initialInsightsMs ?? timing.totalElapsedMs
     );
     $("#report-timing-total").textContent =
       timing.estimatedRemainingMs === null
         ? `${formatDuration(timing.totalElapsedMs)} elapsed`
         : `${formatDuration(timing.totalElapsedMs)} elapsed · about ${formatDuration(
-            timing.estimatedRemainingMs,
+            timing.estimatedRemainingMs
           )} left`;
     const modelMs =
       stageDuration(timing.completedStages, "model") +
@@ -338,28 +334,27 @@ function renderLiveTiming(
       phase === "embed" && total > 0
         ? `${formatNumber(current)} of ${formatNumber(total)} vectors`
         : "Preparing selected candidates";
-    $("#report-timing-status").textContent =
-      `${label}${total > 0 ? ` · ${percent}%` : ""}${
-        timing.estimatedRemainingMs === null
-          ? ""
-          : ` · about ${formatDuration(timing.estimatedRemainingMs)} left`
-      }`;
-    analysisDetailsSummary.textContent =
-      `${label}${total > 0 ? ` · ${percent}%` : ""} · ${confidencePreset(activeConfidence)} evidence`;
+    $("#report-timing-status").textContent = `${label}${total > 0 ? ` · ${percent}%` : ""}${
+      timing.estimatedRemainingMs === null
+        ? ""
+        : ` · about ${formatDuration(timing.estimatedRemainingMs)} left`
+    }`;
+    analysisDetailsSummary.textContent = `${label}${total > 0 ? ` · ${percent}%` : ""} · ${confidencePreset(activeConfidence)} evidence`;
   }
 }
 
 function renderPerformanceSummary(performance: AnalysisPerformance | undefined, restored = false) {
   if (!performance) {
     analysisTimingBoard.hidden = true;
-    analysisDetailsSummary.textContent =
-      `Model and confidence · ${confidencePreset(activeConfidence)} evidence`;
+    analysisDetailsSummary.textContent = `Model and confidence · ${confidencePreset(activeConfidence)} evidence`;
     return;
   }
   analysisTimingBoard.hidden = false;
   $("#report-timing-initial").textContent = formatDuration(performance.initialInsightsMs);
   $("#report-timing-total").textContent =
-    performance.totalMs === null ? "Running…" : `Complete in ${formatDuration(performance.totalMs)}`;
+    performance.totalMs === null
+      ? "Running…"
+      : `Complete in ${formatDuration(performance.totalMs)}`;
   $("#report-timing-model").textContent =
     performance.modelMs > 0 ? formatDuration(performance.modelMs) : "Waiting";
   $("#report-timing-semantic").textContent =
@@ -374,8 +369,7 @@ function renderPerformanceSummary(performance: AnalysisPerformance | undefined, 
       : "Initial insights are ready. Semantic analysis is continuing.";
   renderStageTimings(performance.stages, null, 0);
   if (performance.status === "complete") {
-    analysisDetailsSummary.textContent =
-      `${performance.totalMs === null ? "Complete" : `Complete in ${formatDuration(performance.totalMs)}`} · ${confidencePreset(activeConfidence)} evidence`;
+    analysisDetailsSummary.textContent = `${performance.totalMs === null ? "Complete" : `Complete in ${formatDuration(performance.totalMs)}`} · ${confidencePreset(activeConfidence)} evidence`;
     if (!analysisDetailsAutoSettled) {
       analysisDetails.open = false;
       analysisDetailsAutoSettled = true;
@@ -383,8 +377,7 @@ function renderPerformanceSummary(performance: AnalysisPerformance | undefined, 
   } else {
     analysisDetails.open = true;
     analysisDetailsAutoSettled = false;
-    analysisDetailsSummary.textContent =
-      `Semantic work is running · ${confidencePreset(activeConfidence)} evidence`;
+    analysisDetailsSummary.textContent = `Semantic work is running · ${confidencePreset(activeConfidence)} evidence`;
   }
 }
 
@@ -411,7 +404,7 @@ function startTimingTicker() {
           latestTiming.timing.estimatedRemainingMs === null
             ? null
             : Math.max(0, latestTiming.timing.estimatedRemainingMs - delta),
-      },
+      }
     );
   }, 1_000);
 }
@@ -450,7 +443,7 @@ function setConfidence(value: number, rerender = true) {
   for (const button of document.querySelectorAll<HTMLButtonElement>("[data-confidence]")) {
     button.setAttribute(
       "aria-pressed",
-      String(Number(button.dataset.confidence) === activeConfidence),
+      String(Number(button.dataset.confidence) === activeConfidence)
     );
   }
   const performance = currentReport?.performance;
@@ -479,7 +472,10 @@ function drawGraphFormation() {
   const context = graphFormationCanvas.getContext("2d");
   if (!context) return;
   const cssWidth = Math.max(300, graphFormationCanvas.clientWidth || 900);
-  const cssHeight = Math.max(280, graphFormationCanvas.clientHeight || Math.min(420, cssWidth * 0.45));
+  const cssHeight = Math.max(
+    280,
+    graphFormationCanvas.clientHeight || Math.min(420, cssWidth * 0.45)
+  );
   const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
   const width = Math.round(cssWidth * pixelRatio);
   const height = Math.round(cssHeight * pixelRatio);
@@ -568,10 +564,9 @@ function updateGraphFormationText() {
       : count < graphFormationProcessed
         ? `${formatNumber(count)} of ${formatNumber(graphFormationProcessed)} stops drawn`
         : `${formatNumber(count)} conversations routed`;
-  graphFormationLatest.textContent =
-    graphFormationRendered.at(-1)?.title || "Opening the archive";
+  graphFormationLatest.textContent = graphFormationRendered.at(-1)?.title || "Opening the archive";
   const activeRoutes = new Set(
-    graphFormationRendered.flatMap((conversation) => formationRouteIds(conversation)),
+    graphFormationRendered.flatMap((conversation) => formationRouteIds(conversation))
   ).size;
   graphFormationRoutes.textContent = `${activeRoutes} of ${FORMATION_ROUTES.length}`;
 }
@@ -595,10 +590,7 @@ function renderGraphFormationFrame() {
   }
 }
 
-function queueGraphFormation(
-  conversations: GraphFormationConversation[],
-  processed: number,
-) {
+function queueGraphFormation(conversations: GraphFormationConversation[], processed: number) {
   graphFormationQueue.push(...conversations);
   graphFormationProcessed = Math.max(graphFormationProcessed, processed);
   if (reduceGraphFormationMotion.matches) {
@@ -698,7 +690,7 @@ async function analyzeFile(file: File) {
   if (!(await analysisLease.acquire())) {
     archiveInput.value = "";
     showError(
-      "Memory Map is already analyzing or retaining a searchable model in another tab. Close or reset that tab, then try again.",
+      "Memory Map is already analyzing or retaining a searchable model in another tab. Close or reset that tab, then try again."
     );
     return;
   }
@@ -758,7 +750,7 @@ function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
         message.label,
         message.current,
         message.total,
-        message.timing,
+        message.timing
       );
     }
     if (
@@ -793,7 +785,7 @@ function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
         latestTiming.label,
         latestTiming.current,
         latestTiming.total,
-        latestTiming.timing,
+        latestTiming.timing
       );
     }
     appStatus.textContent = "Initial statistics are ready. Semantic analysis is still running.";
@@ -853,7 +845,7 @@ function renderReport(report: FullReport) {
     : `${report.analysis.modelProfile === "auto" ? `Automatic → ${report.analysis.resolvedModelProfile}.` : `${report.analysis.modelProfile} profile selected.`} ${report.analysis.profileReason}`;
   $("#report-meta").textContent =
     `${report.fileName} · ${formatDate(deterministic.dateRange.start)} to ${formatDate(
-      deterministic.dateRange.end,
+      deterministic.dateRange.end
     )} · analyzed ${new Date(report.generatedAt).toLocaleString()}`;
   renderPerformanceSummary(report.performance);
 
@@ -871,17 +863,17 @@ function renderReport(report: FullReport) {
       const wrapper = document.createElement("div");
       wrapper.append(text("dt", label), text("dd", formatNumber(value)));
       return wrapper;
-    }),
+    })
   );
 
   const visibleMonths = activityMonthWindow(deterministic, activePeriodMonths);
   $("#date-range").textContent =
     activePeriodMonths === null
       ? `All history · ${formatDate(deterministic.dateRange.start)} — ${formatDate(
-          deterministic.dateRange.end,
+          deterministic.dateRange.end
         )}`
       : `${formatNumber(activePeriodMonths)} months · ${formatMonth(
-          visibleMonths[0],
+          visibleMonths[0]
         )} — ${formatMonth(visibleMonths.at(-1) ?? visibleMonths[0])}`;
   const periodLabel =
     activePeriodMonths === null ? "All available history." : `Recent ${activePeriodMonths} months.`;
@@ -909,13 +901,13 @@ function renderReport(report: FullReport) {
     const model = report.semantic.model;
     $("#sampling-note").textContent =
       `Embedded ${formatNumber(model.embeddedConversations)} of ${formatNumber(
-        model.totalConversations,
+        model.totalConversations
       )} conversations, ${formatNumber(model.embeddedQuestions)} of ${formatNumber(
-        model.totalQuestions,
+        model.totalQuestions
       )} prompts, and ${formatNumber(model.embeddedFacts)} of ${formatNumber(
-        model.totalFacts,
+        model.totalFacts
       )} fact candidates, and ${formatNumber(model.embeddedThreadPrompts)} of ${formatNumber(
-        model.totalThreadPrompts,
+        model.totalThreadPrompts
       )} candidate thread prompts.`;
     renderGraph(report.semantic.topics, report.semantic.edges);
     renderLedger(report);
@@ -929,13 +921,13 @@ function renderReport(report: FullReport) {
 
 function renderGraph(
   topics: NonNullable<FullReport["semantic"]>["topics"],
-  edges: NonNullable<FullReport["semantic"]>["edges"],
+  edges: NonNullable<FullReport["semantic"]>["edges"]
 ) {
   graphLoading.hidden = true;
   graph.classList.remove("is-hidden");
   graph.setAttribute(
     "viewBox",
-    window.matchMedia("(max-width: 600px)").matches ? "250 135 500 350" : "0 0 1000 620",
+    window.matchMedia("(max-width: 600px)").matches ? "250 135 500 350" : "0 0 1000 620"
   );
   graph.replaceChildren();
 
@@ -969,10 +961,7 @@ function renderGraph(
     const targetY = target.y * 620;
     const bendX = (sourceX + targetX) / 2;
     const bendY = (sourceY + targetY) / 2 - Math.min(45, Math.abs(targetX - sourceX) * 0.08);
-    path.setAttribute(
-      "d",
-      `M ${sourceX} ${sourceY} Q ${bendX} ${bendY} ${targetX} ${targetY}`,
-    );
+    path.setAttribute("d", `M ${sourceX} ${sourceY} Q ${bendX} ${bendY} ${targetX} ${targetY}`);
     path.setAttribute("class", "graph-edge");
     path.setAttribute("data-source", edge.source);
     path.setAttribute("data-target", edge.target);
@@ -991,7 +980,7 @@ function renderGraph(
     group.setAttribute("role", "button");
     group.setAttribute(
       "aria-label",
-      `${topic.label}, ${topic.count} conversations. Show supporting conversations.`,
+      `${topic.label}, ${topic.count} conversations. Show supporting conversations.`
     );
     group.setAttribute("transform", `translate(${topic.x * 1_000} ${topic.y * 620})`);
 
@@ -1033,7 +1022,7 @@ function renderGraph(
         button.append(marker, text("span", topic.label), text("small", formatNumber(topic.count)));
         button.addEventListener("click", () => selectTopic(topic));
         return button;
-      }),
+      })
   );
 }
 
@@ -1043,7 +1032,8 @@ function selectTopic(topic: TopicNode) {
   }
   for (const edge of graph.querySelectorAll<SVGPathElement>(".graph-edge")) {
     const connected =
-      edge.getAttribute("data-source") === topic.id || edge.getAttribute("data-target") === topic.id;
+      edge.getAttribute("data-source") === topic.id ||
+      edge.getAttribute("data-target") === topic.id;
     edge.style.opacity = connected ? "1" : "0.16";
     edge.style.strokeWidth = connected ? "4" : "2";
   }
@@ -1056,10 +1046,11 @@ function selectTopic(topic: TopicNode) {
 const MEMORY_CHAT_STAGES = ["query", "search", "topics", "evidence", "answer"] as const;
 
 function setMemoryChatStage(active: (typeof MEMORY_CHAT_STAGES)[number] | null) {
-  const activeIndex = active === null ? MEMORY_CHAT_STAGES.length : MEMORY_CHAT_STAGES.indexOf(active);
+  const activeIndex =
+    active === null ? MEMORY_CHAT_STAGES.length : MEMORY_CHAT_STAGES.indexOf(active);
   for (const item of document.querySelectorAll<HTMLElement>("[data-chat-stage]")) {
     const index = MEMORY_CHAT_STAGES.indexOf(
-      item.dataset.chatStage as (typeof MEMORY_CHAT_STAGES)[number],
+      item.dataset.chatStage as (typeof MEMORY_CHAT_STAGES)[number]
     );
     item.classList.toggle("is-complete", index < activeIndex);
     item.classList.toggle("is-active", index === activeIndex);
@@ -1124,17 +1115,10 @@ function renderGraphTraversal(question: string, evidence: MemoryChatEvidence[]) 
   }
 }
 
-function appendMemoryChatMessage(
-  role: "user" | "assistant",
-  content: string,
-  detail?: string,
-) {
+function appendMemoryChatMessage(role: "user" | "assistant", content: string, detail?: string) {
   const message = document.createElement("article");
   message.className = `memory-chat-message ${role}`;
-  message.append(
-    text("span", role === "user" ? "You" : "Grounded answer"),
-    text("p", content),
-  );
+  message.append(text("span", role === "user" ? "You" : "Grounded answer"), text("p", content));
   if (detail) message.append(text("small", detail));
   memoryChatTranscript.append(message);
   memoryChatTranscript.scrollTop = memoryChatTranscript.scrollHeight;
@@ -1143,7 +1127,7 @@ function appendMemoryChatMessage(
 function renderMemoryChatEvidence(evidence: MemoryChatEvidence[]) {
   if (evidence.length === 0) {
     memoryChatEvidence.replaceChildren(
-      text("p", "No mapped evidence cleared the search floor.", "empty-note"),
+      text("p", "No mapped evidence cleared the search floor.", "empty-note")
     );
     return;
   }
@@ -1154,17 +1138,17 @@ function renderMemoryChatEvidence(evidence: MemoryChatEvidence[]) {
       button.append(
         text("b", item.reference),
         text("span", item.title),
-        text("small", `${Math.round(item.similarity * 100)}%`),
+        text("small", `${Math.round(item.similarity * 100)}%`)
       );
       button.addEventListener("click", () =>
         showEvidence(item.title, item.source ? [item.source] : [], [
           item.excerpt,
           `${item.type} match · ${Math.round(item.similarity * 100)}% combined similarity`,
           item.topicId ? `Traversed through ${item.topicId}.` : "Evidence-only stop.",
-        ]),
+        ])
       );
       return button;
-    }),
+    })
   );
 }
 
@@ -1175,15 +1159,14 @@ function handleMemoryChatSearch(results: SearchResult[]) {
         pendingMemoryQuestion,
         results,
         currentReport,
-        currentSnapshot?.searchIndex,
+        currentSnapshot?.searchIndex
       )
     : results;
   pendingMemoryEvidence = buildMemoryChatEvidence(plannedResults);
   renderGraphTraversal(pendingMemoryQuestion, pendingMemoryEvidence);
   renderMemoryChatEvidence(pendingMemoryEvidence);
-  const topicCount = new Set(
-    pendingMemoryEvidence.map((item) => item.topicId).filter(Boolean),
-  ).size;
+  const topicCount = new Set(pendingMemoryEvidence.map((item) => item.topicId).filter(Boolean))
+    .size;
   const topicStage = $<HTMLElement>('[data-chat-stage="topics"] span');
   const graphTopicCount = Math.min(4, topicCount);
   topicStage.textContent =
@@ -1203,7 +1186,7 @@ function handleMemoryChatSearch(results: SearchResult[]) {
     messages: buildMemoryChatMessages(
       pendingMemoryQuestion,
       pendingMemoryEvidence,
-      historyBeforeQuestion,
+      historyBeforeQuestion
     ),
   });
 }
@@ -1244,7 +1227,7 @@ function onMemoryChatWorkerMessage(event: MessageEvent<MemoryChatWorkerResponse>
       displayedAnswer,
       validation.valid
         ? `${memoryChatRuntimeLabel(message.runtime)} · ${formatDuration(message.elapsedMs)} · ${validation.citations.join(", ")} verified`
-        : `${memoryChatRuntimeLabel(message.runtime)} · ${formatDuration(message.elapsedMs)} · grounding validator withheld the draft`,
+        : `${memoryChatRuntimeLabel(message.runtime)} · ${formatDuration(message.elapsedMs)} · grounding validator withheld the draft`
     );
     memoryChatHistory.push({ role: "assistant", content: displayedAnswer });
     pendingMemoryQuestion = null;
@@ -1263,7 +1246,7 @@ function onMemoryChatWorkerMessage(event: MessageEvent<MemoryChatWorkerResponse>
   if (!memoryChatSession.hidden || pendingMemoryQuestion) {
     appendMemoryChatMessage(
       "assistant",
-      "I could not synthesize an answer locally. Review the retrieved evidence stops below.",
+      "I could not synthesize an answer locally. Review the retrieved evidence stops below."
     );
   }
   pendingMemoryQuestion = null;
@@ -1325,12 +1308,12 @@ function showEvidence(title: string, sources: SourceRef[], notes: string[] = [])
 function renderLedger(report: FullReport) {
   const facts = report.semantic?.facts ?? [];
   const visibleFacts = facts.filter(
-    (fact) => fact.status === "current" || clearsConfidence(fact.confidence),
+    (fact) => fact.status === "current" || clearsConfidence(fact.confidence)
   );
   for (const tab of document.querySelectorAll<HTMLButtonElement>("#ledger-tabs button")) {
     const status = tab.dataset.status as FactGroup["status"];
     tab.querySelector("span")!.textContent = formatNumber(
-      visibleFacts.filter((fact) => fact.status === status).length,
+      visibleFacts.filter((fact) => fact.status === status).length
     );
     tab.setAttribute("aria-selected", String(status === ledgerStatus));
   }
@@ -1339,7 +1322,11 @@ function renderLedger(report: FullReport) {
   const list = $("#ledger-list");
   if (visible.length === 0) {
     list.replaceChildren(
-      text("p", `No ${ledgerStatus} fact candidates were detected in the semantic sample.`, "empty-note"),
+      text(
+        "p",
+        `No ${ledgerStatus} fact candidates were detected in the semantic sample.`,
+        "empty-note"
+      )
     );
     return;
   }
@@ -1351,17 +1338,21 @@ function renderLedger(report: FullReport) {
       const label = text("span", fact.status, `status-label ${fact.status}`);
       const meta = document.createElement("span");
       meta.className = "ledger-meta";
-      meta.append(label, text("span", formatDate(fact.lastSeen)), text("span", `${fact.history.length} source${fact.history.length === 1 ? "" : "s"}`));
+      meta.append(
+        label,
+        text("span", formatDate(fact.lastSeen)),
+        text("span", `${fact.history.length} source${fact.history.length === 1 ? "" : "s"}`)
+      );
       button.append(
         text("strong", truncate(fact.statement, 320)),
         meta,
         fact.status === "current"
           ? document.createDocumentFragment()
-          : text("small", `${formatPercent(fact.confidence)} evidence confidence`),
+          : text("small", `${formatPercent(fact.confidence)} evidence confidence`)
       );
       button.addEventListener("click", () => showFactEvidence(fact));
       return button;
-    }),
+    })
   );
 }
 
@@ -1374,17 +1365,17 @@ function showFactEvidence(fact: FactGroup) {
     text(
       "p",
       `${formatPercent(fact.confidence)} evidence confidence · ${formatPercent(
-        fact.similarity,
+        fact.similarity
       )} semantic similarity · ${formatPercent(fact.lexicalSimilarity)} lexical overlap`,
-      "evidence-note",
-    ),
+      "evidence-note"
+    )
   );
   for (const item of fact.history) {
     const paragraph = document.createElement("p");
     paragraph.append(
       text("strong", `${formatDate(item.date)} · ${item.cue}`),
       document.createElement("br"),
-      document.createTextNode(item.text),
+      document.createTextNode(item.text)
     );
     history.append(paragraph);
   }
@@ -1404,12 +1395,12 @@ function showFactEvidence(fact: FactGroup) {
 function renderRepeats(report: FullReport) {
   const exact = report.deterministic.exactRepeats;
   const semantic = (report.semantic?.repeats ?? []).filter((repeat) =>
-    clearsConfidence(repeat.confidence),
+    clearsConfidence(repeat.confidence)
   );
   const summary = $("#repeat-summary");
   summary.replaceChildren(
     text("span", `${formatNumber(exact.length)} exact groups`),
-    text("span", `${formatNumber(semantic.length)} semantic groups`),
+    text("span", `${formatNumber(semantic.length)} semantic groups`)
   );
 
   const rows = [
@@ -1452,23 +1443,23 @@ function renderRepeats(report: FullReport) {
         text("span", String(row.count), "interchange"),
         text("strong", truncate(row.question, 320), "repeat-question"),
         text("span", row.kind, "repeat-kind"),
-        text("span", formatDate(row.date), "repeat-date"),
+        text("span", formatDate(row.date), "repeat-date")
       );
       button.addEventListener("click", () => showEvidence(row.question, row.sources, row.notes));
       return button;
-    }),
+    })
   );
 }
 
 function showThreadEvidence(
   segmentation: ThreadSegmentation,
-  strands: ReturnType<typeof buildThreadStrands>,
+  strands: ReturnType<typeof buildThreadStrands>
 ) {
   $("#evidence-heading").textContent = segmentation.title;
   const summary = text(
     "p",
     `${segmentation.analyzedPrompts} of ${segmentation.promptCount} prompts analyzed · ${strands.length} visible strands at ${activeConfidence}% confidence.`,
-    "evidence-note",
+    "evidence-note"
   );
   const timeline = document.createElement("ol");
   timeline.className = "strand-timeline";
@@ -1477,7 +1468,7 @@ function showThreadEvidence(
     item.append(
       text("strong", strand.label),
       text("small", `${strand.promptCount} prompt${strand.promptCount === 1 ? "" : "s"}`),
-      ...strand.snippets.map((snippet) => text("p", truncate(snippet, 220))),
+      ...strand.snippets.map((snippet) => text("p", truncate(snippet, 220)))
     );
     timeline.append(item);
   }
@@ -1486,13 +1477,13 @@ function showThreadEvidence(
     .map(
       (boundary) =>
         `${formatPercent(boundary.confidence)} boundary confidence · ${formatPercent(
-          boundary.semanticSimilarity,
-        )} semantic continuity`,
+          boundary.semanticSimilarity
+        )} semantic continuity`
     );
   evidenceContent.replaceChildren(
     summary,
     timeline,
-    ...boundaryNotes.map((note) => text("p", note, "evidence-note")),
+    ...boundaryNotes.map((note) => text("p", note, "evidence-note"))
   );
   openEvidencePanel();
 }
@@ -1511,18 +1502,18 @@ function renderQuestionLenses(report: FullReport) {
         text(
           "span",
           `${formatNumber(lens.conversationCount)} conversation${lens.conversationCount === 1 ? "" : "s"}`,
-          "lens-conversation-count",
-        ),
+          "lens-conversation-count"
+        )
       );
       button.addEventListener("click", () =>
         showEvidence(lens.label, lens.sources, [
           lens.description,
           `${formatNumber(lens.queryCount)} matching queries across ${formatNumber(lens.conversationCount)} conversations.`,
           "A query can match more than one lens.",
-        ]),
+        ])
       );
       return button;
-    }),
+    })
   );
 
   const typo = lenses.typos;
@@ -1531,7 +1522,7 @@ function renderQuestionLenses(report: FullReport) {
   const typoList = $("#typo-list");
   if (typo.signals.length === 0) {
     typoList.replaceChildren(
-      text("p", "No high-confidence typo signals matched the small local list.", "empty-note"),
+      text("p", "No high-confidence typo signals matched the small local list.", "empty-note")
     );
   } else {
     typoList.replaceChildren(
@@ -1541,17 +1532,17 @@ function renderQuestionLenses(report: FullReport) {
         button.append(
           text("strong", signal.token),
           text("span", `→ ${signal.suggestion}`),
-          text("output", formatNumber(signal.count)),
+          text("output", formatNumber(signal.count))
         );
         button.addEventListener("click", () =>
           showEvidence(`Likely typo: ${signal.token}`, signal.sources, [
             `Possible correction: ${signal.suggestion}`,
             `${formatNumber(signal.count)} matching quer${signal.count === 1 ? "y" : "ies"}.`,
             "This is a conservative spelling signal, not a writing-quality score.",
-          ]),
+          ])
         );
         return button;
-      }),
+      })
     );
   }
 
@@ -1562,7 +1553,7 @@ function renderQuestionLenses(report: FullReport) {
       strands: buildThreadStrands(
         segmentation.prompts,
         segmentation.boundaries,
-        confidenceThreshold(activeConfidence),
+        confidenceThreshold(activeConfidence)
       ),
     }))
     .filter(({ strands }) => strands.length > 1);
@@ -1582,24 +1573,24 @@ function renderQuestionLenses(report: FullReport) {
           text("strong", truncate(segmentation.title, 90)),
           text(
             "span",
-            `${segmentation.promptCount} prompts · ${strands.length} visible strands · ${formatPercent(segmentation.confidence)} strongest boundary`,
-          ),
+            `${segmentation.promptCount} prompts · ${strands.length} visible strands · ${formatPercent(segmentation.confidence)} strongest boundary`
+          )
         );
         button.addEventListener("click", () => showThreadEvidence(segmentation, strands));
         return button;
-      }),
+      })
     );
   } else if (report.semantic) {
     threadList.replaceChildren(
       text(
         "p",
         "No semantic strand boundaries clear the active confidence threshold.",
-        "empty-note",
-      ),
+        "empty-note"
+      )
     );
   } else if (threads.candidates.length === 0) {
     threadList.replaceChildren(
-      text("p", "No conversations crossed the likely multi-thread threshold.", "empty-note"),
+      text("p", "No conversations crossed the likely multi-thread threshold.", "empty-note")
     );
   } else {
     threadList.replaceChildren(
@@ -1610,18 +1601,18 @@ function renderQuestionLenses(report: FullReport) {
           text("strong", truncate(candidate.title, 90)),
           text(
             "span",
-            `${candidate.promptCount} prompts · ${candidate.shiftCount} likely changes · ≈${candidate.estimatedThreads} threads`,
-          ),
+            `${candidate.promptCount} prompts · ${candidate.shiftCount} likely changes · ≈${candidate.estimatedThreads} threads`
+          )
         );
         button.addEventListener("click", () =>
           showEvidence(candidate.title, candidate.sources, [
             `${candidate.promptCount} prompts contained ${candidate.shiftCount} low-overlap adjacent changes.`,
             `Roughly ${candidate.estimatedThreads} threads by this heuristic.`,
             "Short follow-ups were ignored. A subject change is not necessarily a derailment.",
-          ]),
+          ])
         );
         return button;
-      }),
+      })
     );
   }
 }
@@ -1659,7 +1650,7 @@ function evolutionRows(report: FullReport): EvolutionRow[] {
     report.deterministic.emotions.byMonth.map(({ month, counts }) => [
       month,
       Object.values(counts).reduce((sum, value) => sum + value, 0),
-    ]),
+    ])
   );
   if (evolutionKind === "topics") {
     return (report.semantic?.topics ?? []).map((topic) => ({
@@ -1735,8 +1726,8 @@ function renderEvolution(report: FullReport) {
         evolutionKind === "topics"
           ? "Topic evolution appears after semantic analysis."
           : "Not enough chronological evidence was found.",
-        "empty-note",
-      ),
+        "empty-note"
+      )
     );
   } else {
     list.replaceChildren(
@@ -1747,7 +1738,7 @@ function renderEvolution(report: FullReport) {
         const heading = document.createElement("span");
         heading.append(
           text("strong", row.label),
-          text("span", TREND_LABELS[row.trend], "trend-label"),
+          text("span", TREND_LABELS[row.trend], "trend-label")
         );
         const route = document.createElement("span");
         route.className = "evolution-route";
@@ -1763,8 +1754,8 @@ function renderEvolution(report: FullReport) {
           route,
           text(
             "small",
-            `${row.periods[0]?.label ?? "Unknown"} → ${row.periods.at(-1)?.label ?? "Unknown"} · ${row.note}`,
-          ),
+            `${row.periods[0]?.label ?? "Unknown"} → ${row.periods.at(-1)?.label ?? "Unknown"} · ${row.note}`
+          )
         );
         button.addEventListener("click", () =>
           showEvidence(row.label, row.sources, [
@@ -1774,10 +1765,10 @@ function renderEvolution(report: FullReport) {
               .filter((period) => period.value > 0)
               .slice(-8)
               .map((period) => `${period.label}: ${period.value}`),
-          ]),
+          ])
         );
         return button;
-      }),
+      })
     );
   }
 
@@ -1788,7 +1779,7 @@ function renderEvolution(report: FullReport) {
   const changeList = $("#memory-change-list");
   if (changes.length === 0) {
     changeList.replaceChildren(
-      text("p", "No memory changes clear the active confidence threshold.", "empty-note"),
+      text("p", "No memory changes clear the active confidence threshold.", "empty-note")
     );
   } else {
     changeList.replaceChildren(
@@ -1801,12 +1792,12 @@ function renderEvolution(report: FullReport) {
           text("strong", truncate(fact.statement, 150)),
           text(
             "small",
-            `${formatDate(fact.firstSeen)} → ${formatDate(fact.lastSeen)} · ${formatPercent(fact.confidence)} confidence`,
-          ),
+            `${formatDate(fact.firstSeen)} → ${formatDate(fact.lastSeen)} · ${formatPercent(fact.confidence)} confidence`
+          )
         );
         button.addEventListener("click", () => showFactEvidence(fact));
         return button;
-      }),
+      })
     );
   }
 }
@@ -1820,21 +1811,19 @@ function renderConfidenceImpact(report: FullReport) {
   }
   const repeats = semantic.repeats.filter((repeat) => clearsConfidence(repeat.confidence)).length;
   const changes = semantic.facts.filter(
-    (fact) => fact.status !== "current" && clearsConfidence(fact.confidence),
+    (fact) => fact.status !== "current" && clearsConfidence(fact.confidence)
   ).length;
   const boundaries = semantic.threads.reduce(
     (sum, thread) =>
       sum + thread.boundaries.filter((boundary) => clearsConfidence(boundary.confidence)).length,
-    0,
+    0
   );
   $("#confidence-impact").textContent =
     `${activeConfidence}% shows ${repeats} semantic repeat groups, ${changes} memory changes, and ${boundaries} strand boundaries. Deterministic totals do not change.`;
 }
 
 function renderTone(report: FullReport) {
-  const visibleMonths = new Set(
-    activityMonthWindow(report.deterministic, activePeriodMonths),
-  );
+  const visibleMonths = new Set(activityMonthWindow(report.deterministic, activePeriodMonths));
   const counts =
     activePeriodMonths === null
       ? report.deterministic.tone.counts
@@ -1846,7 +1835,7 @@ function renderTone(report: FullReport) {
               neutral: totals.neutral + datum.neutral,
               negative: totals.negative + datum.negative,
             }),
-            { positive: 0, neutral: 0, negative: 0 },
+            { positive: 0, neutral: 0, negative: 0 }
           );
   const total = counts.positive + counts.neutral + counts.negative;
   const labels = [
@@ -1868,7 +1857,7 @@ function renderTone(report: FullReport) {
       output.textContent = `${formatNumber(counts[bucket])} · ${formatPercent(proportion)}`;
       row.append(text("strong", label), track, output);
       return row;
-    }),
+    })
   );
 
   const emotionCounts =
@@ -1891,12 +1880,16 @@ function renderTone(report: FullReport) {
               excitement: 0,
               appreciation: 0,
               neutral: 0,
-            },
+            }
           );
   const emotionTotal = Object.values(emotionCounts).reduce((sum, value) => sum + value, 0);
   const emotionLabels = [
     ["curiosity", "Curiosity", "Questions seeking explanation, understanding, or discovery"],
-    ["frustration", "Frustration", "Wording about errors, being stuck, failure, or something not working"],
+    [
+      "frustration",
+      "Frustration",
+      "Wording about errors, being stuck, failure, or something not working",
+    ],
     ["urgency", "Urgency", "Time-pressure wording such as urgent, immediately, or deadline"],
     ["uncertainty", "Uncertainty", "Tentative wording such as unsure, maybe, or not sure"],
     ["excitement", "Excitement", "Enthusiastic wording such as excited, amazing, or can’t wait"],
@@ -1916,13 +1909,13 @@ function renderTone(report: FullReport) {
       button.append(
         marker,
         copy,
-        text("output", `${formatNumber(emotionCounts[bucket])} · ${formatPercent(proportion)}`),
+        text("output", `${formatNumber(emotionCounts[bucket])} · ${formatPercent(proportion)}`)
       );
       button.addEventListener("click", () => {
         const sources = report.deterministic.emotions.sources[bucket].filter(
           (source) =>
             activePeriodMonths === null ||
-            visibleMonths.has(new Date(source.date * 1_000).toISOString().slice(0, 7)),
+            visibleMonths.has(new Date(source.date * 1_000).toISOString().slice(0, 7))
         );
         showEvidence(`${label} wording`, sources, [
           description,
@@ -1931,14 +1924,14 @@ function renderTone(report: FullReport) {
         ]);
       });
       return button;
-    }),
+    })
   );
 }
 
 function renderReflections(report: FullReport) {
   const list = $("#reflection-list");
   const visibleReflections = report.reflections.filter((reflection) =>
-    clearsConfidence(reflection.confidence),
+    clearsConfidence(reflection.confidence)
   );
   if (visibleReflections.length === 0) {
     list.replaceChildren(
@@ -1947,8 +1940,8 @@ function renderReflections(report: FullReport) {
         report.semantic
           ? "No evidence-backed reflection prompts crossed the current thresholds."
           : "Reflection prompts will appear as repeat and memory patterns become available.",
-        "empty-note",
-      ),
+        "empty-note"
+      )
     );
     return;
   }
@@ -1961,16 +1954,19 @@ function renderReflections(report: FullReport) {
         text("span", String(index + 1).padStart(2, "0"), "reflection-index"),
         text("span", reflection.eyebrow, "reflection-eyebrow"),
         text("strong", reflection.question),
-        text("small", `${formatPercent(reflection.confidence)} confidence · ${reflection.reason} · Open ${reflection.sources.length} source${reflection.sources.length === 1 ? "" : "s"}`),
+        text(
+          "small",
+          `${formatPercent(reflection.confidence)} confidence · ${reflection.reason} · Open ${reflection.sources.length} source${reflection.sources.length === 1 ? "" : "s"}`
+        )
       );
       button.addEventListener("click", () =>
         showEvidence(reflection.eyebrow, reflection.sources, [
           reflection.question,
           reflection.reason,
-        ]),
+        ])
       );
       return button;
-    }),
+    })
   );
 }
 
@@ -1978,7 +1974,7 @@ function renderSearchResults(results: SearchResult[]) {
   searchResults.hidden = false;
   if (results.length === 0) {
     searchResults.replaceChildren(
-      text("p", "No semantic results yet. Wait for the topic map to finish.", "empty-note"),
+      text("p", "No semantic results yet. Wait for the topic map to finish.", "empty-note")
     );
     return;
   }
@@ -1990,24 +1986,26 @@ function renderSearchResults(results: SearchResult[]) {
       const body = document.createElement("span");
       body.append(
         text("strong", truncate(result.title, 240)),
-        text("small", truncate(result.detail, 140)),
+        text("small", truncate(result.detail, 140))
       );
       button.append(
         text("span", result.type, "search-result-type"),
         body,
-        text("span", formatPercent(result.similarity), "search-result-score"),
+        text("span", formatPercent(result.similarity), "search-result-score")
       );
       button.addEventListener("click", () => {
         searchResults.hidden = true;
         if (result.topicId && currentReport?.semantic) {
-          const topic = currentReport.semantic.topics.find((candidate) => candidate.id === result.topicId);
+          const topic = currentReport.semantic.topics.find(
+            (candidate) => candidate.id === result.topicId
+          );
           if (topic) selectTopic(topic);
         } else if (result.source) {
           showEvidence(result.title, [result.source], [result.detail]);
         }
       });
       return button;
-    }),
+    })
   );
 }
 
@@ -2019,7 +2017,7 @@ for (const button of document.querySelectorAll<HTMLButtonElement>("[data-confide
 
 confidenceInput.addEventListener("input", () => setConfidence(Number(confidenceInput.value)));
 reportConfidenceInput.addEventListener("input", () =>
-  setConfidence(Number(reportConfidenceInput.value)),
+  setConfidence(Number(reportConfidenceInput.value))
 );
 atlasPeriod.addEventListener("change", () => {
   activePeriodMonths = atlasPeriod.value === "all" ? null : Number(atlasPeriod.value);
@@ -2034,15 +2032,13 @@ for (const button of document.querySelectorAll<HTMLButtonElement>("[data-rhythm-
   button.addEventListener("click", () => {
     activeRhythmMeasure = button.dataset.rhythmMeasure as typeof activeRhythmMeasure;
     if (currentReport) renderReport(currentReport);
-    appStatus.textContent =
-      `Rhythms now show ${activeRhythmMeasure === "words" ? "approximate words" : "conversation count"}.`;
+    appStatus.textContent = `Rhythms now show ${activeRhythmMeasure === "words" ? "approximate words" : "conversation count"}.`;
   });
 }
 rhythmRoute.addEventListener("change", () => {
   activeRhythmRouteId = rhythmRoute.value as typeof activeRhythmRouteId;
   if (currentReport) renderReport(currentReport);
-  appStatus.textContent =
-    `Rhythms filtered to ${rhythmRoute.selectedOptions[0]?.textContent ?? "all conversations"}.`;
+  appStatus.textContent = `Rhythms filtered to ${rhythmRoute.selectedOptions[0]?.textContent ?? "all conversations"}.`;
 });
 storyButton.addEventListener("click", () => {
   if (!currentReport) return;
@@ -2121,7 +2117,11 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
     $<HTMLButtonElement>("#close-evidence").focus();
   }
-  if ((event.metaKey || event.ctrlKey) && event.key.toLocaleLowerCase() === "k" && !reportView.hidden) {
+  if (
+    (event.metaKey || event.ctrlKey) &&
+    event.key.toLocaleLowerCase() === "k" &&
+    !reportView.hidden
+  ) {
     event.preventDefault();
     searchInput.focus();
   }
@@ -2196,7 +2196,7 @@ void loadSnapshot()
     if ((snapshot as { version: number }).version !== 3) {
       await forgetSnapshot();
       showError(
-        "An older saved memory was removed. Import the ZIP again to build evolution, confidence, and strand evidence.",
+        "An older saved memory was removed. Import the ZIP again to build evolution, confidence, and strand evidence."
       );
       return;
     }
@@ -2217,7 +2217,9 @@ if (import.meta.env.DEV) {
         await analyzeFile(new File([blob], "development-sample.zip", { type: "application/zip" }));
       })
       .catch((error) => {
-        showError(error instanceof Error ? error.message : "The development sample could not load.");
+        showError(
+          error instanceof Error ? error.message : "The development sample could not load."
+        );
       });
   }
 }

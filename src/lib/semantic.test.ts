@@ -71,7 +71,7 @@ describe("fact history classification", () => {
     id: string,
     text: string,
     cue: FactCandidate["cue"],
-    date: number,
+    date: number
   ): FactCandidate => ({
     id,
     text,
@@ -83,19 +83,19 @@ describe("fact history classification", () => {
 
   it("requires linked history before calling a statement updated or refuted", () => {
     expect(classifyFactHistory([fact("one", "I don't have an answer.", "refutation", 1)])).toBe(
-      "current",
+      "current"
     );
     expect(
       classifyFactHistory([
         fact("one", "I use paper notes.", "statement", 1),
         fact("two", "I no longer use paper notes.", "refutation", 2),
-      ]),
+      ])
     ).toBe("refuted");
     expect(
       classifyFactHistory([
         fact("one", "I work remotely.", "statement", 1),
         fact("two", "Actually, I work from an office now.", "update", 2),
-      ]),
+      ])
     ).toBe("updated");
   });
 });

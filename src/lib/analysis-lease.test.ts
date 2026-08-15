@@ -7,7 +7,7 @@ class TestLockManager {
   async request(
     name: string,
     _options: { mode: "exclusive"; ifAvailable: true },
-    callback: (lock: { name: string } | null) => Promise<void>,
+    callback: (lock: { name: string } | null) => Promise<void>
   ) {
     if (this.held) return callback(null);
     this.held = true;

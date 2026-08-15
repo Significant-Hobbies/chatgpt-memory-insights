@@ -1,10 +1,5 @@
 import { distinctiveTerms, distinctiveTitleTerms, lexicalSimilarity } from "./insights";
-import {
-  buildThreadStrands,
-  classifyTrend,
-  evidenceConfidence,
-  monthKey,
-} from "./analysis";
+import { buildThreadStrands, classifyTrend, evidenceConfidence, monthKey } from "./analysis";
 import type {
   AnalysisResolution,
   AnalysisRuntime,
@@ -44,7 +39,10 @@ const THREAD_PROMPT_CAP = 1_200;
 const COLORS = ["#2157d5", "#e44b33", "#168579", "#d69a17", "#7554c8", "#2f7aa3"];
 const TOPIC_ANCHORS = [
   ["Software engineering", "programming software engineering code frontend backend database bugs"],
-  ["AI & machine learning", "artificial intelligence machine learning language models agents embeddings"],
+  [
+    "AI & machine learning",
+    "artificial intelligence machine learning language models agents embeddings",
+  ],
   ["Product & startups", "startup product strategy saas business ideas customers growth"],
   ["Investing & markets", "stocks investing market portfolio companies earnings valuation"],
   ["Personal finance", "money budgeting taxes savings debt insurance personal finance"],
@@ -70,7 +68,7 @@ type Progress = (
   label: string,
   current: number,
   total: number,
-  runtime?: AnalysisRuntime,
+  runtime?: AnalysisRuntime
 ) => void;
 
 type TensorLike = {
@@ -93,18 +91,18 @@ export const INFERENCE_BATCH_SIZE = {
 } as const;
 
 export function supportsWebGpu(
-  scope: { navigator?: { gpu?: unknown } } = globalThis as { navigator?: { gpu?: unknown } },
+  scope: { navigator?: { gpu?: unknown } } = globalThis as { navigator?: { gpu?: unknown } }
 ): boolean {
   return Boolean(scope.navigator?.gpu);
 }
 
 export function preferredRuntime(
   webGpuAvailable = supportsWebGpu(),
-  profile: AnalysisResolution["resolvedModelProfile"] = "compact",
+  profile: AnalysisResolution["resolvedModelProfile"] = "compact"
 ): AnalysisRuntime {
   return webGpuAvailable && profile === "compact"
     ? {
-      device: "webgpu",
+        device: "webgpu",
         dtype: "fp32",
         batchSize: INFERENCE_BATCH_SIZE.webgpu,
       }
@@ -133,8 +131,7 @@ export function prepareEmbeddingWork(texts: string[]): Array<{
   return [...unique.entries()]
     .map(([text, indexes]) => ({ text, indexes }))
     .sort(
-      (left, right) =>
-        left.text.length - right.text.length || left.indexes[0] - right.indexes[0],
+      (left, right) => left.text.length - right.text.length || left.indexes[0] - right.indexes[0]
     );
 }
 
@@ -189,7 +186,7 @@ function sampleQuestions(prompts: UserPrompt[]): UserPrompt[] {
   const keep = repeated.slice(0, Math.floor(QUESTION_CAP * 0.35));
   const rest = stableSample(
     ranked.filter((prompt) => !keep.includes(prompt)),
-    QUESTION_CAP - keep.length,
+    QUESTION_CAP - keep.length
   );
   return [...keep, ...rest];
 }
@@ -197,13 +194,10 @@ function sampleQuestions(prompts: UserPrompt[]): UserPrompt[] {
 async function getExtractor(
   profile: AnalysisResolution["resolvedModelProfile"],
   progress: Progress,
-  runtime: AnalysisRuntime,
+  runtime: AnalysisRuntime
 ): Promise<Extractor> {
   const runtimeKey = `${runtime.device}:${runtime.dtype}`;
-  if (
-    extractorPromise &&
-    (extractorProfile !== profile || extractorRuntimeKey !== runtimeKey)
-  ) {
+  if (extractorPromise && (extractorProfile !== profile || extractorRuntimeKey !== runtimeKey)) {
     await disposeExtractor();
   }
   if (!extractorPromise) {
@@ -222,7 +216,7 @@ async function getExtractor(
           : "Starting compatibility browser inference",
         0,
         100,
-        runtime,
+        runtime
       );
       return (await pipeline("feature-extraction", model.id, {
         revision: model.revision,
@@ -241,7 +235,7 @@ async function getExtractor(
               event.file ? `Downloading ${event.file}` : "Downloading embedding model",
               event.loaded ?? event.progress ?? 0,
               event.total ?? 100,
-              runtime,
+              runtime
             );
           }
         },
@@ -269,7 +263,7 @@ async function embedWithRuntime(
   texts: string[],
   profile: AnalysisResolution["resolvedModelProfile"],
   progress: Progress,
-  initialRuntime: AnalysisRuntime,
+  initialRuntime: AnalysisRuntime
 ): Promise<{ vectors: Float32Array[]; runtime: AnalysisRuntime }> {
   const extractor = await getExtractor(profile, progress, initialRuntime);
   const embeddings = new Array<Float32Array>(texts.length);
@@ -293,17 +287,8 @@ async function embedWithRuntime(
         }
       }
       start += batchItems.length;
-      processedCandidates += batchItems.reduce(
-        (total, item) => total + item.indexes.length,
-        0,
-      );
-      progress(
-        "embed",
-        "Embedding memory candidates",
-        processedCandidates,
-        texts.length,
-        runtime,
-      );
+      processedCandidates += batchItems.reduce((total, item) => total + item.indexes.length, 0);
+      progress("embed", "Embedding memory candidates", processedCandidates, texts.length, runtime);
       await new Promise((resolve) => setTimeout(resolve, 0));
     } catch (error) {
       const minimumBatch = runtime.device === "webgpu" ? 16 : 12;
@@ -319,7 +304,7 @@ async function embedWithRuntime(
         `Reducing inference batch to ${runtime.batchSize}`,
         processedCandidates,
         texts.length,
-        runtime,
+        runtime
       );
     }
   }
@@ -329,7 +314,7 @@ async function embedWithRuntime(
 async function embedTexts(
   texts: string[],
   profile: AnalysisResolution["resolvedModelProfile"],
-  progress: Progress,
+  progress: Progress
 ): Promise<{ vectors: Float32Array[]; runtime: AnalysisRuntime }> {
   if (texts.length === 0) {
     return { vectors: [], runtime: preferredRuntime(false, profile) };
@@ -347,13 +332,7 @@ async function embedTexts(
       ...preferredRuntime(false, profile),
       fallbackReason,
     };
-    progress(
-      "model",
-      "GPU path unavailable; retrying with compatibility mode",
-      0,
-      100,
-      fallback,
-    );
+    progress("model", "GPU path unavailable; retrying with compatibility mode", 0, 100, fallback);
     return embedWithRuntime(texts, profile, progress, fallback);
   }
 }
@@ -423,8 +402,7 @@ function semanticRepeats(prompts: UserPrompt[], vectors: Float32Array[]): Semant
         bestScore = score;
       }
     }
-    const lexical =
-      best >= 0 ? lexicalSimilarity(prompts[left].text, prompts[best].text) : 0;
+    const lexical = best >= 0 ? lexicalSimilarity(prompts[left].text, prompts[best].text) : 0;
     const confidence = evidenceConfidence(bestScore, lexical);
     if (
       best >= 0 &&
@@ -440,7 +418,9 @@ function semanticRepeats(prompts: UserPrompt[], vectors: Float32Array[]): Semant
     .groups()
     .filter((group) => group.length > 1)
     .map((group, index) => {
-      const ordered = group.map((item) => prompts[item]).sort((left, right) => right.date - left.date);
+      const ordered = group
+        .map((item) => prompts[item])
+        .sort((left, right) => right.date - left.date);
       const centroid = average(group.map((item) => vectors[item]));
       const representativeIndex = group
         .map((item) => ({ item, score: cosine(vectors[item], centroid) }))
@@ -450,12 +430,12 @@ function semanticRepeats(prompts: UserPrompt[], vectors: Float32Array[]): Semant
       const similarity =
         comparisons.reduce(
           (sum, item) => sum + cosine(vectors[item], vectors[representativeIndex]),
-          0,
+          0
         ) / Math.max(1, comparisons.length);
       const lexical =
         comparisons.reduce(
           (sum, item) => sum + lexicalSimilarity(prompts[item].text, representativeText),
-          0,
+          0
         ) / Math.max(1, comparisons.length);
       return {
         id: `semantic-repeat-${index}`,
@@ -522,8 +502,7 @@ function groupFacts(facts: FactCandidate[], vectors: Float32Array[]): FactGroup[
         .sort((left, right) => right.semantic - left.semantic)[0];
       const explicitStatus = classifyFactHistory(history);
       const distinct = new Set(history.map((fact) => normalizedKey(fact.text))).size > 1;
-      const spansConversations =
-        new Set(history.map((fact) => fact.conversationId)).size > 1;
+      const spansConversations = new Set(history.map((fact) => fact.conversationId)).size > 1;
       const spansAtLeastAWeek = latest.date - history[0].date >= 7 * 24 * 60 * 60;
       const possibleContradiction =
         explicitStatus === "current" &&
@@ -534,13 +513,17 @@ function groupFacts(facts: FactCandidate[], vectors: Float32Array[]): FactGroup[
         previous.semantic >= 0.78 &&
         previous.lexical >= 0.1 &&
         previous.lexical < 0.86;
-      const status: FactGroup["status"] = possibleContradiction
-        ? "contradicted"
-        : explicitStatus;
+      const status: FactGroup["status"] = possibleContradiction ? "contradicted" : explicitStatus;
       const semantic = previous?.semantic ?? 1;
       const lexical = previous?.lexical ?? 1;
       const cueBonus =
-        status === "refuted" ? 0.1 : status === "updated" ? 0.06 : status === "contradicted" ? -0.08 : 0;
+        status === "refuted"
+          ? 0.1
+          : status === "updated"
+            ? 0.06
+            : status === "contradicted"
+              ? -0.08
+              : 0;
       const confidence =
         status === "current" ? 0.99 : evidenceConfidence(semantic, lexical, cueBonus);
       const reason =
@@ -614,7 +597,7 @@ function kMeans(vectors: Float32Array[], requestedClusters: number) {
 function topicGraph(
   conversations: ConversationRecord[],
   vectors: Float32Array[],
-  anchorVectors: Float32Array[],
+  anchorVectors: Float32Array[]
 ): {
   topics: TopicNode[];
   edges: TopicEdge[];
@@ -627,7 +610,7 @@ function topicGraph(
   const requested = Math.min(12, Math.max(2, Math.round(Math.sqrt(conversations.length / 2))));
   const { assignments, centroids } = kMeans(vectors, requested);
   const groups = centroids.map((_, cluster) =>
-    conversations.filter((__, index) => assignments[index] === cluster),
+    conversations.filter((__, index) => assignments[index] === cluster)
   );
   const allMonths = [...new Set(conversations.map((conversation) => monthKey(conversation.date)))]
     .filter((month) => month !== "1970-01")
@@ -650,7 +633,8 @@ function topicGraph(
         similarity: cosine(centroids[cluster], vector),
       }))
       .sort((left, right) => right.similarity - left.similarity);
-    const selected = candidates.find((candidate) => !usedAnchors.has(candidate.anchor)) ?? candidates[0];
+    const selected =
+      candidates.find((candidate) => !usedAnchors.has(candidate.anchor)) ?? candidates[0];
     if (selected) {
       usedAnchors.add(selected.anchor);
       anchorAssignments.set(cluster, TOPIC_ANCHORS[selected.anchor][0]);
@@ -679,10 +663,13 @@ function topicGraph(
       .find((title) => title && title !== "Untitled conversation");
     const anchor = anchorAssignments.get(cluster);
     const specific = terms.find(
-      (term) => !anchor?.toLocaleLowerCase().includes(term.toLocaleLowerCase()),
+      (term) => !anchor?.toLocaleLowerCase().includes(term.toLocaleLowerCase())
     );
     const label =
-      [anchor, specific ? specific.replace(/\b\w/g, (character) => character.toLocaleUpperCase()) : null]
+      [
+        anchor,
+        specific ? specific.replace(/\b\w/g, (character) => character.toLocaleUpperCase()) : null,
+      ]
         .filter(Boolean)
         .join(" · ") ||
       fallback?.slice(0, 34) ||
@@ -760,7 +747,7 @@ function sampleOrderedPrompts(prompts: UserPrompt[], limit: number): UserPrompt[
 
 function prepareThreads(
   conversations: ConversationRecord[],
-  candidateIds: string[],
+  candidateIds: string[]
 ): {
   threads: PreparedThread[];
   totalPrompts: number;
@@ -771,19 +758,19 @@ function prepareThreads(
     .slice(0, THREAD_CONVERSATION_CAP);
   const totalPrompts = candidates.reduce(
     (sum, conversation) => sum + conversation.prompts.length,
-    0,
+    0
   );
   if (candidates.length === 0) return { threads: [], totalPrompts };
   const perConversation = Math.max(
     8,
-    Math.floor(THREAD_PROMPT_CAP / Math.max(1, candidates.length)),
+    Math.floor(THREAD_PROMPT_CAP / Math.max(1, candidates.length))
   );
   let remaining = THREAD_PROMPT_CAP;
   const threads = candidates
     .map((conversation) => {
       const prompts = sampleOrderedPrompts(
         conversation.prompts,
-        Math.min(perConversation, remaining),
+        Math.min(perConversation, remaining)
       );
       remaining -= prompts.length;
       return { conversation, prompts };
@@ -794,7 +781,7 @@ function prepareThreads(
 
 function segmentThreads(
   prepared: PreparedThread[],
-  vectors: Float32Array[],
+  vectors: Float32Array[]
 ): { threads: ThreadSegmentation[]; searchEntries: SearchEntry[] } {
   const threads: ThreadSegmentation[] = [];
   const searchEntries: SearchEntry[] = [];
@@ -834,11 +821,11 @@ function segmentThreads(
     }
     const maximumBoundaries = Math.max(
       2,
-      Math.min(12, Math.round(Math.sqrt(prompts.length) * 1.25)),
+      Math.min(12, Math.round(Math.sqrt(prompts.length) * 1.25))
     );
     const selected: ThreadBoundary[] = [];
     for (const candidate of candidates.sort(
-      (left, right) => right.confidence - left.confidence || left.at - right.at,
+      (left, right) => right.confidence - left.confidence || left.at - right.at
     )) {
       if (candidate.at < 2 || candidate.at > prompts.length - 2) continue;
       if (selected.some((boundary) => Math.abs(boundary.at - candidate.at) < 2)) continue;
@@ -888,7 +875,7 @@ function segmentThreads(
         (left, right) =>
           right.confidence - left.confidence ||
           right.boundaries.length - left.boundaries.length ||
-          right.promptCount - left.promptCount,
+          right.promptCount - left.promptCount
       )
       .slice(0, THREAD_CONVERSATION_CAP),
     searchEntries,
@@ -901,7 +888,7 @@ export async function buildSemanticMemory(
   allFacts: FactCandidate[],
   threadCandidateIds: string[],
   analysis: AnalysisResolution,
-  progress: Progress,
+  progress: Progress
 ): Promise<{ report: SemanticReport; searchIndex: SearchEntry[] }> {
   const conversations = stableSample(allConversations, CONVERSATION_CAP);
   const prompts = sampleQuestions(allPrompts);
@@ -1019,7 +1006,7 @@ export async function searchMemory(
   index: SearchEntry[],
   lexicalIndex: LexicalSearchEntry[],
   profile: AnalysisResolution["resolvedModelProfile"],
-  progress: Progress,
+  progress: Progress
 ): Promise<Array<Omit<SearchEntry, "embedding"> & { similarity: number }>> {
   const { vectors } = await embedTexts([query], profile, progress);
   const [queryVector] = vectors;
@@ -1031,7 +1018,7 @@ export async function searchMemory(
   const queryTerms = new Set(
     normalizedKey(query)
       .split(" ")
-      .filter((term) => term.length > 2),
+      .filter((term) => term.length > 2)
   );
   const lexicalResults = lexicalIndex
     .map((entry) => {
@@ -1041,10 +1028,7 @@ export async function searchMemory(
       const phraseBonus = haystack.includes(normalizedKey(query)) ? 0.3 : 0;
       return {
         ...entry,
-        lexicalScore: Math.min(
-          0.99,
-          (overlap / Math.max(1, queryTerms.size)) * 0.68 + phraseBonus,
-        ),
+        lexicalScore: Math.min(0.99, (overlap / Math.max(1, queryTerms.size)) * 0.68 + phraseBonus),
       };
     })
     .filter((entry) => entry.lexicalScore > 0)
@@ -1073,7 +1057,7 @@ export async function searchMemory(
   const topicByConversation = new Map(
     index
       .filter((entry) => entry.source && entry.topicId)
-      .map((entry) => [entry.source!.conversationId, entry.topicId!] as const),
+      .map((entry) => [entry.source!.conversationId, entry.topicId!] as const)
   );
   return [...candidates.values()]
     .map(({ semanticScore, lexicalScore, ...entry }) => {
@@ -1087,7 +1071,7 @@ export async function searchMemory(
         ...entry,
         topicId:
           entry.topicId ??
-          (entry.source ? topicByConversation.get(entry.source.conversationId) ?? null : null),
+          (entry.source ? (topicByConversation.get(entry.source.conversationId) ?? null) : null),
         similarity: Math.min(0.99, combined),
       };
     })
@@ -1098,7 +1082,7 @@ export async function searchMemory(
 export function buildLexicalIndex(
   conversations: ConversationRecord[],
   prompts: UserPrompt[],
-  facts: FactCandidate[],
+  facts: FactCandidate[]
 ): LexicalSearchEntry[] {
   return [
     ...conversations.map((conversation) => ({

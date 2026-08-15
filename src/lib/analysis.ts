@@ -68,14 +68,11 @@ export function confidenceThreshold(value: number): number {
 export function evidenceConfidence(
   semanticSimilarity: number,
   lexicalSimilarity: number,
-  cueBonus = 0,
+  cueBonus = 0
 ): number {
   return Math.max(
     0,
-    Math.min(
-      0.99,
-      semanticSimilarity * 0.82 + Math.min(1, lexicalSimilarity * 3) * 0.18 + cueBonus,
-    ),
+    Math.min(0.99, semanticSimilarity * 0.82 + Math.min(1, lexicalSimilarity * 3) * 0.18 + cueBonus)
   );
 }
 
@@ -87,7 +84,7 @@ function countLetters(value: string): { letters: number; nonLatin: number } {
     letters += 1;
     if (
       /[\p{Script=Arabic}\p{Script=Armenian}\p{Script=Bengali}\p{Script=Cyrillic}\p{Script=Devanagari}\p{Script=Georgian}\p{Script=Greek}\p{Script=Gujarati}\p{Script=Gurmukhi}\p{Script=Han}\p{Script=Hangul}\p{Script=Hebrew}\p{Script=Hiragana}\p{Script=Kannada}\p{Script=Katakana}\p{Script=Malayalam}\p{Script=Oriya}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Thai}]/u.test(
-        character,
+        character
       )
     ) {
       nonLatin += 1;
@@ -98,7 +95,7 @@ function countLetters(value: string): { letters: number; nonLatin: number } {
 
 export function resolveAnalysisSettings(
   settings: AnalysisSettings,
-  promptTexts: string[],
+  promptTexts: string[]
 ): AnalysisResolution {
   const confidence = clampConfidence(settings.confidence);
   let resolvedModelProfile: ResolvedModelProfile;
@@ -136,32 +133,28 @@ export function monthKey(timestamp: number): string {
 
 export function classifyTrend(
   series: CountDatum[],
-  totals: Map<string, number> | null = null,
+  totals: Map<string, number> | null = null
 ): { trend: TrendState; momentum: number } {
   const ordered = [...series].sort((left, right) => left.label.localeCompare(right.label));
   const sum = ordered.reduce((total, datum) => total + datum.value, 0);
   if (ordered.length < 3 || sum < 4) return { trend: "insufficient", momentum: 0 };
 
   const normalized = ordered.map((datum) =>
-    totals ? datum.value / Math.max(1, totals.get(datum.label) ?? 0) : datum.value,
+    totals ? datum.value / Math.max(1, totals.get(datum.label) ?? 0) : datum.value
   );
   const third = Math.max(1, Math.floor(normalized.length / 3));
   const early = normalized.slice(0, third);
   const middle = normalized.slice(third, -third);
   const recent = normalized.slice(-third);
-  const earlyCount = ordered
-    .slice(0, third)
-    .reduce((total, datum) => total + datum.value, 0);
-  const recentCount = ordered
-    .slice(-third)
-    .reduce((total, datum) => total + datum.value, 0);
+  const earlyCount = ordered.slice(0, third).reduce((total, datum) => total + datum.value, 0);
+  const recentCount = ordered.slice(-third).reduce((total, datum) => total + datum.value, 0);
   const average = (values: number[]) =>
     values.reduce((total, value) => total + value, 0) / Math.max(1, values.length);
   const earlyAverage = average(early);
   const recentAverage = average(recent);
   const momentum = Math.max(
     -1,
-    Math.min(1, (recentAverage - earlyAverage) / Math.max(0.01, earlyAverage || recentAverage)),
+    Math.min(1, (recentAverage - earlyAverage) / Math.max(0.01, earlyAverage || recentAverage))
   );
 
   if (
@@ -189,7 +182,7 @@ function strandLabel(prompts: ThreadPrompt[], fallback: string): string {
         .toLocaleLowerCase()
         .normalize("NFKC")
         .match(/[\p{L}\p{N}]{4,}/gu)
-        ?.filter((term) => !THREAD_STOP_WORDS.has(term) && !/^\d+$/u.test(term)) ?? [],
+        ?.filter((term) => !THREAD_STOP_WORDS.has(term) && !/^\d+$/u.test(term)) ?? []
     );
     for (const term of terms) counts.set(term, (counts.get(term) ?? 0) + 1);
   }
@@ -203,7 +196,7 @@ function strandLabel(prompts: ThreadPrompt[], fallback: string): string {
 export function buildThreadStrands(
   prompts: ThreadPrompt[],
   boundaries: ThreadBoundary[],
-  threshold: number,
+  threshold: number
 ): ThreadStrand[] {
   if (prompts.length === 0) return [];
   const splitPoints = boundaries

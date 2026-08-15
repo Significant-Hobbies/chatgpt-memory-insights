@@ -12,7 +12,7 @@ const remoteHead = git("rev-parse", "origin/main");
 if (branch !== "main" || dirty || head !== remoteHead) {
   console.error(
     "Deploy requires clean, synced main. " +
-      `branch=${branch || "detached"} dirty=${Boolean(dirty)} synced=${head === remoteHead}`,
+      `branch=${branch || "detached"} dirty=${Boolean(dirty)} synced=${head === remoteHead}`
   );
   process.exit(1);
 }
