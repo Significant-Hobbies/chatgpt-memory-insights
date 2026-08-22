@@ -146,7 +146,7 @@ export async function onRequest(context: {
     const existingVary = headers.get("vary");
     headers.set(
       "vary",
-      existingVary ? `${existingVary}, Accept, Accept-Encoding` : "Accept, Accept-Encoding",
+      existingVary ? `${existingVary}, Accept, Accept-Encoding` : "Accept, Accept-Encoding"
     );
     return new Response(response.body, {
       status: response.status,
