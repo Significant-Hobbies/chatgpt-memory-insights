@@ -6,6 +6,7 @@
   "llmsFull": "https://chatgpt.significanthobbies.com/llms-full.txt",
   "sitemap": "https://chatgpt.significanthobbies.com/sitemap.xml",
   "robots": "https://chatgpt.significanthobbies.com/robots.txt",
+  "openapi": "https://chatgpt.significanthobbies.com/openapi.json",
   "markdown": {
     "suffix": ".md",
     "negotiation": true
