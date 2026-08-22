@@ -11,5 +11,13 @@
 ## Machine surfaces
 
 - [Agent catalog](https://chatgpt.significanthobbies.com/api/ai): JSON inventory of public surfaces
+- [OpenAPI spec](https://chatgpt.significanthobbies.com/openapi.json): Machine-readable API description
 - [Homepage markdown](https://chatgpt.significanthobbies.com/index.md): Product brief without JS
 - [This index](https://chatgpt.significanthobbies.com/llms.txt)
+
+## When to use this
+
+- Analyzing a ChatGPT export locally for memory patterns and longitudinal insights
+- Discovering evidence-linked themes and reflection questions from conversation history
+- Understanding the privacy architecture of browser-local ChatGPT analysis (no server upload)
+- Checking what capabilities the Memory Map tool finds in ChatGPT exports
