@@ -1,4 +1,12 @@
-import type { EmotionBucket, FullReport, QuestionLens, SourceRef, TrendState } from "../lib/types";
+import type {
+  EmotionBucket,
+  FullReport,
+  QuestionLens,
+  ShiftFamily,
+  ShiftFinding,
+  SourceRef,
+  TrendState,
+} from "../lib/types";
 import { activityMonthWindow } from "../lib/period";
 import { formatNumber, truncate } from "./dom-utils";
 import { areaY, dot, lineY, plot, rectY, ruleX, ruleY, text as plotText } from "@observablehq/plot";
@@ -1043,6 +1051,127 @@ function renderActivityRhythms(report: FullReport, context: AtlasContext) {
   );
 }
 
+const SHIFT_FAMILY_LABELS: Record<ShiftFamily, string> = {
+  cadence: "Cadence",
+  lens: "Question lens",
+  emotion: "Emotion",
+};
+
+function shiftValueLabel(finding: ShiftFinding, value: number): string {
+  // Cadence findings are absolute conversations per month; lens and emotion
+  // findings are shares of that month's activity. Formatting them alike would
+  // read as a percentage of nothing.
+  return finding.family === "cadence"
+    ? `${formatNumber(Math.round(value))}/mo`
+    : `${Math.round(value * 100)}%`;
+}
+
+function renderHistoricalShifts(report: FullReport) {
+  const chart = $("#historical-shifts");
+  const state = $("#historical-shifts-state");
+  const data = $("#historical-shifts-data");
+  chart.replaceChildren();
+  const shifts = report.deterministic.shifts;
+  const findings = shifts?.findings ?? [];
+  if (findings.length === 0) {
+    state.hidden = false;
+    chart.classList.add("is-hidden");
+    data.replaceChildren(
+      element(
+        "p",
+        shifts && shifts.months < 3
+          ? `Only ${shifts.months} month(s) of history; three are needed to compare.`
+          : "No measurable shift in cadence, question lenses, or emotions."
+      )
+    );
+    return;
+  }
+  state.hidden = true;
+  chart.classList.remove("is-hidden");
+
+  const ordered = findings
+    .slice()
+    .sort((left, right) => Math.abs(right.momentum) - Math.abs(left.momentum));
+  const rows = ordered.map((finding) => ({
+    ...finding,
+    rowLabel: truncate(`${SHIFT_FAMILY_LABELS[finding.family]} · ${finding.label}`, 34),
+    color: TREND_COLORS[finding.trend],
+    recentLabel: shiftValueLabel(finding, finding.recentShare),
+    tip: `${finding.label} — ${TREND_LABELS[finding.trend]}, ${shiftValueLabel(
+      finding,
+      finding.earlyShare
+    )} → ${shiftValueLabel(finding, finding.recentShare)}`,
+  }));
+  const domain = rows.map((row) => row.rowLabel);
+
+  const plotElement = plot({
+    className: "atlas-observable-plot",
+    width: 620,
+    height: Math.max(180, 40 + rows.length * 24),
+    marginLeft: 190,
+    marginRight: 56,
+    x: { domain: [-1, 1], label: "← fading    ·    emerging →", grid: true, ticks: 5 },
+    y: { domain, label: null },
+    color: { type: "identity" },
+    marks: [
+      ruleX([0], { stroke: "#c9ccc7" }),
+      ruleY(rows, {
+        y: "rowLabel",
+        x1: 0,
+        x2: "momentum",
+        stroke: "color",
+        strokeWidth: 2,
+        strokeLinecap: "round",
+      }),
+      dot(rows, {
+        y: "rowLabel",
+        x: "momentum",
+        fill: "color",
+        stroke: "#fcfcfb",
+        strokeWidth: 2,
+        r: 5,
+        title: "tip",
+      }),
+      plotText(
+        rows.filter((row) => row.momentum < 0),
+        {
+          y: "rowLabel",
+          x: "momentum",
+          text: "recentLabel",
+          dx: -14,
+          textAnchor: "end",
+          fill: "#4b5459",
+          fontSize: 11,
+        }
+      ),
+      plotText(
+        rows.filter((row) => row.momentum >= 0),
+        {
+          y: "rowLabel",
+          x: "momentum",
+          text: "recentLabel",
+          dx: 14,
+          textAnchor: "start",
+          fill: "#4b5459",
+          fontSize: 11,
+        }
+      ),
+    ],
+  });
+  chart.append(plotElement);
+
+  data.replaceChildren(
+    ...rows.map((row) =>
+      element(
+        "p",
+        `${SHIFT_FAMILY_LABELS[row.family]} · ${row.label}: ${TREND_LABELS[row.trend]}, ` +
+          `${shiftValueLabel(row, row.earlyShare)} → ${shiftValueLabel(row, row.recentShare)} ` +
+          `(momentum ${row.momentum >= 0 ? "+" : ""}${row.momentum.toFixed(2)})`
+      )
+    )
+  );
+}
+
 export function renderVisualAtlas(report: FullReport, context: AtlasContext) {
   $("#atlas-period-note").textContent =
     context.periodMonths === null
@@ -1056,4 +1185,5 @@ export function renderVisualAtlas(report: FullReport, context: AtlasContext) {
   renderTopicMomentum(report, context);
   renderConversationShape(report);
   renderActivityRhythms(report, context);
+  renderHistoricalShifts(report);
 }
