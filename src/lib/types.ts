@@ -208,6 +208,7 @@ export type DeterministicReport = {
   tone: ToneReport;
   emotions: EmotionReport;
   lenses: QuestionLensReport;
+  shifts?: HistoricalShiftReport;
 };
 
 export type SemanticRepeat = {
@@ -241,6 +242,25 @@ export type FactGroup = {
 };
 
 export type TrendState = "emerging" | "fading" | "resurfacing" | "steady" | "insufficient";
+
+export type ShiftFamily = "cadence" | "lens" | "emotion";
+
+export type ShiftFinding = {
+  id: string;
+  family: ShiftFamily;
+  label: string;
+  trend: TrendState;
+  momentum: number;
+  earlyShare: number;
+  recentShare: number;
+  byMonth: CountDatum[];
+};
+
+export type HistoricalShiftReport = {
+  months: number;
+  method: string;
+  findings: ShiftFinding[];
+};
 
 export type TopicNode = {
   id: string;
