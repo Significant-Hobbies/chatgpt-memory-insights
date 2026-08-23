@@ -1,3 +1,4 @@
+import { buildHistoricalShifts } from "./historical-shifts";
 import type {
   ConversationRecord,
   DeterministicReport,
@@ -712,7 +713,11 @@ export function buildDeterministicReport(conversations: ConversationRecord[]): {
     lenses: buildQuestionLenses(conversations, prompts),
   };
 
-  return { report, prompts, facts: extractFactCandidates(prompts) };
+  return {
+    report: { ...report, shifts: buildHistoricalShifts(report) },
+    prompts,
+    facts: extractFactCandidates(prompts),
+  };
 }
 
 export function lexicalSimilarity(left: string, right: string): number {
