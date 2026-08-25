@@ -1,6 +1,6 @@
 # chatgpt-memory-insights — PROJECT STATUS
 
-Last updated: 2026-08-09
+Last updated: 2026-08-26
 
 ## Why / What
 
@@ -38,6 +38,12 @@ sync, and verified medical, emotional, or personality claims.
 
 ## Timeline
 
+- 2026-08-26 — completed the historical-change surface with a readable
+  full-width comparison, explicit early and recent windows, visible before-to-
+  after values, responsive horizontal containment, and reconciled atlas copy
+- 2026-08-25 — added deterministic early-versus-recent historical shifts for
+  cadence, question lenses, and wording signals, plus the seventh visual-atlas
+  figure; no embedding model or network call is required
 - 2026-08-12 — adopted the complete Fleet JavaScript/TypeScript code-health
   boundary with coverage, unused-code, complexity, duplication, cycle,
   dependency-risk, suppression, hygiene, and build ratchets; removed two dead
@@ -118,7 +124,8 @@ sync, and verified medical, emotional, or personality claims.
 - Longitudinal topic, question-domain, and language-signal views with emerging,
   fading, resurfacing, steady, and insufficient-evidence labels.
 - Period-aware visual atlas with daily activity, question mix, language
-  signals, repeat landscape, topic movement, and conversation-shape views.
+  signals, repeat landscape, topic movement, conversation-shape, and an
+  all-history early-versus-recent change view with visible before/after values.
 - Filterable monthly cadence graph for conversation count or approximate word
   count across all conversations or one overlapping question route, aligned to
   the same exact calendar window as the atlas, tone, and language signals.

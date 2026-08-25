@@ -1066,13 +1066,28 @@ function shiftValueLabel(finding: ShiftFinding, value: number): string {
     : `${Math.round(value * 100)}%`;
 }
 
+function shiftWindowLabel(findings: ShiftFinding[]): string {
+  const months = findings[0]?.byMonth.map(({ label }) => label) ?? [];
+  if (months.length < 3) return "All history · earlier third vs recent third · no model needed";
+  const edge = Math.max(1, Math.floor(months.length / 3));
+  const rangeLabel = (values: string[]) => {
+    const first = values[0];
+    const last = values.at(-1);
+    if (!(first && last)) return "";
+    return first === last ? formatMonth(first) : `${formatMonth(first)}–${formatMonth(last)}`;
+  };
+  return `All history · ${rangeLabel(months.slice(0, edge))} vs ${rangeLabel(months.slice(-edge))} · no model needed`;
+}
+
 function renderHistoricalShifts(report: FullReport) {
   const chart = $("#historical-shifts");
   const state = $("#historical-shifts-state");
   const data = $("#historical-shifts-data");
+  const period = $("#historical-shifts-period");
   chart.replaceChildren();
   const shifts = report.deterministic.shifts;
   const findings = shifts?.findings ?? [];
+  period.textContent = shiftWindowLabel(findings);
   if (findings.length === 0) {
     state.hidden = false;
     chart.classList.add("is-hidden");
@@ -1096,7 +1111,10 @@ function renderHistoricalShifts(report: FullReport) {
     ...finding,
     rowLabel: truncate(`${SHIFT_FAMILY_LABELS[finding.family]} · ${finding.label}`, 34),
     color: TREND_COLORS[finding.trend],
-    recentLabel: shiftValueLabel(finding, finding.recentShare),
+    changeLabel: `${shiftValueLabel(finding, finding.earlyShare)} → ${shiftValueLabel(
+      finding,
+      finding.recentShare
+    )}`,
     tip: `${finding.label} — ${TREND_LABELS[finding.trend]}, ${shiftValueLabel(
       finding,
       finding.earlyShare
@@ -1106,11 +1124,16 @@ function renderHistoricalShifts(report: FullReport) {
 
   const plotElement = plot({
     className: "atlas-observable-plot",
-    width: 620,
+    width: 720,
     height: Math.max(180, 40 + rows.length * 24),
-    marginLeft: 190,
-    marginRight: 56,
-    x: { domain: [-1, 1], label: "← fading    ·    emerging →", grid: true, ticks: 5 },
+    marginLeft: 240,
+    marginRight: 128,
+    x: {
+      domain: [-1, 1],
+      label: "← fading    ·    relative change    ·    emerging →",
+      grid: true,
+      ticks: 5,
+    },
     y: { domain, label: null },
     color: { type: "identity" },
     marks: [
@@ -1132,35 +1155,24 @@ function renderHistoricalShifts(report: FullReport) {
         r: 5,
         title: "tip",
       }),
-      plotText(
-        rows.filter((row) => row.momentum < 0),
-        {
-          y: "rowLabel",
-          x: "momentum",
-          text: "recentLabel",
-          dx: -14,
-          textAnchor: "end",
-          fill: "#4b5459",
-          fontSize: 11,
-        }
-      ),
-      plotText(
-        rows.filter((row) => row.momentum >= 0),
-        {
-          y: "rowLabel",
-          x: "momentum",
-          text: "recentLabel",
-          dx: 14,
-          textAnchor: "start",
-          fill: "#4b5459",
-          fontSize: 11,
-        }
-      ),
+      plotText(rows, {
+        y: "rowLabel",
+        x: 1,
+        text: "changeLabel",
+        dx: 14,
+        textAnchor: "start",
+        fill: "#4b5459",
+        fontSize: 11,
+      }),
     ],
   });
   chart.append(plotElement);
 
   data.replaceChildren(
+    element(
+      "p",
+      `${shiftWindowLabel(findings).replace(" · no model needed", "")}. Lens and wording rows are monthly shares; cadence is conversations per month.`
+    ),
     ...rows.map((row) =>
       element(
         "p",
@@ -1175,8 +1187,8 @@ function renderHistoricalShifts(report: FullReport) {
 export function renderVisualAtlas(report: FullReport, context: AtlasContext) {
   $("#atlas-period-note").textContent =
     context.periodMonths === null
-      ? "All stored months shown where exact period filtering is supported. Shape and overview remain all-time."
-      : `Recent ${context.periodMonths} months applied to chronological charts, query tone, and language signals. Shape and overview remain all-time.`;
+      ? "All stored months shown where exact period filtering is supported. Shape, overview, and What changed remain all-time."
+      : `Recent ${context.periodMonths} months applied to chronological charts, query tone, and language signals. Shape, overview, and What changed remain all-time.`;
   renderAtlasHighlight(report, context);
   renderActivityCalendar(report, context);
   renderQuestionMix(report, context);

@@ -1369,7 +1369,8 @@ h2 {
 }
 
 .activity-calendar-figure,
-.conversation-shape-figure {
+.conversation-shape-figure,
+.historical-shifts-figure {
   grid-column: span 12;
 }
 
@@ -1560,6 +1561,32 @@ h2 {
 
 .topic-momentum .atlas-observable-plot {
   overflow: hidden;
+}
+
+.historical-shifts {
+  display: block;
+  justify-items: start;
+  min-height: 0;
+  overflow-x: auto;
+  padding: 0.25rem 0 0.75rem;
+  scrollbar-color: var(--rule-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.historical-shifts .atlas-observable-plot {
+  min-width: 720px;
+}
+
+.historical-shifts-scroll-hint {
+  display: none;
+  margin: -0.35rem 0 0.75rem;
+  color: var(--ink-muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.65rem;
+}
+
+.historical-shifts.is-hidden + .historical-shifts-scroll-hint {
+  display: none;
 }
 
 .language-grid {
@@ -3801,6 +3828,10 @@ body.has-evidence::before {
 @media (max-width: 1050px) {
   .app-shell {
     grid-template-columns: 1fr;
+  }
+
+  .historical-shifts-scroll-hint {
+    display: block;
   }
 
   .route-rail {

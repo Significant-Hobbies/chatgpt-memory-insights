@@ -463,7 +463,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
           >
             <div class="section-heading atlas-heading">
               <div>
-                <p class="map-key">Six ways to see the archive</p>
+                <p class="map-key">Seven ways to see the archive</p>
                 <h2 id="visual-atlas-heading">Visual atlas</h2>
               </div>
               <div class="atlas-period-control">
@@ -476,7 +476,8 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
                   <option value="all">All history</option>
                 </select>
                 <small id="atlas-period-note">
-                  Applied to chronological charts, query tone, and language signals.
+                  Applied to chronological charts, query tone, and language signals. What changed
+                  remains an all-history comparison.
                 </small>
               </div>
             </div>
@@ -571,7 +572,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
                 <div id="topic-momentum-state" class="atlas-forming">
                   <span></span>
                   <strong>Topic movement is still forming.</strong>
-                  <small>The other four deterministic views are already usable.</small>
+                  <small>The deterministic views are already usable.</small>
                 </div>
                 <div
                   id="topic-momentum"
@@ -603,7 +604,9 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               <figure class="atlas-figure historical-shifts-figure">
                 <figcaption>
                   <span><b>07</b><strong>What changed</strong></span>
-                  <small>Fading &#8592; share of attention &#8594; emerging · no model needed</small>
+                  <small id="historical-shifts-period">
+                    All history · earlier third vs recent third · no model needed
+                  </small>
                 </figcaption>
                 <div id="historical-shifts-state" class="atlas-forming">
                   <span></span>
@@ -613,8 +616,11 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
                 <div
                   id="historical-shifts"
                   class="atlas-plot historical-shifts is-hidden"
-                  aria-label="Cadence, question lenses, and emotions by direction and size of change"
+                  aria-label="Cadence, question lenses, and wording signals by relative change from earlier to recent history"
                 ></div>
+                <p class="historical-shifts-scroll-hint" aria-hidden="true">
+                  Scroll to see the change and before-to-after values &#8594;
+                </p>
                 <details class="chart-data">
                   <summary>Read what-changed data</summary>
                   <div id="historical-shifts-data" class="chart-data-list"></div>
