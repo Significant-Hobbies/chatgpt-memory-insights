@@ -36,4 +36,4 @@ Resolved target: `src/pages/index.astro`
 
 ## Run notes
 
-Questions skipped: the repository surface brief delegates implementation judgment and the owner explicitly prioritized historical changes over Claude import work. Visual proof uses a synthetic eight-month export, not private user data. The final three-width pass shows a 365px card at 390, 671px at 768, and 1087px at 1440, with no page-level horizontal overflow.
+Questions skipped: the repository surface brief delegates implementation judgment and the owner explicitly prioritized historical changes over Claude import work. Visual proof uses a synthetic multi-month export, not private user data. The final three-width pass shows a 365px card at 390, 671px at 768, and 1087px at 1440, with no page-level horizontal overflow.
