@@ -177,12 +177,16 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
             <div class="export-guide-body">
               <ol>
                 <li>
+                  Install it, on macOS or Linux:<br />
+                  <code>curl -fsSL https://chatgpt.significanthobbies.com/install.sh | sh</code>
+                </li>
+                <li>
                   See what it finds, without writing anything:<br />
-                  <code>npx memory-pack --dry-run --list</code>
+                  <code>memory-pack --dry-run --list</code>
                 </li>
                 <li>
                   Write the archive into the current folder:<br />
-                  <code>npx memory-pack</code>
+                  <code>memory-pack</code>
                 </li>
                 <li>
                   Drop the <code>memory-pack-&lt;date&gt;.zip</code> it names here, without
@@ -201,9 +205,9 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
                   rebuilt from the prompts that survive.
                 </p>
                 <p>
-                  memory-pack runs entirely on your machine, makes no network calls, and masks
-                  credential-shaped tokens before it writes anything. It needs Node 18 or newer;
-                  everything else it reads is already on disk.
+                  The installer downloads one small binary and checks it against a published
+                  checksum. memory-pack itself then runs entirely on your machine, makes no
+                  network calls, and masks credential-shaped tokens before it writes anything.
                 </p>
                 <p>
                   Narrow it with <code>--since 2026-01-01</code>, or pack only sessions whose
@@ -211,8 +215,10 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
                 </p>
               </div>
               <nav class="export-guide-links" aria-label="memory-pack resources">
-                <a href="https://www.npmjs.com/package/memory-pack" target="_blank" rel="noreferrer"
-                  >memory-pack on npm ↗</a
+                <a
+                  href="https://github.com/Significant-Hobbies/chatgpt-memory-insights/releases"
+                  target="_blank"
+                  rel="noreferrer">Binaries and checksums ↗</a
                 >
                 <a
                   href="https://github.com/Significant-Hobbies/chatgpt-memory-insights/tree/main/packer"

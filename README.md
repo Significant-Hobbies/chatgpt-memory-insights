@@ -72,8 +72,10 @@ reaches back much further than the transcripts do. It makes no network calls
 and masks credential-shaped tokens before writing.
 
 ```bash
-npx memory-pack --dry-run --list   # see what would be packed
-npx memory-pack                    # write memory-pack-<date>.zip
+curl -fsSL https://chatgpt.significanthobbies.com/install.sh | sh
+
+memory-pack --dry-run --list   # see what would be packed
+memory-pack                    # write memory-pack-<date>.zip
 ```
 
 Source, options, and the full account of what is kept and dropped are in

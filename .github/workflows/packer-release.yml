@@ -66,15 +66,22 @@ jobs:
         with:
           path: dist
           merge-multiple: true
+      - name: Checksum every binary
+        working-directory: dist
+        run: sha256sum memory-pack-* > SHA256SUMS
       - uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          files: |
+            dist/memory-pack-*
+            dist/SHA256SUMS
           generate_release_notes: true
 
+  # Optional: runs only once an NPM_TOKEN secret exists. The installer script
+  # and the GitHub release do not depend on it.
   npm:
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') && vars.PUBLISH_TO_NPM == 'true'
     defaults:
       run:
         working-directory: packer
