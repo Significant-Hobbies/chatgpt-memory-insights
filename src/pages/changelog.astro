@@ -3,6 +3,23 @@ import "../styles/global.css";
 import "../styles/about.css";
 
 const repository = "https://github.com/Significant-Hobbies/chatgpt-memory-insights";
+const title = "Changelog · Memory Map";
+const description = "Meaningful improvements to Memory Map’s private ChatGPT-history analysis.";
+const canonical = "https://chatgpt.significanthobbies.com/changelog/";
+const socialImage =
+  "https://raw.githubusercontent.com/Significant-Hobbies/chatgpt-memory-insights/main/artifacts/design/after-1440.png";
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: title,
+  description,
+  url: canonical,
+  isPartOf: {
+    "@type": "WebSite",
+    name: "Memory Map",
+    url: "https://chatgpt.significanthobbies.com/",
+  },
+};
 const releases = [
   {
     date: "2026-07-28",
@@ -44,14 +61,22 @@ const releases = [
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
-    <meta
-      name="description"
-      content="Meaningful improvements to Memory Map’s private ChatGPT-history analysis."
-    />
+    <meta name="description" content={description} />
     <meta name="theme-color" content="#f3f5f2" />
-    <link rel="canonical" href="https://chatgpt.significanthobbies.com/changelog/" />
+    <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>Changelog · Memory Map</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Memory Map" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={socialImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    <title>{title}</title>
     <script is:inline async src="/scripts/posthog.js"></script>
   </head>
   <body class="about-page changelog-page">
@@ -117,5 +142,17 @@ const releases = [
       <p>Your history, made navigable on your device.</p>
       <a href="/">Analyze my ChatGPT ZIP →</a>
     </footer>
+    <script
+      is:inline
+      src="https://sassmaker.com/project-strip.js"
+      data-project="chatgpt-memory-insights"
+      defer
+    ></script>
+    <script
+      is:inline
+      src="https://sassmaker.com/ai-chat-footer.js"
+      data-name="Memory Map"
+      defer
+    ></script>
   </body>
 </html>

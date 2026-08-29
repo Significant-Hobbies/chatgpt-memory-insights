@@ -6,13 +6,23 @@
 
 const ORIGIN = "https://chatgpt.significanthobbies.com";
 
+function discoveryLinks(markdownPath: string): string {
+  return [
+    `</sitemap.xml>; rel="sitemap"; type="application/xml"`,
+    `<${markdownPath}>; rel="alternate"; type="text/markdown"`,
+    `</openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"`,
+    `</.well-known/ai-catalog.json>; rel="service-desc"; type="application/ai-catalog+json"`,
+    `</.well-known/agent-skills/index.json>; rel="agent-skills"; type="application/json"`,
+  ].join(", ");
+}
+
 const OPENAPI_SPEC = {
   openapi: "3.1.0",
   info: {
-    title: "Memory Map public API",
+    title: "Memory Map discovery surfaces",
     version: "1.0.0",
     description:
-      "Private, browser-local analysis of a ChatGPT export into evidence-linked memory and longitudinal insights. The public web API exposes read-only agent surfaces.",
+      "Private, browser-local analysis of a ChatGPT export into evidence-linked memory and longitudinal insights. These read-only discovery documents do not accept archives, run analysis, or expose derived memory.",
     contact: { name: "Memory Map", url: ORIGIN },
   },
   servers: [{ url: ORIGIN }],
@@ -143,11 +153,14 @@ export async function onRequest(context: {
     !path.startsWith("/api/")
   ) {
     const headers = new Headers(response.headers);
+    const markdownPath =
+      path === "/" ? "/index.md" : path === "/about/" ? "/about.md" : "/changelog.md";
     const existingVary = headers.get("vary");
     headers.set(
       "vary",
       existingVary ? `${existingVary}, Accept, Accept-Encoding` : "Accept, Accept-Encoding"
     );
+    headers.set("link", discoveryLinks(markdownPath));
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,

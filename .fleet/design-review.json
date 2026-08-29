@@ -2,33 +2,64 @@
   "$schema": "fleet.design-review.v1",
   "version": 1,
   "project": "chatgpt-memory-insights",
-  "target": "Owned product changelog",
-  "mode": "preserve",
+  "target": "public Memory Map import landing and analysis entry",
+  "surfaceMode": "persuade",
+  "mode": "overhaul",
   "register": "product",
   "context": {
     "product": "PRODUCT.md",
     "design": "DESIGN.md"
   },
   "direction": {
-    "references": [],
+    "references": [
+      "transit maps",
+      "evidence ledgers",
+      "local-first file import tools"
+    ],
     "probes": [],
-    "selected": "existing-design",
-    "approval": "not-required",
-    "before": "artifacts/design/before.png"
+    "selected": "memory-transit-atlas",
+    "approval": "delegated",
+    "before": "artifacts/design/before.png",
+    "library": {
+      "strategy": "platform-first",
+      "primary": "native HTML controls plus Astro",
+      "sources": [
+        "HTML details, fieldset, radio, range, file input, dialog, and semantic navigation primitives"
+      ],
+      "runtime": "native controls",
+      "customReplacement": {
+        "used": false,
+        "authorization": "not-required",
+        "reason": "The visual language is product-specific, while all standard interactions remain native browser primitives."
+      }
+    },
+    "contract": {
+      "purpose": "Turn a ChatGPT export into a private browser-computed map of recurring themes, facts, emotions, questions, and change.",
+      "purposeSource": "Site Health purposeContract plus PRODUCT.md and current implementation",
+      "canonicalPurpose": "Memory Map turns an exported AI conversation history into a private map of recurring themes, facts, emotions, and change.",
+      "purposeAlignment": "match",
+      "driftNote": "The landing accurately limits the current import to ChatGPT and does not imply accounts, server uploads, cross-device sync, or verified personality and medical claims.",
+      "audience": "People curious about patterns in their ChatGPT history who are unwilling to upload the archive to an application server.",
+      "job": "Understand the privacy boundary, obtain an export if needed, choose an analysis lens, and import the original ZIP locally.",
+      "thesis": "A private archive becomes a navigable transit map whose routes always lead back to source evidence.",
+      "system": "Cool paper, ink rules, cobalt route signals, teal privacy cues, restrained red alerts, monospace map keys, and native evidence controls.",
+      "signature": "The import gate reads like a transit interchange: analysis lenses, a ZIP platform, three route stages, and an explicit privacy contract.",
+      "risk": "The product exposes many post-import views, so the pre-import landing keeps one dominant task and links to the complete capability inventory rather than presenting a feature wall."
+    }
   },
   "evidence": {
     "screenshots": [
       {
         "width": 390,
-        "path": "artifacts/design/after-390.png"
+        "path": "artifacts/design/landing-audit-390.png"
       },
       {
         "width": 768,
-        "path": "artifacts/design/after-768.png"
+        "path": "artifacts/design/landing-audit-768.png"
       },
       {
         "width": 1440,
-        "path": "artifacts/design/after-1440.png"
+        "path": "artifacts/design/landing-audit-1440.png"
       }
     ],
     "projectCheck": {
@@ -36,11 +67,11 @@
       "status": "pass"
     },
     "critique": {
-      "score": 36,
+      "score": 38,
       "maximum": 40
     },
     "audit": {
-      "score": 18,
+      "score": 20,
       "maximum": 20
     },
     "unresolved": {
@@ -50,12 +81,50 @@
     "detector": {
       "posture": "advisory",
       "findings": [
-        "The detector reported one pre-existing side-tab treatment in the capability-route timeline, outside the changelog surface."
+        "A raw macOS Chrome --window-size capture imposed an inaccurate minimum viewport; exact Puppeteer metrics confirmed 390px and 768px layouts have no horizontal overflow.",
+        "The generic SEO auditor requests review evidence for valid SoftwareApplication JSON-LD; no review or rating was fabricated."
       ]
+    },
+    "comprehension": {
+      "status": "pass",
+      "reviewer": "canonical purpose contract, implementation, and fresh browser review",
+      "answers": {
+        "product": "Memory Map is a browser-local analyzer for a ChatGPT export ZIP.",
+        "audience": "People who want to understand recurring patterns in their history without uploading the archive.",
+        "value": "It turns an unwieldy conversation archive into searchable themes, facts, repeats, historical shifts, and evidence-linked routes.",
+        "mechanism": "The browser parses conversation JSON, applies inspectable rules and local embeddings, and keeps archive text and derived content on the device.",
+        "proof": "The landing names 51 inspectable outputs, exposes analysis-lens and confidence controls, and explains how every suggestion traces back to source conversations.",
+        "nextAction": "Choose the original ChatGPT export ZIP or follow the embedded official export guide."
+      },
+      "purposeScore": {
+        "product": 25,
+        "audience": 15,
+        "value": 15,
+        "mechanism": 15,
+        "proof": 14,
+        "nextAction": 14,
+        "total": 98
+      },
+      "mismatches": []
+    },
+    "performance": {
+      "weightedLcpMs": 1200,
+      "cls": 0,
+      "tbtMs": 0
+    },
+    "visualQuality": {
+      "priority": "P2",
+      "score": 96,
+      "minimum": 88
+    },
+    "accessibility": {
+      "lighthouseMobile": 100,
+      "contrastFailures": 0,
+      "note": "Raised the two sub-threshold labels in the analysis-lens and privacy-contract surfaces; exact mobile Lighthouse now reports no accessibility failures."
     }
   },
   "ownerFeedback": {
     "decision": "delegated",
-    "note": "The owner explicitly delegated changelog implementation across all projects on 2026-07-29."
+    "note": "The owner delegated portfolio landing-page rebuilding and asked that implementation depth follow canonical priority."
   }
 }

@@ -4,8 +4,22 @@ import "../styles/about.css";
 
 const title = "What Memory Map finds in your ChatGPT history";
 const description =
-  "See every insight Memory Map can find in a ChatGPT export: recurring questions, topic connections, memory changes, query patterns, conversation strands, and private semantic search.";
+  "See how Memory Map finds recurring questions, topic connections, memory changes, conversation strands, and private search in a ChatGPT export.";
 const canonical = "https://chatgpt.significanthobbies.com/about/";
+const socialImage =
+  "https://raw.githubusercontent.com/Significant-Hobbies/chatgpt-memory-insights/main/artifacts/design/after-1440.png";
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: title,
+  description,
+  url: canonical,
+  isPartOf: {
+    "@type": "WebSite",
+    name: "Memory Map",
+    url: "https://chatgpt.significanthobbies.com/",
+  },
+};
 
 const capabilityRoutes = [
   {
@@ -322,6 +336,17 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
     <meta name="description" content={description} />
     <meta name="theme-color" content="#f3f5f2" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Memory Map" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={socialImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
     <title>{title}</title>
     <script is:inline async src="/scripts/posthog.js"></script>
   </head>
@@ -667,5 +692,17 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
       <a href="/changelog/">Changelog</a>
       <a href="/">Analyze my ChatGPT ZIP →</a>
     </footer>
+    <script
+      is:inline
+      src="https://sassmaker.com/project-strip.js"
+      data-project="chatgpt-memory-insights"
+      defer
+    ></script>
+    <script
+      is:inline
+      src="https://sassmaker.com/ai-chat-footer.js"
+      data-name="Memory Map"
+      defer
+    ></script>
   </body>
 </html>

@@ -7,6 +7,10 @@
   "sitemap": "https://chatgpt.significanthobbies.com/sitemap.xml",
   "robots": "https://chatgpt.significanthobbies.com/robots.txt",
   "openapi": "https://chatgpt.significanthobbies.com/openapi.json",
+  "agentGuidance": "https://chatgpt.significanthobbies.com/agents.md",
+  "agentSkills": "https://chatgpt.significanthobbies.com/.well-known/agent-skills/index.json",
+  "aiCatalog": "https://chatgpt.significanthobbies.com/.well-known/ai-catalog.json",
+  "commercialState": "https://chatgpt.significanthobbies.com/pricing.md",
   "markdown": {
     "suffix": ".md",
     "negotiation": true
@@ -32,10 +36,22 @@
       "md": "https://chatgpt.significanthobbies.com/changelog.md",
       "kind": "static",
       "description": "Verified product releases"
+    },
+    {
+      "id": "agent-guidance",
+      "url": "https://chatgpt.significanthobbies.com/agents.md",
+      "kind": "static",
+      "description": "When to use Memory Map without crossing its browser-local privacy boundary"
+    },
+    {
+      "id": "commercial-state",
+      "url": "https://chatgpt.significanthobbies.com/pricing.md",
+      "kind": "static",
+      "description": "Current account, checkout, and pricing boundary"
     }
   ],
   "auth": {
     "public": true,
-    "notes": "Auth-walled app routes are not agent-indexed unless listed here."
+    "notes": "The current web app has no Memory Map account. Public machine surfaces are read-only documentation and never accept archives or derived memory."
   }
 }

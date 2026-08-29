@@ -16,6 +16,20 @@ const structuredData = {
       url: siteUrl,
       description,
     },
+    {
+      "@type": "SoftwareApplication",
+      name: "Memory Map",
+      url: siteUrl,
+      description,
+      applicationCategory: "LifestyleApplication",
+      operatingSystem: "Any modern web browser",
+      featureList: [
+        "Browser-local ChatGPT export analysis",
+        "Evidence-linked recurring themes and questions",
+        "Historical memory and topic shifts",
+        "Optional browser-local semantic search and Memory Chat",
+      ],
+    },
   ],
 };
 ---
@@ -217,8 +231,10 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
           <div class="privacy-contract">
             <strong>Private by construction.</strong>
             <span>
-              No upload endpoint, account, analytics payload, or archive persistence. Model files
+              No archive upload endpoint, account, or default archive persistence. Model files
               download from Hugging Face; your conversation text is not sent with that request.
+              Site-level page-view and performance telemetry is separate and receives no archive
+              text or derived content.
             </span>
           </div>
         </section>
@@ -1005,6 +1021,23 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
         </section>
       </main>
     </div>
+
+    <footer class="product-footer">
+      <div>
+        <strong>Memory Map</strong>
+        <p>
+          Browser-local analysis for a ChatGPT export. The current web app has no Memory Map
+          account or checkout.
+        </p>
+      </div>
+      <nav aria-label="Memory Map footer">
+        <a href="/about/">What it finds</a>
+        <a href="/about/#privacy">Privacy</a>
+        <a href="/changelog/">Changelog</a>
+        <a href="/agents.md">Agent guide</a>
+        <a href="https://github.com/Significant-Hobbies/chatgpt-memory-insights">Source ↗</a>
+      </nav>
+    </footer>
 
     <dialog id="story-dialog" class="story-dialog" aria-labelledby="story-heading">
       <div class="story-shell">
