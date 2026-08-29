@@ -19,8 +19,10 @@ jobs:
         include:
           - target: aarch64-apple-darwin
             runner: macos-latest
+          # Cross-compiled from Apple Silicon: the macos-13 Intel image is
+          # retired, and Xcode ships both macOS architectures.
           - target: x86_64-apple-darwin
-            runner: macos-13
+            runner: macos-latest
           - target: x86_64-unknown-linux-musl
             runner: ubuntu-latest
           - target: aarch64-unknown-linux-musl
