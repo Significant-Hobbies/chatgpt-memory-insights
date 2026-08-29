@@ -23,6 +23,19 @@ Prefer to do it yourself? Take a binary from
 [Releases](https://github.com/Significant-Hobbies/chatgpt-memory-insights/releases),
 or build from this directory with `cargo install --path .`.
 
+On macOS, a binary downloaded through a browser carries Gatekeeper's quarantine
+attribute, and an unsigned one is then killed on sight with no message at all.
+The installer above avoids this, since curl does not set the attribute and the
+script clears it anyway. If you download by hand, clear it yourself:
+
+```sh
+xattr -d com.apple.quarantine ./memory-pack
+```
+
+Windows has a published `memory-pack-x86_64-pc-windows-msvc.exe` but no
+installer script. Download it from Releases and run it directly. It is built on
+every release and untested by the author.
+
 ## Use
 
 ```sh

@@ -107,6 +107,12 @@ mkdir -p "$BIN_DIR" || die "could not create $BIN_DIR"
 chmod +x "$tmp/$BINARY"
 mv -f "$tmp/$BINARY" "$BIN_DIR/$BINARY" || die "could not install into $BIN_DIR"
 
+# A binary carrying the quarantine attribute is killed by Gatekeeper with no
+# message at all. curl does not set it, but a proxy or wrapper might.
+if [ "$(uname -s)" = "Darwin" ] && need xattr; then
+  xattr -d com.apple.quarantine "$BIN_DIR/$BINARY" 2>/dev/null || true
+fi
+
 say "Installed $BINARY to $BIN_DIR/$BINARY"
 
 case ":${PATH}:" in
