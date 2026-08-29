@@ -1,0 +1,83 @@
+{
+  "$schema": "fleet.landing-audit.scorecard.v1",
+  "project": "chatgpt-memory-insights",
+  "priority": "P2",
+  "candidate": "http://127.0.0.1:4181/",
+  "productionChanged": false,
+  "checkedAt": "2026-08-28",
+  "purpose": {
+    "score": 98,
+    "minimum": 85,
+    "p0": 0,
+    "p1": 0,
+    "note": "The first viewport identifies the ChatGPT export input, browser-local mechanism, searchable semantic graph, audience privacy concern, output inventory, official export path, and one immediate ZIP action without claiming server sync, accounts, or unsupported personality and medical conclusions."
+  },
+  "design": {
+    "score": 96,
+    "minimum": 88,
+    "p0": 0,
+    "p1": 0,
+    "note": "The Memory Transit Atlas is distinctive, product-specific, responsive, and evidence-led. Native controls remain familiar while the visual system avoids the generic glowing-AI-dashboard pattern."
+  },
+  "seo": {
+    "score": 99,
+    "passed": 16,
+    "failed": 0,
+    "warnings": 2,
+    "warningsNote": "The valid SoftwareApplication has no genuine review evidence, and localhost is intentionally absent from the production sitemap. No review or rating was invented.",
+    "linkGraph": {
+      "sitemapPages": 3,
+      "crawledPages": 3,
+      "errors": 0,
+      "redirects": 0,
+      "orphanCandidates": 0
+    }
+  },
+  "geo": {
+    "score": 100,
+    "productionTier": "S",
+    "productionScore": 100,
+    "note": "Production passes llms.txt, /api/ai, homepage Markdown, robots AI policy, sitemap, JSON-LD, and typed discovery-surface checks. The local Cloudflare Pages candidate preserves that contract."
+  },
+  "performance": {
+    "score": 94,
+    "successfulCoverageRuns": 4,
+    "weightedLcpMs": 1200,
+    "weightedCls": 0,
+    "weightedTbtMs": 0,
+    "profiles": {
+      "mobileSlowLcpMs": 3610,
+      "mobileMidLcpMs": 1660,
+      "mobileFastLcpMs": 756,
+      "desktopLcpMs": 367
+    },
+    "note": "The weighted coverage profile clears the good LCP gate with zero CLS and TBT. The slowest emulation is network-bound; Ahrefs and CrUX were intentionally disabled for local iteration."
+  },
+  "verification": {
+    "lighthouseMobile": {
+      "performance": 94,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "agenticBrowsing": 100
+    },
+    "build": "Astro production build passes",
+    "projectCheck": "pnpm run check and git diff --check pass",
+    "functionalJourney": "The exact-width browser journey opened the official export guide, exercised the analysis entry controls, verified 390px and 768px layouts have no overflow, and confirmed the product exposes an original-ZIP file input without an archive upload endpoint.",
+    "footer": {
+      "askAi": "pass",
+      "projectStripSource": "pass",
+      "note": "Both shared scripts are wired and Ask AI renders. The currently deployed SaaS Maker loader still removes the strip; the already-qualified shared candidate restores the required composition without a Memory Map deploy."
+    },
+    "responsiveScreenshots": [
+      "../../../artifacts/design/landing-audit-390.png",
+      "../../../artifacts/design/landing-audit-768.png",
+      "../../../artifacts/design/landing-audit-1440.png"
+    ]
+  },
+  "limitations": [
+    "No deployment, commit, push, DNS change, account action, or production configuration change was performed.",
+    "The browser-local analysis itself requires a real owner-provided ChatGPT export, so this audit verified the import boundary and existing automated analysis suite rather than ingesting personal archive data.",
+    "The composed project strip requires an authorized release of the already-qualified shared SaaS Maker loader change."
+  ]
+}
