@@ -8,10 +8,25 @@ tool traffic — commands, file contents, diffs, reasoning traces. `memory-pack`
 keeps the conversation and leaves the machinery behind. On a machine holding
 11.8 GB of transcripts, the resulting archive is under 8 MB.
 
+## Install
+
+```sh
+curl -fsSL https://chatgpt.significanthobbies.com/install.sh | sh
+```
+
+That picks the binary for your platform, checks it against the published
+`SHA256SUMS`, and installs it into `~/.local/bin`. Set `MEMORY_PACK_BIN_DIR` to
+put it somewhere else, or `MEMORY_PACK_VERSION` to pin a release. macOS and
+Linux, on both Intel and ARM.
+
+Prefer to do it yourself? Take a binary from
+[Releases](https://github.com/Significant-Hobbies/chatgpt-memory-insights/releases),
+or build from this directory with `cargo install --path .`.
+
 ## Use
 
 ```sh
-npx memory-pack
+memory-pack
 ```
 
 That reads `~/.claude` and `~/.codex` and writes `memory-pack-<date>.zip` in
@@ -20,15 +35,8 @@ the current directory. Upload that ZIP to Memory Map without unzipping it.
 Look before you write:
 
 ```sh
-npx memory-pack --dry-run --list
+memory-pack --dry-run --list
 ```
-
-The npm package is a launcher around a Rust binary, shipped as one optional
-dependency per platform, so nothing is downloaded or compiled at run time.
-
-Prefer a plain binary? Take one from
-[Releases](https://github.com/Significant-Hobbies/chatgpt-memory-insights/releases),
-or build from this directory with `cargo install --path .`.
 
 ## What it reads
 
@@ -126,6 +134,14 @@ conversations.json   Your conversations, in the same shape as a ChatGPT data
 memory-pack.json     What was packed, from which source, with which options.
 README.txt           The same explanation, for anyone who opens the ZIP.
 ```
+
+## npm
+
+`npm/` holds a launcher package that resolves one prebuilt binary per platform,
+the way esbuild does, so `npx memory-pack` needs no compile step. It is built
+and tested but not published; the release workflow publishes it once a
+repository variable `PUBLISH_TO_NPM` is set to `true` and an `NPM_TOKEN` secret
+exists. The installer above does not depend on it.
 
 ## Develop
 

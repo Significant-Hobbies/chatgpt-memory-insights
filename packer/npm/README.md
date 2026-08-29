@@ -7,6 +7,9 @@ ZIP that [Memory Map](https://chatgpt.significanthobbies.com) can read.
 npx memory-pack
 ```
 
+No package manager? `curl -fsSL https://chatgpt.significanthobbies.com/install.sh | sh`
+installs the same binary directly.
+
 That reads `~/.claude` and `~/.codex`, writes `memory-pack-<date>.zip`, and
 tells you what went in. Upload the ZIP without unzipping it.
 
