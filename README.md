@@ -60,6 +60,25 @@ hours. See OpenAI's
 [official export instructions](https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data)
 or use the [Privacy Portal](https://privacy.openai.com/).
 
+## Pack your Claude Code and Codex sessions
+
+`memory-pack` turns the transcripts Claude Code and Codex already keep in
+`~/.claude` and `~/.codex` into an archive Memory Map reads through the same
+path as a ChatGPT export. It packs your prompts and the assistant's replies and
+leaves tool calls, tool output, reasoning traces, and file contents behind, so
+gigabytes of transcripts become an archive of a few megabytes. It also reads
+the prompt history both CLIs keep for sessions they have already pruned, which
+reaches back much further than the transcripts do. It makes no network calls
+and masks credential-shaped tokens before writing.
+
+```bash
+npx memory-pack --dry-run --list   # see what would be packed
+npx memory-pack                    # write memory-pack-<date>.zip
+```
+
+Source, options, and the full account of what is kept and dropped are in
+[`packer/`](packer/README.md).
+
 ## Develop
 
 ```bash

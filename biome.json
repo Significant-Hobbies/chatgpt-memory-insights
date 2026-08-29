@@ -13,7 +13,8 @@
       "!node_modules",
       "!public",
       "!pnpm-lock.yaml",
-      "!artifacts"
+      "!artifacts",
+      "!packer"
     ]
   },
   "formatter": {

@@ -169,6 +169,60 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
             </div>
           </details>
 
+          <details class="export-guide">
+            <summary>
+              <span>Use Claude Code or Codex?</span>
+              <strong>How to pack your agent sessions</strong>
+            </summary>
+            <div class="export-guide-body">
+              <ol>
+                <li>
+                  See what it finds, without writing anything:<br />
+                  <code>npx memory-pack --dry-run --list</code>
+                </li>
+                <li>
+                  Write the archive into the current folder:<br />
+                  <code>npx memory-pack</code>
+                </li>
+                <li>
+                  Drop the <code>memory-pack-&lt;date&gt;.zip</code> it names here, without
+                  unzipping it.
+                </li>
+              </ol>
+              <div class="export-guide-notes">
+                <p>
+                  Your prompts and the assistant&rsquo;s replies are packed. Tool calls, tool
+                  output, reasoning traces, and file contents are left behind, which is why an
+                  archive stays small enough to analyse in a browser tab.
+                </p>
+                <p>
+                  Both CLIs prune old sessions, so memory-pack also reads the prompt history
+                  they keep outside their transcripts. Sessions they have already deleted are
+                  rebuilt from the prompts that survive.
+                </p>
+                <p>
+                  memory-pack runs entirely on your machine, makes no network calls, and masks
+                  credential-shaped tokens before it writes anything. It needs Node 18 or newer;
+                  everything else it reads is already on disk.
+                </p>
+                <p>
+                  Narrow it with <code>--since 2026-01-01</code>, or pack only sessions whose
+                  full transcript survives with <code>--no-history</code>.
+                </p>
+              </div>
+              <nav class="export-guide-links" aria-label="memory-pack resources">
+                <a href="https://www.npmjs.com/package/memory-pack" target="_blank" rel="noreferrer"
+                  >memory-pack on npm ↗</a
+                >
+                <a
+                  href="https://github.com/Significant-Hobbies/chatgpt-memory-insights/tree/main/packer"
+                  target="_blank"
+                  rel="noreferrer">How it works ↗</a
+                >
+              </nav>
+            </div>
+          </details>
+
           <fieldset class="analysis-setup">
             <legend>Choose the analysis lens</legend>
             <div class="model-profile-options">
@@ -208,7 +262,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               <input id="archive-input" type="file" accept=".zip,application/zip" />
               <span class="file-mark" aria-hidden="true">.ZIP</span>
               <strong>Choose your ChatGPT export</strong>
-              <span>or drop the original ZIP here</span>
+              <span>or drop a ChatGPT export or memory-pack ZIP here</span>
               <small>Conversation JSON is read. Attachments and chat.html are ignored.</small>
             </label>
 

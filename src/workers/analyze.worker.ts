@@ -89,7 +89,7 @@ async function analyze(file: File, settings: AnalysisSettings) {
 
     if (conversationEntries.length === 0) {
       throw new Error(
-        "No conversations JSON was found. Choose the original ChatGPT export ZIP containing conversations.json or conversations-000.json."
+        "No conversations JSON was found. Choose the original ChatGPT export ZIP containing conversations.json or conversations-000.json, or an archive built by memory-pack from your Claude Code and Codex sessions."
       );
     }
 

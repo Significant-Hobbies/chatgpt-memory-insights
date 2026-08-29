@@ -391,12 +391,25 @@ h2 {
   display: grid;
   gap: 0.75rem;
   margin: 0;
+  /* The stylesheet reset strips list markers; ordered steps need them back. */
   padding: 1.25rem 0 0 1.3rem;
+  list-style: decimal;
 }
 
 .export-guide li {
   padding-left: 0.35rem;
   line-height: 1.55;
+}
+
+.export-guide code {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--rule);
+  background: rgb(255 255 255 / 70%);
+  color: var(--ink);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.82em;
+  overflow-wrap: anywhere;
 }
 
 .export-guide-notes {
