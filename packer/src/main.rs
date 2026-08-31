@@ -4,6 +4,7 @@
 mod archive;
 mod claude;
 mod codex;
+mod efficiency;
 mod history;
 mod options;
 mod session;
@@ -85,6 +86,11 @@ struct Cli {
     /// history both CLIs keep for sessions they have since pruned.
     #[arg(long)]
     no_history: bool,
+
+    /// Leave out the token and tool accounting that explains why sessions were
+    /// expensive. The report's efficiency findings need it.
+    #[arg(long)]
+    no_usage: bool,
 }
 
 fn home_dir() -> Option<PathBuf> {
@@ -160,6 +166,7 @@ fn run(cli: Cli) -> Result<(), String> {
         max_message_chars: cli.max_message_chars,
         since: cli.since.as_deref().map(parse_since).transpose()?,
         include_history: !cli.no_history,
+        include_usage: !cli.no_usage,
     };
 
     let claude_dir = cli
@@ -307,6 +314,7 @@ mod tests {
                 at: 1_788_019_427.0,
                 model: None,
             }],
+            stats: crate::efficiency::SessionStats::default(),
         }];
         assert_eq!(
             default_output(&sessions),

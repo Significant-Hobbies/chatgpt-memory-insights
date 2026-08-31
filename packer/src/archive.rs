@@ -10,6 +10,7 @@ use serde::Serialize;
 use zip::write::SimpleFileOptions;
 use zip::{CompressionMethod, ZipWriter};
 
+use crate::efficiency::{self, SessionRecord};
 use crate::options::Options;
 use crate::session::{self, Role, Session, Source};
 use crate::time;
@@ -23,6 +24,9 @@ stored on one machine.
                        Memory Map exactly as it is; do not unzip it first.
   memory-pack.json     What was packed, from which source, and with which
                        options.
+  efficiency.json      Token and tool accounting per session: what each one
+                       cost, which calls repeated, which failed. This is what
+                       the report's efficiency findings are built from.
 
 Tool calls, tool output, reasoning traces, file contents, and attachments were
 never read into this archive. Credential-shaped tokens are masked unless the
@@ -42,6 +46,7 @@ struct SourceCount {
 
 #[derive(Serialize)]
 struct ManifestOptions {
+    include_usage: bool,
     include_assistant: bool,
     include_subagents: bool,
     include_history: bool,
@@ -144,6 +149,7 @@ fn build_manifest(sessions: &[Session], options: &Options) -> Manifest {
         tool_version: env!("CARGO_PKG_VERSION"),
         generated_at: now(),
         options: ManifestOptions {
+            include_usage: options.include_usage,
             include_assistant: options.include_assistant,
             include_subagents: options.include_subagents,
             include_history: options.include_history,
@@ -191,6 +197,29 @@ pub fn write(path: &Path, sessions: &[Session], options: &Options) -> io::Result
     zip.start_file("conversations.json", entry)?;
     serde_json::to_writer(&mut zip, &conversations)?;
 
+    let records: Vec<SessionRecord> = sessions
+        .iter()
+        .filter(|session| !session.stats.is_empty())
+        .map(|session| {
+            efficiency::to_record(
+                &session.id,
+                session.source.slug(),
+                session.started_at,
+                &session.stats,
+            )
+        })
+        .collect();
+    if !records.is_empty() {
+        zip.start_file("efficiency.json", entry)?;
+        serde_json::to_writer(
+            &mut zip,
+            &serde_json::json!({
+                "format": "memory-pack-efficiency/1",
+                "sessions": records,
+            }),
+        )?;
+    }
+
     zip.start_file("memory-pack.json", entry)?;
     serde_json::to_writer_pretty(&mut zip, &build_manifest(sessions, options))?;
 
@@ -236,6 +265,7 @@ mod tests {
                     model: None,
                 },
             ],
+            stats: crate::efficiency::SessionStats::default(),
         }
     }
 

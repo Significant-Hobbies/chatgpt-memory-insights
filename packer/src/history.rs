@@ -146,6 +146,9 @@ fn fold(
                     project: entry.project.clone(),
                     started_at: entry.at,
                     messages: Vec::new(),
+                    // A session rebuilt from prompt history has no transcript,
+                    // so there is nothing to account for.
+                    stats: crate::efficiency::SessionStats::default(),
                 });
                 added_sessions += 1;
                 index.insert(id, sessions.len() - 1);
@@ -228,6 +231,7 @@ mod tests {
                 at,
                 model: None,
             }],
+            stats: crate::efficiency::SessionStats::default(),
         }
     }
 

@@ -14,6 +14,8 @@ pub struct Options {
     pub since: Option<f64>,
     /// Merge the prompt histories both CLIs keep outside their transcripts.
     pub include_history: bool,
+    /// Collect token and tool accounting so the report can explain cost.
+    pub include_usage: bool,
 }
 
 impl Default for Options {
@@ -25,6 +27,7 @@ impl Default for Options {
             max_message_chars: None,
             since: None,
             include_history: true,
+            include_usage: true,
         }
     }
 }

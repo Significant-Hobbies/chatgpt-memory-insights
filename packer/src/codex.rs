@@ -13,6 +13,7 @@ use std::path::Path;
 use serde_json::Value;
 use walkdir::WalkDir;
 
+use crate::efficiency::{SessionStats, Tokens};
 use crate::options::Options;
 use crate::session::{Message, Role, Session, Source};
 use crate::text;
@@ -113,6 +114,7 @@ struct Draft {
     project: Option<String>,
     model: Option<String>,
     is_subagent: bool,
+    stats: SessionStats,
     messages: Vec<Message>,
     /// Prompts found only inside a compaction record. Compaction rewrites the
     /// turn history, and when a thread resumes from an earlier rollout the
@@ -131,6 +133,85 @@ fn read_meta(payload: &Value, draft: &mut Draft) {
     draft.session_id = string_field(payload, "session_id").map(str::to_string);
     draft.project = string_field(payload, "cwd").map(str::to_string);
     draft.is_subagent = string_field(payload, "thread_source") == Some("subagent");
+}
+
+/// Codex reports usage as a running total per session, so the last event wins.
+fn record_token_count(payload: &Value, stats: &mut SessionStats) {
+    if string_field(payload, "type") != Some("token_count") {
+        return;
+    }
+    let Some(usage) = payload
+        .get("info")
+        .and_then(|info| info.get("total_token_usage"))
+    else {
+        return;
+    };
+    // One token_count event is one API turn. Assistant messages are far fewer
+    // than turns, because a turn spent on tool calls produces no message, so
+    // counting messages here would inflate the per-turn cost of every session.
+    stats.count_turn();
+    let read = |key: &str| usage.get(key).and_then(Value::as_u64).unwrap_or(0);
+    stats.set_cumulative_tokens(Tokens {
+        input: read("input_tokens"),
+        output: read("output_tokens"),
+        cache_read: read("cached_input_tokens"),
+        cache_write: read("cache_write_input_tokens"),
+        reasoning: read("reasoning_output_tokens"),
+    });
+}
+
+/// Codex wraps shell work in a script, so the command is nested inside the
+/// call's input rather than being the input.
+fn shell_commands(input: &str) -> Vec<String> {
+    const KEY: &str = "\"cmd\":\"";
+    let mut found = Vec::new();
+    let mut rest = input;
+    while let Some(start) = rest.find(KEY) {
+        rest = &rest[start + KEY.len()..];
+        let mut command = String::new();
+        let mut characters = rest.chars();
+        while let Some(character) = characters.next() {
+            match character {
+                '"' => break,
+                '\\' => {
+                    // A escaped character inside the JSON string.
+                    if let Some(next) = characters.next() {
+                        command.push(if next == 'n' { ' ' } else { next });
+                    }
+                }
+                _ => command.push(character),
+            }
+        }
+        if !command.trim().is_empty() {
+            found.push(command);
+        }
+    }
+    found
+}
+
+fn record_tool_call(payload: &Value, stats: &mut SessionStats) {
+    match string_field(payload, "type") {
+        Some("custom_tool_call" | "function_call") => {}
+        Some("custom_tool_call_output" | "function_call_output") => {
+            let bytes = payload
+                .get("output")
+                .map(|o| o.to_string().len() as u64)
+                .unwrap_or(0);
+            stats.record_result(bytes, false);
+            return;
+        }
+        _ => return,
+    }
+    let name = string_field(payload, "name").unwrap_or("unknown");
+    let input = payload
+        .get("input")
+        .or_else(|| payload.get("arguments"))
+        .map(Value::to_string)
+        .unwrap_or_default();
+    stats.record_tool(name, &input);
+    for command in shell_commands(&input) {
+        stats.record_command(&command);
+    }
 }
 
 fn read_lines<R: BufRead>(reader: R, options: &Options) -> Draft {
@@ -188,7 +269,17 @@ fn read_lines<R: BufRead>(reader: R, options: &Options) -> Draft {
                 }
                 continue;
             }
-            "response_item" => {}
+            "event_msg" => {
+                if options.include_usage {
+                    record_token_count(payload, &mut draft.stats);
+                }
+                continue;
+            }
+            "response_item" => {
+                if options.include_usage {
+                    record_tool_call(payload, &mut draft.stats);
+                }
+            }
             _ => continue,
         }
 
@@ -344,6 +435,7 @@ pub fn collect(codex_dir: &Path, options: &Options) -> Vec<Session> {
             project: draft.project.clone(),
             started_at: draft.messages[0].at,
             messages: draft.messages,
+            stats: draft.stats,
         });
     }
     collected

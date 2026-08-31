@@ -12,6 +12,7 @@ use std::path::Path;
 use serde_json::Value;
 use walkdir::WalkDir;
 
+use crate::efficiency::{SessionStats, Tokens};
 use crate::options::Options;
 use crate::session::{Message, Role, Session, Source};
 use crate::text;
@@ -137,6 +138,7 @@ struct Draft {
     title: Option<String>,
     project: Option<String>,
     messages: Vec<Message>,
+    stats: SessionStats,
     /// Prompts typed while the agent was busy. The CLI records these as
     /// attachments, and a queued prompt the session never delivered appears
     /// nowhere else, so they are collected here and merged once the whole
@@ -159,6 +161,74 @@ fn queued_prompt(entry: &Value) -> Option<(String, Option<String>)> {
         prompt,
         string_field(attachment, "timestamp").map(str::to_string),
     ))
+}
+
+/// Collects token and tool accounting from a row. This reads the parts of the
+/// transcript the archive never carries: usage blocks, tool arguments, and
+/// tool results.
+fn record_usage(entry: &Value, kind: &str, stats: &mut SessionStats) {
+    if kind == "assistant" {
+        let usage = entry
+            .get("message")
+            .and_then(|message| message.get("usage"));
+        let read = |key: &str| -> u64 {
+            usage
+                .and_then(|u| u.get(key))
+                .and_then(Value::as_u64)
+                .unwrap_or(0)
+        };
+        stats.record_turn(Tokens {
+            input: read("input_tokens"),
+            output: read("output_tokens"),
+            cache_read: read("cache_read_input_tokens"),
+            cache_write: read("cache_creation_input_tokens"),
+            reasoning: 0,
+        });
+        if let Some(blocks) = entry
+            .get("message")
+            .and_then(|message| message.get("content"))
+            .and_then(Value::as_array)
+        {
+            for block in blocks {
+                if block.get("type").and_then(Value::as_str) != Some("tool_use") {
+                    continue;
+                }
+                let name = string_field(block, "name").unwrap_or("unknown");
+                let arguments = block.get("input").map(Value::to_string).unwrap_or_default();
+                stats.record_tool(name, &arguments);
+                if name == "Bash" {
+                    if let Some(command) = block
+                        .get("input")
+                        .and_then(|i| i.get("command"))
+                        .and_then(Value::as_str)
+                    {
+                        stats.record_command(command);
+                    }
+                }
+            }
+        }
+        return;
+    }
+    if kind != "user" {
+        return;
+    }
+    let Some(blocks) = entry
+        .get("message")
+        .and_then(|message| message.get("content"))
+        .and_then(Value::as_array)
+    else {
+        return;
+    };
+    for block in blocks {
+        if block.get("type").and_then(Value::as_str) != Some("tool_result") {
+            continue;
+        }
+        let bytes = block
+            .get("content")
+            .map(|c| c.to_string().len() as u64)
+            .unwrap_or(0);
+        stats.record_result(bytes, is_true(block, "is_error"));
+    }
 }
 
 /// Parses one transcript into a draft session. Exposed for tests.
@@ -208,6 +278,11 @@ fn read_lines<R: BufRead>(reader: R, options: &Options) -> (Option<String>, Draf
         }
         if !options.include_subagents && is_true(&entry, "isSidechain") {
             continue;
+        }
+        // Accounted for after the subagent filter, so a session's turns and
+        // tokens describe its own thread rather than its children's.
+        if options.include_usage {
+            record_usage(&entry, kind, &mut draft.stats);
         }
 
         let (role, raw) = match kind {
@@ -321,10 +396,12 @@ pub fn collect(claude_dir: &Path, options: &Options) -> Vec<Session> {
             project: draft.project.clone(),
             started_at: draft.messages[0].at,
             messages: Vec::new(),
+            stats: SessionStats::default(),
         });
         if session.title.is_none() {
             session.title = draft.title.clone();
         }
+        session.stats.merge(&draft.stats);
         session.messages.extend(draft.messages);
     }
 

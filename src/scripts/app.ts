@@ -34,6 +34,7 @@ import type {
   AnalysisProgressTiming,
   AnalysisRuntime,
   AnalysisSettings,
+  EfficiencyReport,
   EmotionBucket,
   FactGroup,
   FullReport,
@@ -884,6 +885,7 @@ function renderReport(report: FullReport) {
     activeRhythmRouteId = "all";
   }
   renderTone(report);
+  renderEfficiency(report);
   renderReflections(report);
   renderVisualAtlas(report, {
     clearsConfidence,
@@ -1820,6 +1822,108 @@ function renderConfidenceImpact(report: FullReport) {
   );
   $("#confidence-impact").textContent =
     `${activeConfidence}% shows ${repeats} semantic repeat groups, ${changes} memory changes, and ${boundaries} strand boundaries. Deterministic totals do not change.`;
+}
+
+function formatTokens(value: number): string {
+  if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`;
+  if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
+  if (value >= 1000) return `${Math.round(value / 1000)}k`;
+  return formatNumber(value);
+}
+
+function efficiencyStats(totals: EfficiencyReport["totals"]): Array<[string, string]> {
+  return [
+    ["Context re-read", formatTokens(totals.contextRead)],
+    ["Model output", formatTokens(totals.output)],
+    ["Turns", formatNumber(totals.turns)],
+    ["Tool calls", formatNumber(totals.toolCalls)],
+    ["Repeated calls", formatNumber(totals.repeatedCalls)],
+    ["Failed calls", formatNumber(totals.failedCalls)],
+  ];
+}
+
+function findingItem(found: EfficiencyReport["findings"][number]): HTMLLIElement {
+  const item = document.createElement("li");
+  item.className = `efficiency-finding severity-${found.severity}`;
+  const head = document.createElement("div");
+  head.className = "finding-head";
+  head.append(text("span", found.severity, "finding-severity"), text("h4", found.issue));
+  item.append(
+    head,
+    text("p", found.cause, "finding-cause"),
+    text("p", found.action, "finding-action"),
+    text("small", found.evidence, "finding-evidence")
+  );
+  return item;
+}
+
+function scalingBar(bucket: EfficiencyReport["scaling"][number], peak: number): HTMLDivElement {
+  const row = document.createElement("div");
+  row.className = "efficiency-bar";
+  const share = peak === 0 ? 0 : Math.max(2, Math.round((bucket.tokensPerTurn / peak) * 100));
+  const fill = document.createElement("i");
+  fill.style.width = `${share}%`;
+  const track = document.createElement("span");
+  track.className = "efficiency-track";
+  track.append(fill);
+  row.append(
+    text("strong", bucket.label),
+    track,
+    text("span", `${formatTokens(bucket.tokensPerTurn)} / turn`, "efficiency-value"),
+    text("small", `${formatNumber(bucket.sessions)} sessions`)
+  );
+  return row;
+}
+
+function renderEfficiency(report: FullReport) {
+  const efficiency = report.efficiency;
+  const section = $("#efficiency");
+  const route = $("#efficiency-route");
+  if (!efficiency) {
+    section.hidden = true;
+    route.hidden = true;
+    return;
+  }
+  section.hidden = false;
+  route.hidden = false;
+
+  const { totals } = efficiency;
+  $("#efficiency-method").textContent =
+    `Measured from the token and tool records your archive carries, across ${formatNumber(totals.sessions)} sessions. Context re-read is the volume of earlier turns each new turn pays to read again.`;
+
+  $("#efficiency-stats").replaceChildren(
+    ...efficiencyStats(totals).map(([label, value]) => {
+      const wrapper = document.createElement("div");
+      wrapper.append(text("dt", label), text("dd", value));
+      return wrapper;
+    })
+  );
+
+  const findings = $("#efficiency-findings");
+  if (efficiency.findings.length === 0) {
+    findings.replaceChildren(
+      text("p", "Nothing in this archive crossed a reporting threshold.", "empty-note")
+    );
+  } else {
+    findings.replaceChildren(...efficiency.findings.map(findingItem));
+  }
+
+  const peak = Math.max(...efficiency.scaling.map((bucket) => bucket.tokensPerTurn), 0);
+  $("#efficiency-scaling").replaceChildren(
+    ...efficiency.scaling.map((bucket) => scalingBar(bucket, peak))
+  );
+
+  $("#efficiency-costliest").replaceChildren(
+    ...efficiency.costliest.map((session) => {
+      const item = document.createElement("li");
+      item.append(
+        text("strong", `${formatNumber(session.turns)} turns`),
+        text("span", `${formatTokens(session.contextRead)} re-read`, "efficiency-value"),
+        text("small", session.source)
+      );
+      return item;
+    })
+  );
 }
 
 function renderTone(report: FullReport) {

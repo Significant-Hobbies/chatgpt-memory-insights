@@ -5,6 +5,8 @@ use std::collections::BTreeMap;
 
 use serde::Serialize;
 
+use crate::efficiency::SessionStats;
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Role {
     User,
@@ -66,6 +68,8 @@ pub struct Session {
     pub project: Option<String>,
     pub started_at: f64,
     pub messages: Vec<Message>,
+    /// Token and tool accounting, kept out of the conversation itself.
+    pub stats: SessionStats,
 }
 
 impl Session {
@@ -260,6 +264,7 @@ mod tests {
             project: Some("fleet".into()),
             started_at: 100.0,
             messages,
+            stats: crate::efficiency::SessionStats::default(),
         }
     }
 

@@ -4547,3 +4547,168 @@ body.has-evidence::before {
     margin-top: 1rem;
   }
 }
+
+/* Efficiency — measured cost, and what to do about it. */
+.efficiency-findings-heading {
+  margin-top: 2.5rem;
+}
+
+.efficiency-findings {
+  display: grid;
+  gap: 0;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  border: 1px solid var(--ink);
+  list-style: none;
+}
+
+.efficiency-finding {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.35rem 1.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.efficiency-finding:last-child {
+  border-bottom: 0;
+}
+
+.finding-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: baseline;
+}
+
+.finding-severity {
+  color: var(--cobalt);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.severity-high .finding-severity {
+  color: var(--signal);
+}
+
+.finding-head h4 {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+
+.finding-cause {
+  max-width: 68ch;
+  color: var(--ink-muted);
+}
+
+.finding-action {
+  max-width: 68ch;
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--cobalt);
+  font-weight: 500;
+}
+
+.finding-evidence {
+  color: var(--ink-muted);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.72rem;
+}
+
+.efficiency-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2.5rem;
+}
+
+.efficiency-panel {
+  padding: 1.5rem;
+  border: 1px solid var(--ink);
+}
+
+.efficiency-panel h3 {
+  margin: 0.35rem 0 0.5rem;
+}
+
+.efficiency-panel .panel-note {
+  max-width: 46ch;
+  color: var(--ink-muted);
+  font-size: 0.86rem;
+}
+
+.efficiency-bars {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.35rem;
+}
+
+.efficiency-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.3rem 1rem;
+}
+
+.efficiency-bar strong {
+  font-size: 0.9rem;
+}
+
+.efficiency-track {
+  grid-column: 1 / -1;
+  display: block;
+  height: 0.55rem;
+  background: rgb(16 27 36 / 8%);
+}
+
+.efficiency-track > i {
+  display: block;
+  height: 100%;
+  background: var(--cobalt);
+}
+
+.efficiency-value {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+.efficiency-bar small,
+.efficiency-costliest small {
+  grid-column: 1 / -1;
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+}
+
+.efficiency-costliest {
+  display: grid;
+  gap: 0.9rem;
+  margin: 1.35rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.efficiency-costliest li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.2rem 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.efficiency-costliest li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+@media (max-width: 720px) {
+  .efficiency-finding {
+    padding: 1.15rem 1rem;
+  }
+
+  .finding-head {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.3rem;
+  }
+}
