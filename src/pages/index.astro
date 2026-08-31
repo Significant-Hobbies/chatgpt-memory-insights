@@ -99,6 +99,9 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
           <a href="#reflection-questions"><i class="route-dot route-violet"></i>Questions for you</a>
           <a href="#query-tone"><i class="route-dot route-amber"></i>Query tone</a>
           <a href="#rhythms"><i class="route-dot route-violet"></i>Rhythms</a>
+          <a id="efficiency-route" href="#efficiency" hidden
+            ><i class="route-dot route-teal"></i>Efficiency</a
+          >
         </nav>
 
       <div class="rail-footer">
@@ -1001,6 +1004,50 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               <p id="emotion-method"></p>
             </div>
             <div id="emotion-bars" class="emotion-bars"></div>
+          </section>
+
+          <section
+            id="efficiency"
+            class="platform-section efficiency-section"
+            aria-labelledby="efficiency-heading"
+            hidden
+          >
+            <div class="section-heading">
+              <div>
+                <p class="map-key">What your sessions cost</p>
+                <h2 id="efficiency-heading">Say less, do more</h2>
+              </div>
+              <p id="efficiency-method" class="method-note"></p>
+            </div>
+
+            <dl id="efficiency-stats" class="baseline-stats"></dl>
+
+            <div class="efficiency-findings-heading">
+              <p class="map-key">Issues, and what to do about them</p>
+              <h3>Findings</h3>
+            </div>
+            <ol id="efficiency-findings" class="efficiency-findings"></ol>
+
+            <div class="efficiency-grid">
+              <div class="efficiency-panel">
+                <p class="map-key">Cost per turn by session length</p>
+                <h3>Why long sessions compound</h3>
+                <p class="panel-note">
+                  Every turn re-reads the session so far, so the same turn costs more the later it
+                  happens.
+                </p>
+                <div id="efficiency-scaling" class="efficiency-bars"></div>
+              </div>
+              <div class="efficiency-panel">
+                <p class="map-key">Where the spend concentrated</p>
+                <h3>Your costliest sessions</h3>
+                <p class="panel-note">
+                  Ranked by context re-read. A very long thread is usually several tasks that never
+                  got their own session.
+                </p>
+                <ul id="efficiency-costliest" class="efficiency-costliest"></ul>
+              </div>
+            </div>
           </section>
 
           <section id="rhythms" class="platform-section" aria-labelledby="rhythms-heading">

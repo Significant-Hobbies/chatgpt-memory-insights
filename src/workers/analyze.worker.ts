@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 
 import { BlobReader, TextWriter, ZipReader, type FileEntry } from "@zip.js/zip.js";
+import { buildEfficiencyReport, parseEfficiency } from "../lib/efficiency";
 import { normalizeConversationChunk } from "../lib/export";
 import { resolveAnalysisSettings } from "../lib/analysis";
 import { buildDeterministicReport, classifyQuestionLensIds } from "../lib/insights";
@@ -93,6 +94,22 @@ async function analyze(file: File, settings: AnalysisSettings) {
       );
     }
 
+    // Token and tool accounting, when the packer included it. Absent for a
+    // ChatGPT export, which carries no such record.
+    const efficiencyEntry = entries.find(
+      (entry): entry is FileEntry => !entry.directory && entry.filename === "efficiency.json"
+    );
+    let efficiency: FullReport["efficiency"] = null;
+    if (efficiencyEntry) {
+      try {
+        const text = await efficiencyEntry.getData(new TextWriter());
+        efficiency = buildEfficiencyReport(parseEfficiency(JSON.parse(text)));
+      } catch {
+        // A damaged record must not cost the visitor their whole report.
+        efficiency = null;
+      }
+    }
+
     const conversations: ConversationRecord[] = [];
     for (let index = 0; index < conversationEntries.length; index += 1) {
       if (activeGeneration !== generation) return;
@@ -129,6 +146,7 @@ async function analyze(file: File, settings: AnalysisSettings) {
       deterministic: deterministic.report,
       semantic: null,
       reflections: [],
+      efficiency,
     };
     analysisTimer.markInitialInsights();
     currentReport.performance = analysisTimer.summary("running");

@@ -369,6 +369,8 @@ export type FullReport = {
   semantic: SemanticReport | null;
   reflections: ReflectionQuestion[];
   performance?: AnalysisPerformance;
+  // Present only when the archive carries token and tool accounting.
+  efficiency?: EfficiencyReport | null;
 };
 
 export type SearchEntry = {
@@ -427,3 +429,66 @@ export type WorkerResponse =
   | { type: "restored"; report: FullReport }
   | { type: "search-results"; query: string; results: SearchResult[] }
   | { type: "error"; message: string; recoverable: boolean };
+
+type EfficiencyTokens = {
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheWrite: number;
+  reasoning: number;
+};
+
+export type EfficiencySession = {
+  id: string;
+  source: string;
+  startedAt: number;
+  turns: number;
+  tokens: EfficiencyTokens;
+  toolCalls: number;
+  repeatedCalls: number;
+  failedCalls: number;
+  toolResultBytes: number;
+  wholeFileReads: number;
+  topTools: Array<[string, number]>;
+  topCommands: Array<[string, number]>;
+};
+
+export type EfficiencyFinding = {
+  id: string;
+  severity: "high" | "medium" | "low";
+  // The problem, stated with the number that proves it.
+  issue: string;
+  // Why it costs what it costs.
+  cause: string;
+  // What to do differently.
+  action: string;
+  // The measurement the finding rests on.
+  evidence: string;
+};
+
+export type EfficiencyBucket = {
+  label: string;
+  sessions: number;
+  tokensPerTurn: number;
+};
+
+export type EfficiencyReport = {
+  totals: {
+    sessions: number;
+    turns: number;
+    contextRead: number;
+    output: number;
+    toolCalls: number;
+    repeatedCalls: number;
+    failedCalls: number;
+    wholeFileReads: number;
+    toolResultBytes: number;
+  };
+  // Share of all context reads held by the costliest sessions.
+  concentration: Array<{ label: string; sessions: number; share: number }>;
+  // Cost per turn by session length, which is where the compounding shows.
+  scaling: EfficiencyBucket[];
+  costliest: Array<{ id: string; source: string; turns: number; contextRead: number }>;
+  commands: Array<[string, number]>;
+  findings: EfficiencyFinding[];
+};

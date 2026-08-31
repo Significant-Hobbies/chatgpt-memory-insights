@@ -132,6 +132,7 @@ your own notes. `--no-redact` turns masking off and the run says so when you do.
 | `--since <YYYY-MM-DD>` | Only sessions last active on or after this date |
 | `--list` | Print one line per session |
 | `--no-history` | Pack only sessions with a surviving transcript |
+| `--no-usage` | Leave out the token and tool accounting |
 | `--dry-run` | Report what would be packed, write nothing |
 | `--no-assistant` | Pack only your prompts |
 | `--no-redact` | Leave credential-shaped tokens unmasked |
@@ -144,9 +145,29 @@ your own notes. `--no-redact` turns masking off and the run says so when you do.
 ```
 conversations.json   Your conversations, in the same shape as a ChatGPT data
                      export, so Memory Map's existing reader handles them.
+efficiency.json      Token and tool accounting per session.
 memory-pack.json     What was packed, from which source, with which options.
 README.txt           The same explanation, for anyone who opens the ZIP.
 ```
+
+## What your sessions cost
+
+Both CLIs record how many tokens every turn consumed, and both record every
+tool call. None of that is conversation, so it stays out of
+`conversations.json` — but it is what explains why a session was expensive, so
+it is collected separately into a few hundred kilobytes of `efficiency.json`.
+
+Per session: turns, token totals, tool and shell-command frequencies, and the
+three kinds of waste a transcript can prove rather than guess at — calls that
+repeated an earlier call exactly, calls that failed, and reads that pulled in a
+whole file. Polling tools are excluded from the repeat count, since calling
+them again with the same arguments is the point of them.
+
+The number that matters is context re-read: every turn re-reads the session so
+far, so a turn late in a long session costs several times what the same turn
+costs early on. On the corpus this was built against, sessions of 250 turns and
+up cost 226k tokens per turn against 70k for sessions under 25 turns. Memory
+Map turns that into findings with actions attached. `--no-usage` skips it.
 
 ## npm
 
