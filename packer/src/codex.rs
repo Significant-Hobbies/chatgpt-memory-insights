@@ -26,6 +26,10 @@ const INJECTED_TAGS: &[&str] = &[
     "user_instructions",
     "INSTRUCTIONS",
     "app-context",
+    "codex_internal_context",
+    "in-app-browser-context",
+    "chrome_tabs",
+    "ambient_state",
 ];
 
 /// The instruction preamble Codex prepends to the first user turn.
@@ -400,6 +404,19 @@ mod tests {
         ]
         .join("\n");
         assert!(parse(&transcript).messages.is_empty());
+    }
+
+    #[test]
+    fn drops_the_harness_context_codex_injects_mid_thread() {
+        let transcript = [
+            message_line("user", "<codex_internal_context source=\"goal\">\nContinue toward the goal.\n</codex_internal_context>", "m1"),
+            message_line("user", "<in-app-browser-context>\ntabs\n</in-app-browser-context>", "m2"),
+            message_line("user", "a real ask", "m3"),
+        ]
+        .join("\n");
+        let draft = parse(&transcript);
+        assert_eq!(draft.messages.len(), 1);
+        assert_eq!(draft.messages[0].text, "a real ask");
     }
 
     #[test]

@@ -17,7 +17,13 @@ use crate::session::{Message, Role, Session, Source};
 use crate::text;
 
 /// `promptSource` values that mean a person typed or queued the text.
-const HUMAN_PROMPT_SOURCES: &[&str] = &["typed", "queued", "sdk"];
+///
+/// `sdk` is deliberately absent. It marks a programmatic invocation, which
+/// carries a generated prompt rather than anything a person wrote — on the
+/// corpus this was built against, 128 such rows were one injected code-review
+/// system prompt accounting for half of all prompt text. No `sdk` row is ever
+/// marked `origin.kind: "human"`, which is the CLI's own signal for authorship.
+const HUMAN_PROMPT_SOURCES: &[&str] = &["typed", "queued"];
 
 /// Wrappers the CLI injects into the user channel that no human wrote.
 const INJECTED_TAGS: &[&str] = &[
@@ -479,6 +485,15 @@ mod tests {
                 "\n",
                 r#"{{"type":"attachment","attachment":{{"type":"queued_command","prompt":"<task-notification>done</task-notification>","origin":{{"kind":"human"}},"timestamp":"2026-08-29T16:03:48.000Z"}},{stamp}}}"#,
             ),
+            stamp = STAMP
+        );
+        assert!(parse(&transcript).messages.is_empty());
+    }
+
+    #[test]
+    fn drops_a_programmatic_sdk_invocation() {
+        let transcript = format!(
+            r#"{{"type":"user","promptSource":"sdk","message":{{"content":"You are a senior code reviewer. Find real issues."}},{stamp}}}"#,
             stamp = STAMP
         );
         assert!(parse(&transcript).messages.is_empty());
