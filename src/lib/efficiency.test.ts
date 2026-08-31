@@ -71,16 +71,39 @@ describe("buildEfficiencyReport", () => {
     expect(scaling?.action).toMatch(/End a session/);
   });
 
+  it("says nothing about concentration on a small archive", () => {
+    const few = parseEfficiency({
+      sessions: [raw("a", 12, 400_000), raw("b", 9, 300_000), raw("c", 15, 500_000)],
+    });
+    const report = buildEfficiencyReport(few);
+    expect(report?.findings.some((f) => f.id === "concentration")).toBe(false);
+    // Totals and the curve are still worth showing.
+    expect(report?.totals.sessions).toBe(3);
+    expect(report?.costliest.length).toBe(3);
+  });
+
+  it('counts sessions in prose without saying "1 sessions"', () => {
+    const sessions = parseEfficiency({
+      sessions: [
+        raw("whale", 900, 9_000_000_000),
+        ...Array.from({ length: 24 }, (_, index) => raw(`s${index}`, 10, 1000)),
+      ],
+    });
+    const found = buildEfficiencyReport(sessions)?.findings.find((f) => f.id === "concentration");
+    expect(found?.issue).toContain("2 sessions");
+    expect(found?.issue).not.toMatch(/\b1 sessions\b/);
+  });
+
   it("reports concentration only when it is real", () => {
     const even = parseEfficiency({
-      sessions: Array.from({ length: 20 }, (_, index) => raw(`s${index}`, 10, 1000)),
+      sessions: Array.from({ length: 25 }, (_, index) => raw(`s${index}`, 10, 1000)),
     });
     expect(buildEfficiencyReport(even)?.findings.some((f) => f.id === "concentration")).toBe(false);
 
     const skewed = parseEfficiency({
       sessions: [
         raw("whale", 900, 9_000_000_000),
-        ...Array.from({ length: 19 }, (_, index) => raw(`s${index}`, 10, 1000)),
+        ...Array.from({ length: 24 }, (_, index) => raw(`s${index}`, 10, 1000)),
       ],
     });
     const report = buildEfficiencyReport(skewed);

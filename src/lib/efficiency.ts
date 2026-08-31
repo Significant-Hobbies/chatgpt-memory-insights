@@ -14,6 +14,10 @@ const BANDS: Array<{ label: string; upTo: number }> = [
   { label: "250 turns and up", upTo: Number.POSITIVE_INFINITY },
 ];
 
+function plural(count: number, singular: string): string {
+  return `${count.toLocaleString()} ${singular}${count === 1 ? "" : "s"}`;
+}
+
 // Compact units, so a finding never reads "5766M".
 function compact(value: number, unit: "tokens" | "bytes"): string {
   const steps: Array<[number, string]> =
@@ -170,22 +174,28 @@ function scalingFinding(scaling: EfficiencyBucket[]): EfficiencyFinding | null {
   );
 }
 
+// Below this, a "top 10%" share describes one or two sessions and says
+// nothing: of course a handful of sessions holds most of a handful's cost.
+const CONCENTRATION_MINIMUM_SESSIONS = 20;
+
 function concentrationFinding(
   concentration: EfficiencyReport["concentration"],
-  costliest: EfficiencyReport["costliest"]
+  costliest: EfficiencyReport["costliest"],
+  measured: number
 ): EfficiencyFinding | null {
+  if (measured < CONCENTRATION_MINIMUM_SESSIONS) return null;
   const band = concentration.find((entry) => entry.label === "Top 10%");
   if (!band || band.share < 0.4) return null;
   const worst = costliest[0];
   return finding(
     "concentration",
     band.share > 0.6 ? "high" : "medium",
-    `${Math.round(band.share * 100)}% of everything you spent went to ${band.sessions} sessions`,
+    `${Math.round(band.share * 100)}% of everything you spent went to ${plural(band.sessions, "session")}`,
     "A few very long threads dominate the bill. They are usually several tasks that never got separate sessions.",
     "Look at those sessions and find the point where the subject changed. That point is where a new session belonged.",
     worst
       ? `Costliest: ${worst.turns.toLocaleString()} turns in one session, ${compact(worst.contextRead, "tokens")} tokens of context re-read.`
-      : `${band.sessions} sessions account for the majority of context reads.`
+      : `${plural(band.sessions, "session")} account for the majority of context reads.`
   );
 }
 
@@ -255,7 +265,7 @@ export function buildEfficiencyReport(sessions: EfficiencySession[]): Efficiency
 
   const findings = [
     scalingFinding(scaling),
-    concentrationFinding(concentration, costliest),
+    concentrationFinding(concentration, costliest, measured.length),
     repeatFinding(totals),
     failureFinding(totals),
     readFinding(totals),
