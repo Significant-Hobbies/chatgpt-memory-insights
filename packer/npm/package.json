@@ -1,6 +1,6 @@
 {
   "name": "memory-pack",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pack local Claude Code and Codex sessions into a Memory Map archive",
   "bin": {
     "memory-pack": "bin/memory-pack.js"
@@ -27,10 +27,10 @@
     "node": ">=18"
   },
   "optionalDependencies": {
-    "@memory-pack/darwin-arm64": "0.1.0",
-    "@memory-pack/darwin-x64": "0.1.0",
-    "@memory-pack/linux-arm64": "0.1.0",
-    "@memory-pack/linux-x64": "0.1.0",
-    "@memory-pack/win32-x64": "0.1.0"
+    "@memory-pack/darwin-arm64": "0.1.1",
+    "@memory-pack/darwin-x64": "0.1.1",
+    "@memory-pack/linux-arm64": "0.1.1",
+    "@memory-pack/linux-x64": "0.1.1",
+    "@memory-pack/win32-x64": "0.1.1"
   }
 }
