@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import "../styles/about.css";
+import PublicClarity from "../components/public-clarity.astro";
 
 const title = "What Memory Map finds in your ChatGPT history";
 const description =
@@ -349,6 +350,7 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
     <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
     <title>{title}</title>
     <script is:inline async src="/scripts/posthog.js"></script>
+    <PublicClarity />
   </head>
   <body class="about-page">
     <a class="skip-link" href="#main">Skip to main content</a>
@@ -579,6 +581,14 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
           <div>
             <span class="boundary-no">Does not exist</span>
             <p>Archive upload endpoint, Memory Map account, cross-device sync, or server-side analysis.</p>
+          </div>
+          <div>
+            <span class="boundary-out">Public page analytics</span>
+            <p>
+              PostHog and Microsoft Clarity measure the public `/about` and `/changelog` pages.
+              The private analysis route does not load Clarity, so archive text, reports, and
+              search activity are excluded from session replay.
+            </p>
           </div>
         </div>
       </section>

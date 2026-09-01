@@ -1,6 +1,6 @@
 # chatgpt-memory-insights — PROJECT STATUS
 
-Last updated: 2026-08-26
+Last updated: 2026-09-01
 
 ## Why / What
 
@@ -38,6 +38,10 @@ sync, and verified medical, emotional, or personality claims.
 
 ## Timeline
 
+- 2026-09-01 — wired the product's dedicated Microsoft Clarity project only on
+  the public `/about` and `/changelog` pages, disclosed that boundary, and kept
+  the private ZIP analysis, derived report, and search route out of session
+  replay; production remains unchanged pending deploy
 - 2026-08-26 — completed the historical-change surface with a readable
   full-width comparison, explicit early and recent windows, visible before-to-
   after values, responsive horizontal containment, and reconciled atlas copy

@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import "../styles/about.css";
+import PublicClarity from "../components/public-clarity.astro";
 
 const repository = "https://github.com/Significant-Hobbies/chatgpt-memory-insights";
 const title = "Changelog · Memory Map";
@@ -78,6 +79,7 @@ const releases = [
     <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
     <title>{title}</title>
     <script is:inline async src="/scripts/posthog.js"></script>
+    <PublicClarity />
   </head>
   <body class="about-page changelog-page">
     <a class="skip-link" href="#main">Skip to main content</a>
@@ -139,7 +141,10 @@ const releases = [
 
     <footer class="about-footer">
       <a class="brand" href="/">Memory Map</a>
-      <p>Your history, made navigable on your device.</p>
+      <p>
+        Your history stays on your device. Microsoft Clarity measures this public changelog, not
+        the private analysis route.
+      </p>
       <a href="/">Analyze my ChatGPT ZIP →</a>
     </footer>
     <script
