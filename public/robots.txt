@@ -29,5 +29,6 @@ Allow: /llms-full.txt
 Allow: /index.md
 Allow: /api/ai
 Allow: /agents.md
+Allow: /pricing.md
 Allow: /.well-known/ai-catalog.json
 Allow: /.well-known/agent-skills/index.json
