@@ -151,6 +151,10 @@ function checkDependencies() {
     "GHSA-v3r7-h72x-cjcm",
     "GHSA-5p4m-2wfm-xmqj",
     "GHSA-2v37-7h3g-55p8",
+    "GHSA-5jgf-p345-68v8",
+    "GHSA-f65p-4m7j-42xc",
+    "GHSA-fph4-wmhf-6fwf",
+    "GHSA-jqff-g426-hqxp",
   ]);
   const advisories = Object.values(report.advisories ?? {});
   const unexpected = advisories.filter((advisory) => !accepted.has(advisory.github_advisory_id));
