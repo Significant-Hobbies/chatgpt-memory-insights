@@ -636,6 +636,12 @@ h2 {
   text-underline-offset: 0.2em;
 }
 
+.product-footer a.footer-icon-link {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
 .progress-heading-row,
 .report-header,
 .section-heading {
