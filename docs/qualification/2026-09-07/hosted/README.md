@@ -35,3 +35,21 @@ blocked. An existing `t.posthog.init is not a function` exception was observed
 on page loads and is retained honestly as a separate initialization defect.
 Large/split archives, multilingual/cross-browser behavior, physical devices and
 failures after GPU initialization remain unqualified under issue #37.
+
+## Analytics follow-up release
+
+Source `0120fdbd70e7457c6b07b150981d33b3f8a457af` was released separately as
+production deployment `c9571467-d553-4a15-b801-e2f93f9266d7`, with `c02a7506` as
+the retained rollback target. The ordinary custom-domain page served the repaired
+bootstrap byte for byte and loaded the real PostHog SDK with no page exception.
+Autocapture and automatic pageview remained disabled; the existing API host and
+person-profile configuration were unchanged. SDK configuration/event requests
+were intercepted, and a synthetic archive sentinel did not appear in captured
+request bodies. This does not claim provider event delivery.
+
+[Analytics receipt](analytics-receipt.json) · [390px landing](analytics-landing-phone.png)
+
+The embedding model and archive journey were not rerun for this analytics-only
+change. Issue #38 is complete on the actual hosted console acceptance. Issue #37
+retains the broader product cases listed above. These documentation changes were
+not redeployed.

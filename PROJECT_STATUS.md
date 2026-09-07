@@ -38,6 +38,13 @@ sync, and verified medical, emotional, or personality claims.
 
 ## Timeline
 
+- 2026-09-07 — deployed the bounded PostHog bootstrap/SDK URL repair as source
+  `0120fdb`, Pages production deployment `c9571467-d553-4a15-b801-e2f93f9266d7`.
+  Ordinary-domain browser verification loaded the real SDK without exceptions,
+  matched the served bootstrap to source, and preserved analytics configuration.
+  [Acceptance receipt](docs/qualification/2026-09-07/hosted/analytics-receipt.json)
+  records telemetry interception; no model rerun or provider delivery is claimed.
+
 - 2026-09-07 — deployed checked source `3417cca` as Pages production deployment
   `c02a7506-70a0-4ea7-83d2-436137aa5ef7`. The ordinary public URL completed real
   synthetic model import, semantic search, source attribution, explicit save,

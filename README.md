@@ -124,9 +124,11 @@ now passes on deployed source `3417cca`; the initial stale-asset failure and
 separate PostHog initialization exception are retained in that receipt. The
 offline import regression remains a separate failure-path check.
 [PostHog bootstrap repair #38](https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/38)
-now passes local browser initialization checks and awaits a separate release.
-The SDK URL and queue were repaired without changing analytics configuration;
-no provider event delivery is claimed.
+is now deployed as `0120fdb` / `c9571467`. The ordinary public page loads the
+real SDK without initialization exceptions, and its bootstrap matches source.
+[Hosted analytics receipt](docs/qualification/2026-09-07/hosted/analytics-receipt.json)
+records unchanged analytics configuration and intercepted telemetry; provider
+event delivery is not claimed. Issue #38 is complete; #37 remains open.
 
 No private archive or hosted archive upload was used; the approved production
 release is recorded separately from the earlier local repair.

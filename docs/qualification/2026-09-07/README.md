@@ -56,7 +56,7 @@ archives, multilingual and cross-browser behavior, and post-initialization GPU
 failure recovery. No deployment, physical-phone test, optional generator run or
 whole-product sharing qualification is claimed.
 
-## PostHog initialization follow-up (source only)
+## PostHog initialization follow-up
 
 The hosted run exposed an independent bootstrap defect: the placeholder had
 no `init` method, and the old SDK URL returned HTTP 404. The source now uses
@@ -69,6 +69,8 @@ with no page exception and preserved configuration. Only the public SDK download
 reached the network; configuration and telemetry requests were intercepted.
 Delayed/blocked loading and exact manual-event properties are tested by the
 repository's browser suite. This is not a provider event-delivery receipt.
-Issue #38 retains the separate deployment and hosted-console gate.
+The later [hosted analytics receipt](hosted/analytics-receipt.json) completes
+issue #38 after a separately authorized deployment; the initial local receipt
+remains historical.
 
 Bootstrap contract: [PostHog JavaScript documentation](https://posthog.com/docs/libraries/js).

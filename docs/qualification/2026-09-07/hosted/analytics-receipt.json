@@ -1,0 +1,131 @@
+{
+  "observedAt": "2026-09-07T13:37:53.265Z",
+  "origin": "https://chatgpt.significanthobbies.com",
+  "scope": "Ordinary hosted page; real SDK GET; all analytics/config requests intercepted; no archive/model import",
+  "config": {
+    "api_host": "https://us.i.posthog.com",
+    "autocapture": false,
+    "capture_pageview": false,
+    "person_profiles": "always",
+    "loaded": true
+  },
+  "errors": [],
+  "responses": [
+    {
+      "path": "/scripts/posthog.js",
+      "status": 200,
+      "sha256": "dadcffc233168c40a1d6f63d59289efe84107f5aa43aca766a8a2008291db9bf",
+      "matchesBuild": true,
+      "cache": "EXPIRED",
+      "cacheControl": "public, max-age=14400, must-revalidate"
+    }
+  ],
+  "requests": [
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/",
+      "method": "GET",
+      "realNetwork": true,
+      "containsSentinel": false
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/scripts/posthog.js",
+      "method": "GET",
+      "realNetwork": true,
+      "containsSentinel": false
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/app-health-log.js",
+      "method": "GET",
+      "realNetwork": true,
+      "containsSentinel": false
+    },
+    {
+      "host": "static.cloudflareinsights.com",
+      "path": "/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+      "method": "GET",
+      "realNetwork": false,
+      "containsSentinel": false
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/_astro/index.astro_astro_type_script_index_0_lang.CfvNbWSi.js",
+      "method": "GET",
+      "realNetwork": true,
+      "containsSentinel": false
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/project-strip.js",
+      "method": "GET",
+      "realNetwork": true,
+      "containsSentinel": false
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/ai-chat-footer.js",
+      "method": "GET",
+      "realNetwork": true,
+      "containsSentinel": false
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/_astro/analyze.worker-suejEC3W.js",
+      "method": "GET",
+      "realNetwork": true,
+      "containsSentinel": false
+    },
+    {
+      "host": "us-assets.i.posthog.com",
+      "path": "/static/array.js",
+      "method": "GET",
+      "realNetwork": true,
+      "containsSentinel": false
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/projects.json",
+      "method": "GET",
+      "realNetwork": true,
+      "containsSentinel": false
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/projects.json",
+      "method": "GET",
+      "realNetwork": true,
+      "containsSentinel": false
+    },
+    {
+      "host": "us-assets.i.posthog.com",
+      "path": "/array/phc_qgiAarw4Co4pw9fz3Fxj4UJaHmqzFetqs4JrXhGc35Nd/config.js",
+      "method": "GET",
+      "realNetwork": false,
+      "containsSentinel": false
+    },
+    {
+      "host": "us-assets.i.posthog.com",
+      "path": "/array/phc_qgiAarw4Co4pw9fz3Fxj4UJaHmqzFetqs4JrXhGc35Nd/config",
+      "method": "GET",
+      "realNetwork": false,
+      "containsSentinel": false
+    },
+    {
+      "host": "us.i.posthog.com",
+      "path": "/flags/",
+      "method": "POST",
+      "realNetwork": false,
+      "containsSentinel": false
+    }
+  ],
+  "deployment": {
+    "source": "0120fdbd70e7457c6b07b150981d33b3f8a457af",
+    "id": "c9571467-d553-4a15-b801-e2f93f9266d7",
+    "url": "https://c9571467.chatgpt-memory-insights.pages.dev",
+    "sourceCI": "https://github.com/Significant-Hobbies/chatgpt-memory-insights/actions/runs/34128074173",
+    "rollbackId": "c02a7506-70a0-4ea7-83d2-436137aa5ef7",
+    "rollbackSource": "3417cca5a1eb13e9e666ed29dda7a2857bd3f741"
+  }
+}
