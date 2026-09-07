@@ -120,6 +120,7 @@ let pendingMemoryQuestion: string | null = null;
 let pendingMemoryEvidence: MemoryChatEvidence[] = [];
 let memoryChatHistory: MemoryChatTurn[] = [];
 let currentReport: FullReport | null = null;
+let semanticFailure: string | null = null;
 let currentSnapshot: MemorySnapshot | null = null;
 let ledgerStatus: FactGroup["status"] = "current";
 let activeConfidence = 65;
@@ -649,7 +650,9 @@ function resetApp() {
   analysisDetailsSummary.textContent = "Semantic work is running · balanced evidence";
   resetGraphFormation();
   currentReport = null;
+  semanticFailure = null;
   currentSnapshot = null;
+  saveButton.textContent = "Keep on this device";
   archiveInput.value = "";
   searchResults.hidden = true;
   evidencePanel.hidden = true;
@@ -696,6 +699,7 @@ async function analyzeFile(file: File) {
     return;
   }
   currentReport = null;
+  semanticFailure = null;
   currentSnapshot = null;
   analysisDetails.open = true;
   analysisDetailsAutoSettled = false;
@@ -719,6 +723,7 @@ function showError(message: string, keepReport = false) {
   errorMessage.textContent = message;
   appStatus.textContent = message;
   if (!keepReport) showOnly(errorView);
+  else errorView.hidden = false;
 }
 
 function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
@@ -829,11 +834,19 @@ function onWorkerMessage(event: MessageEvent<WorkerResponse>) {
   void analysisLease.release();
   if (graphFormationFrame !== null) window.cancelAnimationFrame(graphFormationFrame);
   graphFormationFrame = null;
+  if (message.recoverable && currentReport && !currentReport.semantic) {
+    semanticFailure = message.message;
+    latestTiming = null;
+    renderReport(currentReport);
+  }
   showError(message.message, message.recoverable && Boolean(currentReport));
 }
 
 function renderReport(report: FullReport) {
   const deterministic = report.deterministic;
+  searchInput.disabled = !report.semantic;
+  $("#memory-search").querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled =
+    !report.semantic;
   const model = report.semantic?.model;
   if (!memoryChatReady) {
     enableMemoryChatButton.disabled = !report.semantic;
@@ -900,6 +913,7 @@ function renderReport(report: FullReport) {
   renderConfidenceImpact(report);
 
   if (report.semantic) {
+    saveButton.disabled = saveButton.textContent === "Saved on this device";
     const model = report.semantic.model;
     $("#sampling-note").textContent =
       `Embedded ${formatNumber(model.embeddedConversations)} of ${formatNumber(
@@ -914,8 +928,15 @@ function renderReport(report: FullReport) {
     renderGraph(report.semantic.topics, report.semantic.edges);
     renderLedger(report);
   } else {
-    $("#sampling-note").textContent = "Full totals are ready. Embeddings are still being built.";
-    graphLoading.hidden = false;
+    saveButton.disabled = true;
+    $("#sampling-note").textContent = semanticFailure
+      ? "Semantic analysis stopped. Initial statistics remain available; search, saved memory, and local chat require a completed map. Choose another ZIP to retry."
+      : "Full totals are ready. Embeddings are still being built.";
+    if (semanticFailure) {
+      analysisTimingBoard.hidden = true;
+      analysisDetailsSummary.textContent = "Initial statistics only · semantic analysis stopped";
+    }
+    graphLoading.hidden = Boolean(semanticFailure);
     mountGraphFormationInReport();
     graph.classList.add("is-hidden");
   }
@@ -2206,7 +2227,7 @@ $("#close-evidence").addEventListener("click", () => closeEvidencePanel());
 $("#memory-search").addEventListener("submit", (event) => {
   event.preventDefault();
   const query = searchInput.value.trim();
-  if (!query) return;
+  if (!query || !currentReport?.semantic) return;
   searchResults.hidden = false;
   searchResults.replaceChildren(text("p", "Searching the semantic index…", "empty-note"));
   send({ type: "search", query });

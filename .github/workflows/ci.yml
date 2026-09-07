@@ -19,6 +19,8 @@ jobs:
       - uses: astral-sh/setup-uv@v8.1.0
       - run: pnpm install --frozen-lockfile
       - run: pnpm run check
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run test:import
 
   packer:
     runs-on: ubuntu-latest

@@ -1,6 +1,6 @@
 # chatgpt-memory-insights — PROJECT STATUS
 
-Last updated: 2026-09-01
+Last updated: 2026-09-07
 
 ## Why / What
 
@@ -38,6 +38,11 @@ sync, and verified medical, emotional, or personality claims.
 
 ## Timeline
 
+- 2026-09-07 — model-download failures after initial statistics now expose the
+  recovery panel, stop the misleading running state, and disable unavailable
+  search/save controls while retaining deterministic output. Real built-app
+  synthetic ZIP checks pass at 390 px and 1280 px with external requests blocked;
+  these receipts do not qualify semantic completion, persistence, or deployment.
 - 2026-09-01 — wired the product's dedicated Microsoft Clarity project only on
   the public `/about` and `/changelog` pages, disclosed that boundary, and kept
   the private ZIP analysis, derived report, and search route out of session
@@ -173,6 +178,6 @@ sync, and verified medical, emotional, or personality claims.
 ## Work queue
 
 Open work is tracked only in
-[GitHub Issues](https://github.com/sarthakagrawal927/chatgpt-memory-insights/issues).
+[GitHub Issues](https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues).
 An open issue is a to-do, a linked pull request is in progress, and merge plus
 issue closure makes the work done.

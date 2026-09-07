@@ -27,6 +27,7 @@
     "preview": "astro preview",
     "typecheck": "astro check",
     "test": "vitest run",
+    "test:import": "node scripts/qualify-import.mjs",
     "test:coverage": "vitest run --coverage --coverage.reporter=text --coverage.reporter=json-summary --coverage.thresholds.lines=54 --coverage.thresholds.statements=52 --coverage.thresholds.functions=54 --coverage.thresholds.branches=45",
     "knip": "knip --no-exit-code --reporter symbols",
     "knip:strict": "knip --reporter symbols --no-config-hints",
@@ -50,6 +51,7 @@
   "devDependencies": {
     "@astrojs/check": "0.9.6",
     "@biomejs/biome": "2.5.5",
+    "@playwright/test": "1.62.0",
     "@tailwindcss/vite": "4.3.3",
     "@vitest/coverage-v8": "4.1.0",
     "jscpd": "5.0.14",
