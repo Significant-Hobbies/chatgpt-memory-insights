@@ -38,6 +38,12 @@ sync, and verified medical, emotional, or personality claims.
 
 ## Timeline
 
+- 2026-09-07 — deployed checked source `3417cca` as Pages production deployment
+  `c02a7506-70a0-4ea7-83d2-436137aa5ef7`. The ordinary public URL completed real
+  synthetic model import, semantic search, source attribution, explicit save,
+  reload/search and forget after asset propagation. Exact release, rollback and
+  [hosted receipts](docs/qualification/2026-09-07/hosted/README.md) are retained.
+
 - 2026-09-07 — actual GPU-adapter preflight prevents unavailable WebGPU from
   poisoning the pinned model library's initialization. A local synthetic ZIP
   completed real WASM q8 embeddings, relevant search, opt-in save, reload/restore

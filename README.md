@@ -115,12 +115,16 @@ retry without discarding the readable statistics. Checks run at 390 px and
 
 This audit began with zero open issues and PRs; none were closed. Remaining
 qualification is [#37](https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/37):
-hosted verification after an approved deployment, large/split archives,
+large/split archives,
 multilingual/cross-browser behavior, and failures after GPU initialization.
 [Local synthetic qualification](docs/qualification/2026-09-07/README.md) now
 proves real compact-model import/search, explicit save, reload/restore, and
-forget. The offline import regression remains a separate failure-path check.
-No private archive, hosted upload, or deployment was used for this repair.
+forget. [Hosted synthetic verification](docs/qualification/2026-09-07/hosted/README.md)
+now passes on deployed source `3417cca`; the initial stale-asset failure and
+separate PostHog initialization exception are retained in that receipt. The
+offline import regression remains a separate failure-path check.
+No private archive or hosted archive upload was used; the approved production
+release is recorded separately from the earlier local repair.
 
 ## Deploy
 

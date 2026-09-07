@@ -1,0 +1,12 @@
+{
+  "deployedSource": "3417cca5a1eb13e9e666ed29dda7a2857bd3f741",
+  "sourceCI": "https://github.com/Significant-Hobbies/chatgpt-memory-insights/actions/runs/34123513464",
+  "deploymentId": "c02a7506-70a0-4ea7-83d2-436137aa5ef7",
+  "deploymentUrl": "https://c02a7506.chatgpt-memory-insights.pages.dev",
+  "productionUrl": "https://chatgpt.significanthobbies.com",
+  "command": "pnpm run deploy",
+  "rollbackDeploymentId": "b5934477-8c6b-494a-8819-da05f5d015e4",
+  "rollbackSource": "72880352e89af4d5e0e43efdcaa6548782bf0b37",
+  "rollbackMethod": "Existing Pages dashboard/API rollback to successful prior production deployment; no rollback performed",
+  "initialProbe": "First ordinary-domain run served prior Xe8n7TP1/ByfPWL1K assets and failed; not accepted. After cache status EXPIRED, ordinary URL served CfvNbWSi/suejEC3W matching build. No cache purge, configuration change or repeated deployment."
+}

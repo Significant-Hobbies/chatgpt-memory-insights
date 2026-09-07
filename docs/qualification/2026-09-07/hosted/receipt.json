@@ -1,0 +1,397 @@
+{
+  "observedAt": "2026-09-07T13:24:40.931Z",
+  "origin": "https://chatgpt.significanthobbies.com",
+  "scope": "Hosted deployed UI; synthetic data only; no POST uploads or optional generator",
+  "semanticSeconds": 5.971,
+  "model": {
+    "id": "Xenova/all-MiniLM-L6-v2",
+    "revision": "751bff37182d3f1213fa05d7196b954e230abad9",
+    "requestedProfile": "auto",
+    "resolvedProfile": "compact",
+    "approximateDownloadMb": 24,
+    "profileReason": "Automatic mode found a predominantly Latin-script history. Choose multilingual manually for non-English Latin-script histories.",
+    "embeddedConversations": 12,
+    "totalConversations": 12,
+    "embeddedQuestions": 12,
+    "totalQuestions": 12,
+    "embeddedFacts": 2,
+    "totalFacts": 2,
+    "embeddedThreadPrompts": 0,
+    "totalThreadPrompts": 0,
+    "embeddedTopicAnchors": 20,
+    "runtime": {
+      "device": "wasm",
+      "dtype": "q8",
+      "batchSize": 32
+    }
+  },
+  "snapshotKeys": ["version", "report", "searchIndex", "lexicalIndex"],
+  "search": "question\nMy basil leaves are yellow. How should I adjust watering?\nBalcony herbs 2\n53.7%\nconversation\nBalcony herbs 4\n1 messages\n52.3%\ntopic\nFood & cooking · Balcony\n6 conversations · balcony, herbs\n52.2%\nconversation\nBalcony herbs 3\n1 messages\n51.5%\nquestion\nWhich soil drains well for container herbs?\nBalcony herbs 3\n51.5%\nquestion\nHow often should I water basil in a small pot?\nBalcony herbs 4\n50.3%\nconversation\nBalcony herbs 2\n1 messages\n45.6%\nconversation\nBalcony herbs 5\n1 messages\n45.2%\nconversation\nBalcony herbs 6\n1 messages\n44.1%\nquestion\nHow can I keep balcony herbs healthy through summer?\nBalcony herbs 6\n43.6%\nquestion\nI grow mint and basil on my balcony. Can they share a pot?\nBalcony herbs 5\n43.3%\nconversation\nBalcony herbs 1\n1 messages\n37.1%\nquestion\nHow can I grow basil on a sunny balcony?\nBalcony herbs 1\n31.8%\nfact\nMy basil leaves are yellow.\nDetected statement\n20.7%",
+  "evidence": "×\n\nWHY THIS APPEARED\n\nFood & cooking · Balcony\n\n6 conversations\n\nDistinctive terms: balcony, herbs\n\nBalcony herbs 6\nJan 24, 2024\nBalcony herbs 5\nJan 10, 2024\nBalcony herbs 4\nDec 27, 2023\nBalcony herbs 3\nDec 13, 2023\nBalcony herbs 2\nNov 29, 2023\nBalcony herbs 1\nNov 15, 2023",
+  "restoredSearch": "topic\nResearch & analysis · Testing\n6 conversations · testing, typescript\n69.4%\nquestion\nHow can I mock fetch in a TypeScript unit test?\nTypeScript testing 2\n68.8%\nconversation\nTypeScript testing 2\n1 messages\n60.6%\nquestion\nHow do I test a TypeScript function with Vitest?\nTypeScript testing 1\n59.8%\nconversation\nTypeScript testing 1\n1 messages\n59.1%\nconversation\nTypeScript testing 5\n1 messages\n57%\nquestion\nHow do I debug a failing TypeScript test?\nTypeScript testing 5\n56.8%\nconversation\nTypeScript testing 4\n1 messages\n54.8%\nquestion\nI use TypeScript and Vitest. How can I test async errors?\nTypeScript testing 6\n52.9%\nfact\nI use TypeScript and Vitest.\nDetected statement\n52.4%\nconversation\nTypeScript testing 6\n1 messages\n52.3%\nquestion\nWhat is the difference between a unit test and an integration test?\nTypeScript testing 4\n45%\nconversation\nTypeScript testing 3\n1 messages\n44.2%\nquestion\nHow should I test retry behavior in an API client?\nTypeScript testing 3\n24.6%\nquestion\nWhich soil drains well for container herbs?\nBalcony herbs 3\n15.3%",
+  "forget": "snapshot absent; reload returns to import",
+  "horizontalOverflow": false,
+  "assets": [
+    {
+      "path": "/scripts/posthog.js",
+      "status": 200,
+      "sha256": "67a8c4c48f916bb4549d505383fb2d86978f11f563de7c490c5c60eecf8c32c8",
+      "matchesBuild": true
+    },
+    {
+      "path": "/app-health-log.js",
+      "status": 200,
+      "sha256": "bf3f81ccf5ef6bdb03b1eebc5145bc08c48b6c9e6b74dcd1b3f347ae071658b9",
+      "matchesBuild": true
+    },
+    {
+      "path": "/_astro/index.astro_astro_type_script_index_0_lang.CfvNbWSi.js",
+      "status": 200,
+      "sha256": "44d42df4d73de1388e6e3b1afdbd0c221cdbc46b43c2e66d5dd61c16e7ace45c",
+      "matchesBuild": true
+    },
+    {
+      "path": "/_astro/analyze.worker-suejEC3W.js",
+      "status": 200,
+      "sha256": "2840d2abf0de00fdc36f0cce06aea5a48ff16af7056ca73460703ab83d7e1b5a",
+      "matchesBuild": true
+    },
+    {
+      "path": "/_astro/transformers.web-BVIn7Vg_.js",
+      "status": 200,
+      "sha256": "0273d98cab7e38b7c84d25def0192f737884e8d1aaebbc21e253e97f4e7df1e2",
+      "matchesBuild": true
+    },
+    {
+      "path": "/scripts/posthog.js",
+      "status": 200,
+      "sha256": "67a8c4c48f916bb4549d505383fb2d86978f11f563de7c490c5c60eecf8c32c8",
+      "matchesBuild": true
+    },
+    {
+      "path": "/app-health-log.js",
+      "status": 200,
+      "sha256": "bf3f81ccf5ef6bdb03b1eebc5145bc08c48b6c9e6b74dcd1b3f347ae071658b9",
+      "matchesBuild": true
+    },
+    {
+      "path": "/_astro/index.astro_astro_type_script_index_0_lang.CfvNbWSi.js",
+      "status": 200,
+      "sha256": "44d42df4d73de1388e6e3b1afdbd0c221cdbc46b43c2e66d5dd61c16e7ace45c",
+      "matchesBuild": true
+    },
+    {
+      "path": "/_astro/analyze.worker-suejEC3W.js",
+      "status": 200,
+      "sha256": "2840d2abf0de00fdc36f0cce06aea5a48ff16af7056ca73460703ab83d7e1b5a",
+      "matchesBuild": true
+    },
+    {
+      "path": "/_astro/transformers.web-BVIn7Vg_.js",
+      "status": 200,
+      "sha256": "0273d98cab7e38b7c84d25def0192f737884e8d1aaebbc21e253e97f4e7df1e2",
+      "matchesBuild": true
+    },
+    {
+      "path": "/app-health-log.js",
+      "status": 200,
+      "sha256": "bf3f81ccf5ef6bdb03b1eebc5145bc08c48b6c9e6b74dcd1b3f347ae071658b9",
+      "matchesBuild": true
+    },
+    {
+      "path": "/scripts/posthog.js",
+      "status": 200,
+      "sha256": "67a8c4c48f916bb4549d505383fb2d86978f11f563de7c490c5c60eecf8c32c8",
+      "matchesBuild": true
+    },
+    {
+      "path": "/_astro/index.astro_astro_type_script_index_0_lang.CfvNbWSi.js",
+      "status": 200,
+      "sha256": "44d42df4d73de1388e6e3b1afdbd0c221cdbc46b43c2e66d5dd61c16e7ace45c",
+      "matchesBuild": true
+    }
+  ],
+  "requests": [
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/scripts/posthog.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/app-health-log.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/_astro/index.astro_astro_type_script_index_0_lang.CfvNbWSi.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/project-strip.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/ai-chat-footer.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "static.cloudflareinsights.com",
+      "path": "/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+      "method": "GET",
+      "allowed": false
+    },
+    {
+      "host": "us.i.posthog.com",
+      "path": "/array.js",
+      "method": "GET",
+      "allowed": false
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/_astro/analyze.worker-suejEC3W.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/projects.json",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/projects.json",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/_astro/transformers.web-BVIn7Vg_.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "huggingface.co",
+      "path": "/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/tokenizer.json",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "huggingface.co",
+      "path": "/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/tokenizer_config.json",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "huggingface.co",
+      "path": "/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/config.json",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "huggingface.co",
+      "path": "/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/onnx/model_quantized.onnx",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "cdn.jsdelivr.net",
+      "path": "/npm/@huggingface/transformers@3.8.1/dist/ort-wasm-simd-threaded.jsep.mjs",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "cdn.jsdelivr.net",
+      "path": "/npm/@huggingface/transformers@3.8.1/dist/ort-wasm-simd-threaded.jsep.wasm",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "ingest.sassmaker.com",
+      "path": "/v1/logs",
+      "method": "POST",
+      "allowed": false
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/scripts/posthog.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/app-health-log.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/_astro/index.astro_astro_type_script_index_0_lang.CfvNbWSi.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "static.cloudflareinsights.com",
+      "path": "/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+      "method": "GET",
+      "allowed": false
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/project-strip.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/ai-chat-footer.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "us.i.posthog.com",
+      "path": "/array.js",
+      "method": "GET",
+      "allowed": false
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/_astro/analyze.worker-suejEC3W.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/projects.json",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/projects.json",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "ingest.sassmaker.com",
+      "path": "/v1/logs",
+      "method": "POST",
+      "allowed": false
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/_astro/transformers.web-BVIn7Vg_.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "cdn.jsdelivr.net",
+      "path": "/npm/@huggingface/transformers@3.8.1/dist/ort-wasm-simd-threaded.jsep.mjs",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "cdn.jsdelivr.net",
+      "path": "/npm/@huggingface/transformers@3.8.1/dist/ort-wasm-simd-threaded.jsep.wasm",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/scripts/posthog.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/app-health-log.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "static.cloudflareinsights.com",
+      "path": "/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+      "method": "GET",
+      "allowed": false
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/_astro/index.astro_astro_type_script_index_0_lang.CfvNbWSi.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/project-strip.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/ai-chat-footer.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "us.i.posthog.com",
+      "path": "/array.js",
+      "method": "GET",
+      "allowed": false
+    },
+    {
+      "host": "ingest.sassmaker.com",
+      "path": "/v1/logs",
+      "method": "POST",
+      "allowed": false
+    },
+    {
+      "host": "chatgpt.significanthobbies.com",
+      "path": "/_astro/analyze.worker-suejEC3W.js",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/projects.json",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/projects.json",
+      "method": "GET",
+      "allowed": true
+    }
+  ],
+  "errors": [
+    "t.posthog.init is not a function",
+    "t.posthog.init is not a function",
+    "t.posthog.init is not a function"
+  ]
+}
