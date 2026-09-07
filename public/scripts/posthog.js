@@ -1,1 +1,29 @@
-if (!["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) !function(t,e){var o,n,a,r,i;function s(e){(o=t._phq=t._phq||[]).push([].slice.call(e))}o=t.posthog=function(e,n){s([e,n])},o.__loaded||(a=e.createElement("script"),a.type="text/javascript",a.async=!0,a.crossOrigin="anonymous",a.src="https://us.i.posthog.com/array.js",r=e.getElementsByTagName("script")[0],r.parentNode.insertBefore(a,r),o.__loaded=!0),t.posthog.init("phc_qgiAarw4Co4pw9fz3Fxj4UJaHmqzFetqs4JrXhGc35Nd",{api_host:"https://us.i.posthog.com",person_profiles:"always",capture_pageview:!1,autocapture:!1,loaded:function(){t.posthog.capture("page_view",{project_id:"chatgpt-memory-insights"})}})}(window,document);
+if (!["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) {
+  // The browser SDK consumes this documented initialization queue when it loads.
+  // Do not call init on a placeholder function before the async SDK is available.
+  const queue = (window.posthog = window.posthog || []);
+  if (!queue.__SV) {
+    queue.__SV = 1;
+    queue._i = [];
+    queue.capture = (...args) => queue.push(["capture", ...args]);
+    queue._i.push([
+      "phc_qgiAarw4Co4pw9fz3Fxj4UJaHmqzFetqs4JrXhGc35Nd",
+      {
+        api_host: "https://us.i.posthog.com",
+        person_profiles: "always",
+        capture_pageview: false,
+        autocapture: false,
+        loaded: () => {
+          window.posthog.capture("page_view", { project_id: "chatgpt-memory-insights" });
+        },
+      },
+      "posthog",
+    ]);
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.async = true;
+    script.crossOrigin = "anonymous";
+    script.src = "https://us-assets.i.posthog.com/static/array.js";
+    document.head.append(script);
+  }
+}

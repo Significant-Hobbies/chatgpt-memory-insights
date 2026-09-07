@@ -1,0 +1,47 @@
+{
+  "errors": [],
+  "network": [
+    {
+      "method": "GET",
+      "host": "us-assets.i.posthog.com",
+      "path": "/static/array.js",
+      "containsArchiveSentinel": false
+    },
+    {
+      "method": "GET",
+      "host": "us-assets.i.posthog.com",
+      "path": "/array/phc_qgiAarw4Co4pw9fz3Fxj4UJaHmqzFetqs4JrXhGc35Nd/config.js",
+      "containsArchiveSentinel": false
+    },
+    {
+      "method": "GET",
+      "host": "us-assets.i.posthog.com",
+      "path": "/array/phc_qgiAarw4Co4pw9fz3Fxj4UJaHmqzFetqs4JrXhGc35Nd/config",
+      "containsArchiveSentinel": false
+    },
+    {
+      "method": "POST",
+      "host": "us.i.posthog.com",
+      "path": "/flags/",
+      "containsArchiveSentinel": false
+    }
+  ],
+  "config": {
+    "autocapture": false,
+    "capture_pageview": false,
+    "person_profiles": "always",
+    "loaded": true
+  },
+  "scope": "Actual current PostHog browser SDK loaded from public CDN into an isolated synthetic host; all configuration/event requests intercepted locally; no provider writes",
+  "legacySdkProbe": "https://us.i.posthog.com/array.js returned HTTP404",
+  "sdkUrl": "https://us-assets.i.posthog.com/static/array.js",
+  "regressions": [
+    "Delayed SDK: initialization queued without exception; loaded callback emits exactly page_view with project_id",
+    "Blocked SDK: import control remains usable and no page exception",
+    "Localhost: no SDK request"
+  ],
+  "limitations": [
+    "No provider event-delivery claim",
+    "Source change not yet deployed; awaiting sequential slot"
+  ]
+}

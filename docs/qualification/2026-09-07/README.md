@@ -55,3 +55,20 @@ remains open for hosted verification after authorized deployment, large/split
 archives, multilingual and cross-browser behavior, and post-initialization GPU
 failure recovery. No deployment, physical-phone test, optional generator run or
 whole-product sharing qualification is claimed.
+
+## PostHog initialization follow-up (source only)
+
+The hosted run exposed an independent bootstrap defect: the placeholder had
+no `init` method, and the old SDK URL returned HTTP 404. The source now uses
+PostHog's documented initialization queue and public SDK asset URL. The existing
+project, API host, localhost guard, disabled autocapture/automatic pageview and
+manual page_view configuration remain unchanged.
+
+The [real-SDK browser receipt](posthog-initialization.json) records initialization
+with no page exception and preserved configuration. Only the public SDK download
+reached the network; configuration and telemetry requests were intercepted.
+Delayed/blocked loading and exact manual-event properties are tested by the
+repository's browser suite. This is not a provider event-delivery receipt.
+Issue #38 retains the separate deployment and hosted-console gate.
+
+Bootstrap contract: [PostHog JavaScript documentation](https://posthog.com/docs/libraries/js).

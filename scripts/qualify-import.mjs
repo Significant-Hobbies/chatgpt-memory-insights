@@ -78,3 +78,83 @@ for (const width of [390, 1280]) {
     }
   });
 }
+
+test("analytics queues initialization until the SDK arrives without collecting archive text", async () => {
+  const source = await readFile(new URL("../public/scripts/posthog.js", import.meta.url), "utf8");
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  const errors = [];
+  let releaseSdk;
+  const ready = new Promise((resolve) => {
+    releaseSdk = resolve;
+  });
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.route("**/*", async (route) => {
+    if (route.request().url() === "https://memory-map.example/") {
+      return route.fulfill({
+        contentType: "text/html",
+        body: `<input value="SYNTHETIC_PRIVATE_ARCHIVE"><script>${source}</script>`,
+      });
+    }
+    assert.equal(route.request().url(), "https://us-assets.i.posthog.com/static/array.js");
+    await ready;
+    return route.fulfill({
+      contentType: "text/javascript",
+      body: `
+      const config = window.posthog._i[0][1];
+      window.analyticsSettings = { api_host: config.api_host, person_profiles: config.person_profiles, capture_pageview: config.capture_pageview, autocapture: config.autocapture };
+      window.analyticsEvents = [];
+      window.posthog = { capture: (...args) => window.analyticsEvents.push(args) };
+      config.loaded();
+    `,
+    });
+  });
+  try {
+    await page.goto("https://memory-map.example/", { waitUntil: "domcontentloaded" });
+    assert.equal(await page.evaluate(() => window.posthog._i.length), 1);
+    assert.deepEqual(errors, []);
+    releaseSdk();
+    await page.waitForFunction(() => window.analyticsEvents?.length === 1);
+    assert.deepEqual(await page.evaluate(() => window.analyticsSettings), {
+      api_host: "https://us.i.posthog.com",
+      person_profiles: "always",
+      capture_pageview: false,
+      autocapture: false,
+    });
+    assert.deepEqual(await page.evaluate(() => window.analyticsEvents), [
+      ["page_view", { project_id: "chatgpt-memory-insights" }],
+    ]);
+    assert.deepEqual(errors, []);
+  } finally {
+    releaseSdk();
+    await browser.close();
+  }
+});
+
+for (const host of ["localhost", "memory-map.example"]) {
+  test(`analytics stays usable with ${host === "localhost" ? "local exclusion" : "blocked SDK"}`, async () => {
+    const source = await readFile(new URL("../public/scripts/posthog.js", import.meta.url), "utf8");
+    const browser = await chromium.launch();
+    const page = await browser.newPage();
+    const errors = [];
+    let sdkRequests = 0;
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.route("**/*", (route) => {
+      if (route.request().url() === `http://${host}/`)
+        return route.fulfill({
+          contentType: "text/html",
+          body: `<button>Import archive</button><script>${source}</script>`,
+        });
+      sdkRequests += 1;
+      return route.abort();
+    });
+    try {
+      await page.goto(`http://${host}/`);
+      await expect(page.getByRole("button", { name: "Import archive" })).toBeEnabled();
+      assert.deepEqual(errors, []);
+      assert.equal(sdkRequests, host === "localhost" ? 0 : 1);
+    } finally {
+      await browser.close();
+    }
+  });
+}

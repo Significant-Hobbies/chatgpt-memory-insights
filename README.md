@@ -123,6 +123,11 @@ forget. [Hosted synthetic verification](docs/qualification/2026-09-07/hosted/REA
 now passes on deployed source `3417cca`; the initial stale-asset failure and
 separate PostHog initialization exception are retained in that receipt. The
 offline import regression remains a separate failure-path check.
+[PostHog bootstrap repair #38](https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/38)
+now passes local browser initialization checks and awaits a separate release.
+The SDK URL and queue were repaired without changing analytics configuration;
+no provider event delivery is claimed.
+
 No private archive or hosted archive upload was used; the approved production
 release is recorded separately from the earlier local repair.
 
