@@ -90,14 +90,26 @@ export const INFERENCE_BATCH_SIZE = {
   wasm: 32,
 } as const;
 
-export function supportsWebGpu(
-  scope: { navigator?: { gpu?: unknown } } = globalThis as { navigator?: { gpu?: unknown } }
-): boolean {
-  return Boolean(scope.navigator?.gpu);
+type GpuScope = {
+  navigator?: {
+    gpu?: { requestAdapter: (options: { powerPreference: string }) => Promise<unknown> };
+  };
+};
+
+export async function supportsWebGpu(scope: GpuScope = globalThis as GpuScope): Promise<boolean> {
+  try {
+    // An exposed API can still return no adapter (for example, headless Chrome).
+    // Avoid poisoning Transformers.js 3.8.1's shared initialization promise.
+    return Boolean(
+      await scope.navigator?.gpu?.requestAdapter({ powerPreference: "high-performance" })
+    );
+  } catch {
+    return false;
+  }
 }
 
 export function preferredRuntime(
-  webGpuAvailable = supportsWebGpu(),
+  webGpuAvailable = false,
   profile: AnalysisResolution["resolvedModelProfile"] = "compact"
 ): AnalysisRuntime {
   return webGpuAvailable && profile === "compact"
@@ -319,7 +331,7 @@ async function embedTexts(
   if (texts.length === 0) {
     return { vectors: [], runtime: preferredRuntime(false, profile) };
   }
-  const preferred = preferredRuntime(supportsWebGpu(), profile);
+  const preferred = preferredRuntime(profile === "compact" && (await supportsWebGpu()), profile);
   if (preferred.device === "wasm") {
     return embedWithRuntime(texts, profile, progress, preferred);
   }

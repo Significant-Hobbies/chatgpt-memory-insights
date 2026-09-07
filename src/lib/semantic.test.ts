@@ -33,8 +33,6 @@ describe("browser model profiles", () => {
   });
 
   it("prefers bounded GPU batches and keeps a portable fallback", () => {
-    expect(supportsWebGpu({ navigator: { gpu: {} } })).toBe(true);
-    expect(supportsWebGpu({ navigator: {} })).toBe(false);
     expect(preferredRuntime(true)).toEqual({
       device: "webgpu",
       dtype: "fp32",
@@ -50,6 +48,36 @@ describe("browser model profiles", () => {
       dtype: "q8",
       batchSize: INFERENCE_BATCH_SIZE.wasm,
     });
+  });
+
+  it("requires an actual GPU adapter before initializing the model", async () => {
+    await expect(supportsWebGpu({ navigator: {} })).resolves.toBe(false);
+    await expect(
+      supportsWebGpu({ navigator: { gpu: { requestAdapter: async () => null } } })
+    ).resolves.toBe(false);
+    await expect(
+      supportsWebGpu({
+        navigator: {
+          gpu: {
+            requestAdapter: async () => {
+              throw new Error("GPU denied");
+            },
+          },
+        },
+      })
+    ).resolves.toBe(false);
+    await expect(
+      supportsWebGpu({
+        navigator: {
+          gpu: {
+            requestAdapter: async (options) => {
+              expect(options.powerPreference).toBe("high-performance");
+              return {};
+            },
+          },
+        },
+      })
+    ).resolves.toBe(true);
   });
 
   it("recognizes allocation failures without masking unrelated errors", () => {

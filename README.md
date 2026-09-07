@@ -29,7 +29,9 @@ completed report collapses its one-time timing, model, and confidence controls
 into an analysis receipt instead of leaving setup chrome in the reading path.
 The receipt includes archive parsing, model download and preparation,
 embeddings, and report assembly. Supported compact-model runs use WebGPU
-acceleration with a complete WebAssembly fallback.
+acceleration after checking that an adapter is available, or WebAssembly
+compatibility mode. A failure after GPU initialization is not yet a qualified
+recovery path.
 
 The report period controls exact calendar windows, including inactive months.
 It updates the daily activity calendar, topic movement, query tone, language
@@ -95,7 +97,7 @@ pnpm run check
 ```
 
 This runs the repository's full Fleet quality boundary: formatting and lint,
-Astro/TypeScript checks, 65 tests with coverage floors, Knip unused-code and
+Astro/TypeScript checks, 66 tests with coverage floors, Knip unused-code and
 cycle checks, complexity, exact duplication, dependency advisories,
 suppression and repository hygiene checks, and the production build. Existing
 debt is regression-gated by the checked-in quality scripts; historical context
@@ -113,9 +115,11 @@ retry without discarding the readable statistics. Checks run at 390 px and
 
 This audit began with zero open issues and PRs; none were closed. Remaining
 qualification is [#37](https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/37):
-complete model-backed import, evidence/search, explicit save, restore, and
-forget, followed by hosted verification after an approved deployment. The
-offline import regression does not prove semantic completion or persistence.
+hosted verification after an approved deployment, large/split archives,
+multilingual/cross-browser behavior, and failures after GPU initialization.
+[Local synthetic qualification](docs/qualification/2026-09-07/README.md) now
+proves real compact-model import/search, explicit save, reload/restore, and
+forget. The offline import regression remains a separate failure-path check.
 No private archive, hosted upload, or deployment was used for this repair.
 
 ## Deploy

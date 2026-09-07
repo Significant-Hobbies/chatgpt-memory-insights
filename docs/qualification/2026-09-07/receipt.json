@@ -1,0 +1,152 @@
+{
+  "scope": "Actual local synthetic ZIP through pinned browser model; no upload or optional chat model",
+  "seconds": 7.575,
+  "before": null,
+  "saved": {
+    "keys": ["version", "report", "searchIndex", "lexicalIndex"],
+    "version": 3,
+    "model": {
+      "id": "Xenova/all-MiniLM-L6-v2",
+      "revision": "751bff37182d3f1213fa05d7196b954e230abad9",
+      "requestedProfile": "auto",
+      "resolvedProfile": "compact",
+      "approximateDownloadMb": 24,
+      "profileReason": "Automatic mode found a predominantly Latin-script history. Choose multilingual manually for non-English Latin-script histories.",
+      "embeddedConversations": 12,
+      "totalConversations": 12,
+      "embeddedQuestions": 12,
+      "totalQuestions": 12,
+      "embeddedFacts": 2,
+      "totalFacts": 2,
+      "embeddedThreadPrompts": 0,
+      "totalThreadPrompts": 0,
+      "embeddedTopicAnchors": 20,
+      "runtime": {
+        "device": "wasm",
+        "dtype": "q8",
+        "batchSize": 32
+      }
+    },
+    "semanticKeys": ["model", "repeats", "facts", "topics", "edges", "threads"],
+    "jsonBytes": 323007
+  },
+  "restoredStatus": "",
+  "search": "question\nMy basil leaves are yellow. How should I adjust watering?\nBalcony herbs 2\n53.7%\nconversation\nBalcony herbs 4\n1 messages\n52.3%\ntopic\nFood & cooking \u00b7 Balcony\n6 conversations \u00b7 balcony, herbs\n52.2%\nconversation\nBalcony herbs 3\n1 messages\n51.5%\nquestion\nWhich soil drains well for container herbs?\nBalcony herbs 3\n51.5%\nquestion\nHow often should I water basil in a small pot?\nBalcony herbs 4\n50.3%\nconversation\nBalcony herbs 2\n1 messages\n45.6%\nconversation\nBalcony herbs 5\n1 messages\n45.2%\nconversation\nBalcony herbs 6\n1 messages\n44.1%\nquestion\nHow can I keep balcony herbs healthy through summer?\nBalcony herbs 6\n43.6%\nquestion\nI grow mint and basil on my balcony. Can they share a pot?\nBalcony herbs 5\n43.3%\nconversation\nBalcony herbs 1\n1 messages\n37.1%\nquestion\nHow can I grow basil on a sunny balcony?\nBalcony herbs 1\n31.8%\nfact\nMy basil leaves are yellow.\nDetected statement\n20.7%",
+  "forget": "passed; snapshot absent and reload returns to import",
+  "network": [
+    {
+      "host": "sassmaker.com",
+      "path": "/project-strip.js",
+      "method": "GET",
+      "allowed": false
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/ai-chat-footer.js",
+      "method": "GET",
+      "allowed": false
+    },
+    {
+      "host": "huggingface.co",
+      "path": "/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/tokenizer.json",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "huggingface.co",
+      "path": "/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/tokenizer_config.json",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "huggingface.co",
+      "path": "/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/config.json",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "huggingface.co",
+      "path": "/Xenova/all-MiniLM-L6-v2/resolve/751bff37182d3f1213fa05d7196b954e230abad9/onnx/model_quantized.onnx",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "cdn.jsdelivr.net",
+      "path": "/npm/@huggingface/transformers@3.8.1/dist/ort-wasm-simd-threaded.jsep.mjs",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "cdn.jsdelivr.net",
+      "path": "/npm/@huggingface/transformers@3.8.1/dist/ort-wasm-simd-threaded.jsep.wasm",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "ingest.sassmaker.com",
+      "path": "/v1/logs",
+      "method": "POST",
+      "allowed": false
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/project-strip.js",
+      "method": "GET",
+      "allowed": false
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/ai-chat-footer.js",
+      "method": "GET",
+      "allowed": false
+    },
+    {
+      "host": "ingest.sassmaker.com",
+      "path": "/v1/logs",
+      "method": "POST",
+      "allowed": false
+    },
+    {
+      "host": "cdn.jsdelivr.net",
+      "path": "/npm/@huggingface/transformers@3.8.1/dist/ort-wasm-simd-threaded.jsep.mjs",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "cdn.jsdelivr.net",
+      "path": "/npm/@huggingface/transformers@3.8.1/dist/ort-wasm-simd-threaded.jsep.wasm",
+      "method": "GET",
+      "allowed": true
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/project-strip.js",
+      "method": "GET",
+      "allowed": false
+    },
+    {
+      "host": "sassmaker.com",
+      "path": "/ai-chat-footer.js",
+      "method": "GET",
+      "allowed": false
+    }
+  ],
+  "errors": [],
+  "evidenceInspection": {
+    "scope": "Previously produced real saved snapshot restored into fresh isolated browser; all external requests blocked; no repeated model download",
+    "width": 390,
+    "text": "5 matched queries in the recent 12 months.\n\nCode, architecture, databases, errors, tooling, and technical implementation\n\nQuestion categories can overlap.\n\nTypeScript testing 6\nApr 17, 2024\nTypeScript testing 5\nApr 3, 2024\nTypeScript testing 3\nMar 6, 2024\nTypeScript testing 2\nFeb 21, 2024\nTypeScript testing 1\nFeb 7, 2024",
+    "close": "passed",
+    "horizontalOverflow": false
+  },
+  "syntheticArchiveSha256": "ba9b85fe82d99951dd20a5fab191ea3896ef93ad683cbe7a8ad521c0bcea04f7",
+  "savedSnapshotSha256": "c05f57d5839de5662ab8e1f89c099978320768196777895a9784e3bbddc15cbd",
+  "savedSnapshotBytes": 323029,
+  "limitations": [
+    "Local synthetic proof only; no hosted deployment",
+    "Evidence drawer shows attribution titles and dates, not full transcripts",
+    "Preflight avoids unavailable adapters; mid-session GPU failure recovery is not qualified",
+    "Telemetry POST and shared promotional scripts blocked by harness",
+    "No multilingual, large/split archive, optional generator, physical phone or cross-browser qualification"
+  ]
+}

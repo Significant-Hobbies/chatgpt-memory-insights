@@ -38,6 +38,12 @@ sync, and verified medical, emotional, or personality claims.
 
 ## Timeline
 
+- 2026-09-07 — actual GPU-adapter preflight prevents unavailable WebGPU from
+  poisoning the pinned model library's initialization. A local synthetic ZIP
+  completed real WASM q8 embeddings, relevant search, opt-in save, reload/restore
+  and forget. Compact [qualification evidence](docs/qualification/2026-09-07/README.md)
+  records the exact scope; no hosted deployment occurred.
+
 - 2026-09-07 — model-download failures after initial statistics now expose the
   recovery panel, stop the misleading running state, and disable unavailable
   search/save controls while retaining deterministic output. Real built-app
@@ -156,7 +162,7 @@ sync, and verified medical, emotional, or personality claims.
   preparation, semantic work, report assembly, runtime, batch size, and exact
   embedded-candidate coverage.
 - Compact-model WebGPU acceleration with bounded device-aware batches and a
-  complete order-preserving WebAssembly compatibility fallback.
+  order-preserving WebAssembly compatibility mode with adapter preflight.
 - Opt-in 77M q8 local Memory Chat in a dedicated worker, with a disclosed
   approximately 105 MB cached download and explicit unload control.
 - Visible question-to-topic-to-evidence graph traversal with a temporary query
