@@ -5,7 +5,6 @@
 //! keeps only rows the CLI attributes to a person.
 
 use std::collections::{BTreeMap, HashSet};
-use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
@@ -13,7 +12,8 @@ use serde_json::Value;
 use walkdir::WalkDir;
 
 use crate::efficiency::{SessionStats, Tokens};
-use crate::options::Options;
+use crate::input;
+use crate::options::{Collection, Options};
 use crate::session::{Message, Role, Session, Source};
 use crate::text;
 
@@ -362,35 +362,74 @@ fn is_subagent_transcript(path: &Path, root: &Path) -> bool {
 }
 
 /// Reads every session under `<home>/.claude/projects`.
-pub fn collect(claude_dir: &Path, options: &Options) -> Vec<Session> {
+pub fn collect_checked(claude_dir: &Path, options: &Options) -> Result<Collection, String> {
     let root = claude_dir.join("projects");
     if !root.is_dir() {
-        return Vec::new();
+        return Ok(Collection::default());
     }
 
     // Sessions are keyed by id so a transcript split across files merges.
     let mut sessions: BTreeMap<String, Session> = BTreeMap::new();
+    let mut result = Collection::default();
     for entry in WalkDir::new(&root).into_iter().filter_map(Result::ok) {
         let path = entry.path();
-        if !path.is_file() || path.extension().is_some_and(|ext| ext != "jsonl") {
+        if !entry.file_type().is_file() || path.extension().is_some_and(|ext| ext != "jsonl") {
             continue;
         }
         if !options.include_subagents && is_subagent_transcript(path, &root) {
             continue;
         }
-        let Ok(file) = File::open(path) else { continue };
+        let metadata = match input::regular_metadata(path) {
+            Ok(metadata) => metadata,
+            Err(_) if options.modified_before.is_some() => {
+                return Err("selected transcript became unavailable".into())
+            }
+            Err(_) => {
+                result.skipped_files += 1;
+                continue;
+            }
+        };
+        if let Some(cutoff) = options.modified_before {
+            if !input::is_before_cutoff(input::modified_epoch(&metadata), cutoff) {
+                result.skipped_files += 1;
+                continue;
+            }
+        }
+        let (file, before) = match input::open_regular_expected(path, Some(&metadata)) {
+            Ok(value) => value,
+            Err(_) if options.modified_before.is_some() => {
+                return Err("selected transcript changed before read".into())
+            }
+            Err(_) => {
+                result.skipped_files += 1;
+                continue;
+            }
+        };
         let stem = path
             .file_stem()
             .and_then(|stem| stem.to_str())
             .unwrap_or_default();
-        let (parsed_id, draft) = read_lines(BufReader::new(file), options);
+        let (parsed_id, draft) = read_lines(BufReader::new(&file), options);
+        if input::unchanged(path, &file, &before).is_err() && options.modified_before.is_some() {
+            return Err("selected transcript changed during read".into());
+        }
         if draft.messages.is_empty() {
             continue;
         }
 
         let id = parsed_id.unwrap_or_else(|| stem.to_string());
+        let session_id = format!("{}-{id}", Source::ClaudeCode.id_prefix());
+        result.source_files += 1;
+        result.source_bytes += before.len();
+        result
+            .sources
+            .push(crate::source::SourceFile::from_metadata(
+                path,
+                &before,
+                session_id.clone(),
+            ));
         let session = sessions.entry(id.clone()).or_insert_with(|| Session {
-            id: format!("{}-{id}", Source::ClaudeCode.id_prefix()),
+            id: session_id,
             source: Source::ClaudeCode,
             title: None,
             project: draft.project.clone(),
@@ -415,7 +454,8 @@ pub fn collect(claude_dir: &Path, options: &Options) -> Vec<Session> {
             .first()
             .map_or(session.started_at, |first| first.at);
     }
-    collected
+    result.sessions = collected;
+    Ok(result)
 }
 
 #[cfg(test)]

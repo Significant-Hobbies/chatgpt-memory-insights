@@ -14,7 +14,8 @@ use serde_json::Value;
 use walkdir::WalkDir;
 
 use crate::efficiency::{SessionStats, Tokens};
-use crate::options::Options;
+use crate::input;
+use crate::options::{Collection, Options};
 use crate::session::{Message, Role, Session, Source};
 use crate::text;
 
@@ -390,55 +391,111 @@ pub fn read_titles(codex_dir: &Path) -> HashMap<String, String> {
     titles
 }
 
-pub fn collect(codex_dir: &Path, options: &Options) -> Vec<Session> {
-    let root = codex_dir.join("sessions");
-    if !root.is_dir() {
-        return Vec::new();
-    }
-    let titles = read_titles(codex_dir);
+pub fn collect_checked(codex_dir: &Path, options: &Options) -> Result<Collection, String> {
+    // The session index is outside the selected transcript roots and may be a
+    // symlink or contain newer metadata. Strict cutoff exports use the parser's
+    // derived title fallback so only stable, selected transcripts are read.
+    let titles = titles_for_collection(codex_dir, options);
 
     let mut collected = Vec::new();
-    for entry in WalkDir::new(&root).into_iter().filter_map(Result::ok) {
-        let path = entry.path();
-        if !path.is_file() || path.extension().is_some_and(|ext| ext != "jsonl") {
+    let mut result = Collection::default();
+    for root in [
+        codex_dir.join("sessions"),
+        codex_dir.join("archived_sessions"),
+    ] {
+        if !root.is_dir() {
             continue;
         }
-        let Ok(file) = File::open(path) else { continue };
-        let mut draft = read_lines(BufReader::new(file), options);
-        if draft.messages.is_empty() || (draft.is_subagent && !options.include_subagents) {
-            continue;
+        for entry in WalkDir::new(&root).into_iter().filter_map(Result::ok) {
+            let path = entry.path();
+            if !entry.file_type().is_file() || path.extension().is_some_and(|ext| ext != "jsonl") {
+                continue;
+            }
+            let metadata = match input::regular_metadata(path) {
+                Ok(metadata) => metadata,
+                Err(_) if options.modified_before.is_some() => {
+                    return Err("selected transcript became unavailable".into())
+                }
+                Err(_) => {
+                    result.skipped_files += 1;
+                    continue;
+                }
+            };
+            if let Some(cutoff) = options.modified_before {
+                if !input::is_before_cutoff(input::modified_epoch(&metadata), cutoff) {
+                    result.skipped_files += 1;
+                    continue;
+                }
+            }
+            let (file, before) = match input::open_regular_expected(path, Some(&metadata)) {
+                Ok(value) => value,
+                Err(_) if options.modified_before.is_some() => {
+                    return Err("selected transcript changed before read".into())
+                }
+                Err(_) => {
+                    result.skipped_files += 1;
+                    continue;
+                }
+            };
+            let mut draft = read_lines(BufReader::new(&file), options);
+            if input::unchanged(path, &file, &before).is_err() && options.modified_before.is_some()
+            {
+                return Err("selected transcript changed during read".into());
+            }
+            if draft.messages.is_empty() || (draft.is_subagent && !options.include_subagents) {
+                continue;
+            }
+
+            let stem = path
+                .file_stem()
+                .and_then(|stem| stem.to_str())
+                .unwrap_or_default();
+            let id = draft
+                .id
+                .clone()
+                .or_else(|| draft.session_id.clone())
+                .unwrap_or_else(|| stem.to_string());
+            let session_id = format!("{}-{id}", Source::Codex.id_prefix());
+            result.source_files += 1;
+            result.source_bytes += before.len();
+            result
+                .sources
+                .push(crate::source::SourceFile::from_metadata(
+                    path,
+                    &before,
+                    session_id.clone(),
+                ));
+            let title = draft
+                .id
+                .as_ref()
+                .and_then(|key| titles.get(key))
+                .or_else(|| draft.session_id.as_ref().and_then(|key| titles.get(key)))
+                .cloned();
+
+            draft
+                .messages
+                .sort_by(|left, right| left.at.total_cmp(&right.at));
+            collected.push(Session {
+                id: session_id,
+                source: Source::Codex,
+                title,
+                project: draft.project.clone(),
+                started_at: draft.messages[0].at,
+                messages: draft.messages,
+                stats: draft.stats,
+            });
         }
-
-        let stem = path
-            .file_stem()
-            .and_then(|stem| stem.to_str())
-            .unwrap_or_default();
-        let id = draft
-            .id
-            .clone()
-            .or_else(|| draft.session_id.clone())
-            .unwrap_or_else(|| stem.to_string());
-        let title = draft
-            .id
-            .as_ref()
-            .and_then(|key| titles.get(key))
-            .or_else(|| draft.session_id.as_ref().and_then(|key| titles.get(key)))
-            .cloned();
-
-        draft
-            .messages
-            .sort_by(|left, right| left.at.total_cmp(&right.at));
-        collected.push(Session {
-            id: format!("{}-{id}", Source::Codex.id_prefix()),
-            source: Source::Codex,
-            title,
-            project: draft.project.clone(),
-            started_at: draft.messages[0].at,
-            messages: draft.messages,
-            stats: draft.stats,
-        });
     }
-    collected
+    result.sessions = collected;
+    Ok(result)
+}
+
+fn titles_for_collection(codex_dir: &Path, options: &Options) -> HashMap<String, String> {
+    if options.modified_before.is_some() {
+        HashMap::new()
+    } else {
+        read_titles(codex_dir)
+    }
 }
 
 #[cfg(test)]
@@ -448,6 +505,15 @@ mod tests {
 
     fn parse(lines: &str) -> Draft {
         read_lines(Cursor::new(lines.to_string()), &Options::default())
+    }
+
+    #[test]
+    fn strict_cutoff_does_not_read_external_session_index() {
+        let options = Options {
+            modified_before: Some(100.0),
+            ..Options::default()
+        };
+        assert!(titles_for_collection(Path::new("/does-not-exist"), &options).is_empty());
     }
 
     const STAMP: &str = r#""timestamp":"2026-08-25T07:57:31.000Z""#;

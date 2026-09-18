@@ -1,5 +1,8 @@
 //! Packing options shared by both readers.
 
+use crate::session::Session;
+use crate::source::SourceFile;
+
 #[derive(Clone, Debug)]
 pub struct Options {
     /// Include the transcripts of subagents the main session spawned.
@@ -16,6 +19,8 @@ pub struct Options {
     pub include_history: bool,
     /// Collect token and tool accounting so the report can explain cost.
     pub include_usage: bool,
+    /// Include transcript files whose filesystem mtime is strictly before this epoch.
+    pub modified_before: Option<f64>,
 }
 
 impl Default for Options {
@@ -28,6 +33,16 @@ impl Default for Options {
             since: None,
             include_history: true,
             include_usage: true,
+            modified_before: None,
         }
     }
+}
+
+#[derive(Default)]
+pub struct Collection {
+    pub sessions: Vec<Session>,
+    pub source_files: usize,
+    pub source_bytes: u64,
+    pub skipped_files: usize,
+    pub sources: Vec<SourceFile>,
 }

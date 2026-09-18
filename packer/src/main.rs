@@ -6,19 +6,25 @@ mod claude;
 mod codex;
 mod efficiency;
 mod history;
+mod input;
 mod options;
 mod session;
+mod source;
 mod text;
 mod time;
 
 use std::collections::HashMap;
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::os::unix::fs::OpenOptionsExt;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, ValueEnum};
 
-use options::Options;
+use options::{Collection, Options};
 use session::{Session, Source};
+use source::SourceFile;
 
 #[derive(Clone, Copy, PartialEq, Eq, ValueEnum)]
 enum SourceArg {
@@ -91,6 +97,14 @@ struct Cli {
     /// expensive. The report's efficiency findings need it.
     #[arg(long)]
     no_usage: bool,
+
+    /// Include only transcript files whose filesystem mtime is strictly before this epoch.
+    #[arg(long, value_name = "EPOCH_SECONDS", requires = "no_history")]
+    modified_before: Option<f64>,
+
+    /// Write a private aggregate receipt after a successful archive export.
+    #[arg(long, value_name = "PATH")]
+    receipt: Option<PathBuf>,
 }
 
 fn home_dir() -> Option<PathBuf> {
@@ -157,6 +171,61 @@ fn report_sessions(sessions: &[Session]) {
     }
 }
 
+#[derive(serde::Serialize)]
+struct Receipt {
+    format: &'static str,
+    #[serde(rename = "sourceFiles")]
+    source_files: usize,
+    #[serde(rename = "sourceBytes")]
+    source_bytes: u64,
+    sessions: usize,
+    prompts: usize,
+    messages: usize,
+    #[serde(rename = "skippedFiles")]
+    skipped_files: usize,
+    sources: Vec<SourceFile>,
+}
+
+fn write_receipt(
+    path: &PathBuf,
+    collection: &Collection,
+    sessions: &[Session],
+) -> Result<(), String> {
+    let totals = archive::totals(sessions);
+    let session_ids: std::collections::HashSet<&str> =
+        sessions.iter().map(|session| session.id.as_str()).collect();
+    let sources: Vec<SourceFile> = collection
+        .sources
+        .iter()
+        .filter(|source| session_ids.contains(source.session_id.as_str()))
+        .cloned()
+        .collect();
+    let source_bytes = sources.iter().map(|source| source.size.max(0) as u64).sum();
+    let receipt = Receipt {
+        format: "memory-pack-receipt/1",
+        source_files: sources.len(),
+        source_bytes,
+        sessions: totals.sessions,
+        prompts: totals.prompts,
+        messages: totals.messages,
+        skipped_files: collection.skipped_files,
+        sources,
+    };
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(path)
+        .map_err(|error| format!("could not create receipt: {error}"))?;
+    serde_json::to_writer_pretty(&mut file, &receipt)
+        .map_err(|error| format!("could not write receipt: {error}"))?;
+    file.write_all(b"\n")
+        .map_err(|error| format!("could not finish receipt: {error}"))?;
+    file.sync_all()
+        .map_err(|error| format!("could not sync receipt: {error}"))?;
+    Ok(())
+}
+
 fn run(cli: Cli) -> Result<(), String> {
     let home = home_dir();
     let options = Options {
@@ -167,6 +236,7 @@ fn run(cli: Cli) -> Result<(), String> {
         since: cli.since.as_deref().map(parse_since).transpose()?,
         include_history: !cli.no_history,
         include_usage: !cli.no_usage,
+        modified_before: cli.modified_before,
     };
 
     let claude_dir = cli
@@ -179,13 +249,24 @@ fn run(cli: Cli) -> Result<(), String> {
         .ok_or("Could not find a home directory. Pass --claude-dir and --codex-dir.")?;
 
     let mut sessions = Vec::new();
+    let mut collection = Collection::default();
     if cli.source != SourceArg::Codex {
         eprintln!("Reading Claude Code sessions from {}", claude_dir.display());
-        sessions.extend(claude::collect(&claude_dir, &options));
+        let collected = claude::collect_checked(&claude_dir, &options)?;
+        collection.source_files += collected.source_files;
+        collection.source_bytes += collected.source_bytes;
+        collection.skipped_files += collected.skipped_files;
+        collection.sources.extend(collected.sources);
+        sessions.extend(collected.sessions);
     }
     if cli.source != SourceArg::Claude {
         eprintln!("Reading Codex sessions from {}", codex_dir.display());
-        sessions.extend(codex::collect(&codex_dir, &options));
+        let collected = codex::collect_checked(&codex_dir, &options)?;
+        collection.source_files += collected.source_files;
+        collection.source_bytes += collected.source_bytes;
+        collection.skipped_files += collected.skipped_files;
+        collection.sources.extend(collected.sources);
+        sessions.extend(collected.sessions);
     }
 
     if options.include_history {
@@ -223,6 +304,11 @@ fn run(cli: Cli) -> Result<(), String> {
     sessions.sort_by(|left, right| left.started_at.total_cmp(&right.started_at));
 
     if sessions.is_empty() {
+        if let Some(receipt) = &cli.receipt {
+            write_receipt(receipt, &collection, &sessions)?;
+            println!("No sessions matched; wrote receipt.");
+            return Ok(());
+        }
         return Err(
             "No sessions were found. Check --claude-dir and --codex-dir, or widen --since.".into(),
         );
@@ -259,6 +345,9 @@ fn run(cli: Cli) -> Result<(), String> {
         println!("Secrets were not masked: this archive was built with --no-redact.");
     }
     println!("Upload it to Memory Map without unzipping it.");
+    if let Some(receipt) = &cli.receipt {
+        write_receipt(receipt, &collection, &sessions)?;
+    }
     Ok(())
 }
 
@@ -275,6 +364,8 @@ fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
+    use std::os::unix::fs::PermissionsExt;
 
     #[test]
     fn verifies_the_command_line_definition() {
@@ -298,6 +389,133 @@ mod tests {
         assert_eq!(plural(2, "session"), "2 sessions");
         assert_eq!(describe_size(2048), "2 KB");
         assert_eq!(describe_size(5_242_880), "5.0 MB");
+    }
+
+    #[test]
+    fn writes_private_zero_session_receipt() {
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!("memory-pack-receipt-{stamp}.json"));
+        write_receipt(&path, &Collection::default(), &[]).unwrap();
+        let value: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        assert_eq!(value["format"], "memory-pack-receipt/1");
+        assert_eq!(value["sourceFiles"], 0);
+        assert_eq!(value["sessions"], 0);
+        assert_eq!(value["prompts"], 0);
+        assert_eq!(value["messages"], 0);
+        assert_eq!(value["skippedFiles"], 0);
+        assert_eq!(value["sources"], serde_json::json!([]));
+        #[cfg(unix)]
+        assert_eq!(
+            std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+            0o600
+        );
+    }
+
+    #[test]
+    fn receipt_sources_keep_only_files_represented_in_final_sessions() {
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let temporary = std::env::temp_dir()
+            .to_string_lossy()
+            .replace("/var/", "/private/var/");
+        let root = PathBuf::from(temporary).join(format!("memory-pack-source-manifest-{stamp}"));
+        let claude_dir = root.join("claude");
+        let codex_dir = root.join("codex");
+        std::fs::create_dir_all(claude_dir.join("projects/demo")).unwrap();
+        std::fs::create_dir_all(codex_dir.join("sessions/2026/08/29")).unwrap();
+        std::fs::write(
+            claude_dir.join("projects/demo/valid.jsonl"),
+            r#"{"type":"user","promptSource":"typed","message":{"content":"claude ask"},"timestamp":"2026-08-29T16:03:47.000Z","sessionId":"claude-thread"}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            codex_dir.join("sessions/2026/08/29/valid.jsonl"),
+            r#"{"timestamp":"2026-08-29T16:03:47.000Z","type":"session_meta","payload":{"id":"codex-thread","cwd":"/repo"}}
+{"timestamp":"2026-08-29T16:03:47.000Z","type":"response_item","payload":{"type":"message","id":"m1","role":"user","content":[{"type":"input_text","text":"codex ask"}]}}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            claude_dir.join("projects/demo/empty.jsonl"),
+            b"not a conversation",
+        )
+        .unwrap();
+        std::fs::write(
+            codex_dir.join("sessions/2026/08/29/unsupported.txt"),
+            b"ignored",
+        )
+        .unwrap();
+
+        let options = Options {
+            include_history: false,
+            ..Options::default()
+        };
+        let claude = claude::collect_checked(&claude_dir, &options).unwrap();
+        let codex = codex::collect_checked(&codex_dir, &options).unwrap();
+        let mut collection = Collection::default();
+        collection.sources.extend(claude.sources);
+        collection.sources.extend(codex.sources);
+        collection.source_files = collection.sources.len();
+        collection.source_bytes = collection
+            .sources
+            .iter()
+            .map(|source| source.size.max(0) as u64)
+            .sum();
+        let mut sessions = claude.sessions;
+        sessions.extend(codex.sessions);
+
+        let receipt = root.join("receipt.json");
+        write_receipt(&receipt, &collection, &sessions).unwrap();
+        let value: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&receipt).unwrap()).unwrap();
+        assert_eq!(value["sourceFiles"], 2);
+        assert_eq!(value["sources"].as_array().unwrap().len(), 2);
+        for source in value["sources"].as_array().unwrap() {
+            assert!(source["path"].as_str().unwrap().starts_with('/'));
+            assert!(source["device"].as_u64().is_some());
+            assert!(source["inode"].as_u64().is_some());
+            assert!(source["size"].as_i64().unwrap() > 0);
+            for field in [
+                "modifiedSeconds",
+                "modifiedNanoseconds",
+                "changedSeconds",
+                "changedNanoseconds",
+            ] {
+                assert!(source[field].as_i64().is_some(), "missing {field}");
+            }
+        }
+        assert_eq!(value["sources"][0]["session_id"], serde_json::Value::Null);
+
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn receipt_has_no_sources_when_no_file_has_eligible_messages() {
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let temporary = std::env::temp_dir()
+            .to_string_lossy()
+            .replace("/var/", "/private/var/");
+        let root = PathBuf::from(temporary).join(format!("memory-pack-no-sources-{stamp}"));
+        let claude_dir = root.join("claude/projects/demo");
+        std::fs::create_dir_all(&claude_dir).unwrap();
+        std::fs::write(claude_dir.join("empty.jsonl"), b"not json\n").unwrap();
+        let options = Options {
+            include_history: false,
+            ..Options::default()
+        };
+        let collection = claude::collect_checked(root.join("claude").as_path(), &options).unwrap();
+        assert!(collection.sessions.is_empty());
+        assert!(collection.sources.is_empty());
+
+        std::fs::remove_dir_all(&root).ok();
     }
 
     #[test]
