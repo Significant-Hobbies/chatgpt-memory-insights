@@ -32,7 +32,7 @@
           navigated = true;
           location.assign(cta.href);
         };
-        setTimeout(navigate, 800);
+        setTimeout(navigate, 4500);
         Promise.resolve(window.appHealth.flush && window.appHealth.flush()).catch(function () {}).finally(navigate);
       }
     }
