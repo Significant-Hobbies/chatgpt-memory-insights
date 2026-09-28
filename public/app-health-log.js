@@ -20,9 +20,21 @@
     send("form.submitted", { title: f.id || f.getAttribute("name") || f.getAttribute("action") || "form", props: { page: location.pathname } });
   }, true);
   document.addEventListener("click", function (e) {
+    var cta = e.target && e.target.closest ? e.target.closest("[data-app-health-event]") : null;
+    var eventName = cta && cta.getAttribute("data-app-health-event");
+    if (eventName && cta.tagName !== "INPUT" && window.appHealth && typeof window.appHealth.track === "function") {
+      window.appHealth.track(eventName);
+    }
     var t = e.target && e.target.closest ? e.target.closest("[data-log]") : null;
     var name = t && t.getAttribute("data-log");
     if (name) send(name, { title: (t.textContent || "").trim().slice(0, 120) || name, props: { page: location.pathname } });
+  }, true);
+  document.addEventListener("change", function (e) {
+    var input = e.target;
+    var name = input && input.getAttribute && input.getAttribute("data-app-health-event");
+    if (name && input.files && input.files.length && window.appHealth && typeof window.appHealth.track === "function") {
+      window.appHealth.track(name);
+    }
   }, true);
   window.addEventListener("error", function (e) {
     send("client.error", { level: "error", title: String(e.message || "error").slice(0, 200), props: { page: location.pathname } });

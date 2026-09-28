@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import "../styles/about.css";
 import PublicClarity from "../components/public-clarity.astro";
+import FooterCapture from "../components/FooterCapture.astro";
 
 const repository = "https://github.com/Significant-Hobbies/chatgpt-memory-insights";
 const title = "Changelog · Memory Map";
@@ -81,6 +82,7 @@ const releases = [
     <script is:inline async src="/scripts/posthog.js"></script>
     <PublicClarity />
     <script is:inline src="/app-health-log.js" defer></script>
+    <script is:inline defer src="https://health.sassmaker.com/tracker.js" data-key="ahk_pub_6e16be9c9385a6def153b05b1feb391a1205ca00a2c4cd263fb7428dbed4302c" data-project="app-import-de5017d248ba97d2e2e54643dcabc91b3a53f820644e3d8d324d74364847fe58" data-identity="persistent"></script>
   </head>
   <body class="about-page changelog-page">
     <a class="skip-link" href="#main">Skip to main content</a>
@@ -146,8 +148,9 @@ const releases = [
         Your history stays on your device. Microsoft Clarity measures this public changelog, not
         the private analysis route.
       </p>
-      <a href="/">Analyze my ChatGPT ZIP →</a>
+      <a href="/" data-app-health-event="analysis_opened">Analyze my ChatGPT ZIP →</a>
     </footer>
+    <FooterCapture />
     <script
       is:inline
       src="https://sassmaker.com/project-strip.js"

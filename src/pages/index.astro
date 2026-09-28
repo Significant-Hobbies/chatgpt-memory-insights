@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import FooterCapture from "../components/FooterCapture.astro";
 
 const title = "Memory Map — Explore your ChatGPT history";
 const description =
@@ -68,6 +69,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
 <!-- fleet-jsonld:end -->
 <script is:inline async src="/scripts/posthog.js"></script>
   <script is:inline src="/app-health-log.js" defer></script>
+  <script is:inline defer src="https://health.sassmaker.com/tracker.js" data-key="ahk_pub_6e16be9c9385a6def153b05b1feb391a1205ca00a2c4cd263fb7428dbed4302c" data-project="app-import-de5017d248ba97d2e2e54643dcabc91b3a53f820644e3d8d324d74364847fe58" data-identity="persistent"></script>
 </head>
   <body>
     <a class="skip-link" href="#main">Skip to main content</a>
@@ -124,7 +126,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
               Choose your ChatGPT export. Memory Map reads its conversation files in this tab,
               then builds a searchable semantic graph with a browser-loaded embedding model.
             </p>
-            <a class="product-tour-link" href="/about/"
+            <a class="product-tour-link" href="/about/" data-app-health-event="capabilities_opened"
               >See all 51 things Memory Map can find →</a
             >
           </div>
@@ -271,7 +273,12 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
 
           <div class="import-grid">
             <label id="drop-zone" class="drop-zone" for="archive-input">
-              <input id="archive-input" type="file" accept=".zip,application/zip" />
+              <input
+                id="archive-input"
+                type="file"
+                accept=".zip,application/zip"
+                data-app-health-event="archive_import_started"
+              />
               <span class="file-mark" aria-hidden="true">.ZIP</span>
               <strong>Choose your ChatGPT export</strong>
               <span>or drop a ChatGPT export or memory-pack ZIP here</span>
@@ -1164,6 +1171,7 @@ FORM: Graph-first memory workbench; selected delegated probe; direction seed 100
         >
       </nav>
     </footer>
+    <FooterCapture />
 
     <dialog id="story-dialog" class="story-dialog" aria-labelledby="story-heading">
       <div class="story-shell">

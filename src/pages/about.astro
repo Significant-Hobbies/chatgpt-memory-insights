@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import "../styles/about.css";
 import PublicClarity from "../components/public-clarity.astro";
+import FooterCapture from "../components/FooterCapture.astro";
 
 const title = "What Memory Map finds in your ChatGPT history";
 const description =
@@ -352,6 +353,7 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
     <script is:inline async src="/scripts/posthog.js"></script>
     <PublicClarity />
     <script is:inline src="/app-health-log.js" defer></script>
+    <script is:inline defer src="https://health.sassmaker.com/tracker.js" data-key="ahk_pub_6e16be9c9385a6def153b05b1feb391a1205ca00a2c4cd263fb7428dbed4302c" data-project="app-import-de5017d248ba97d2e2e54643dcabc91b3a53f820644e3d8d324d74364847fe58" data-identity="persistent"></script>
   </head>
   <body class="about-page">
     <a class="skip-link" href="#main">Skip to main content</a>
@@ -679,7 +681,7 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
           <p class="map-key">Next stop</p>
           <h2 id="final-heading">Your history is already there. Make it navigable.</h2>
         </div>
-        <a class="about-primary-action" href="/">Analyze my ChatGPT ZIP</a>
+        <a class="about-primary-action" href="/" data-app-health-event="analysis_opened">Analyze my ChatGPT ZIP</a>
         <p>
           No account. No archive upload. Nothing saved unless you ask.
         </p>
@@ -703,6 +705,7 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
       <a href="/changelog/">Changelog</a>
       <a href="/">Analyze my ChatGPT ZIP →</a>
     </footer>
+    <FooterCapture />
     <script
       is:inline
       src="https://sassmaker.com/project-strip.js"
