@@ -24,6 +24,17 @@
     var eventName = cta && cta.getAttribute("data-app-health-event");
     if (eventName && cta.tagName !== "INPUT" && window.appHealth && typeof window.appHealth.track === "function") {
       window.appHealth.track(eventName);
+      if (cta.tagName === "A" && e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && cta.target !== "_blank" && !cta.hasAttribute("download")) {
+        e.preventDefault();
+        var navigated = false;
+        var navigate = function () {
+          if (navigated) return;
+          navigated = true;
+          location.assign(cta.href);
+        };
+        setTimeout(navigate, 800);
+        Promise.resolve(window.appHealth.flush && window.appHealth.flush()).catch(function () {}).finally(navigate);
+      }
     }
     var t = e.target && e.target.closest ? e.target.closest("[data-log]") : null;
     var name = t && t.getAttribute("data-log");
