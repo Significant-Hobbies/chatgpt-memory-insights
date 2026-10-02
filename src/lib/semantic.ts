@@ -1021,16 +1021,28 @@ type GroupedEvidence = RankedEvidence & {
   provenance: RankedEvidence[];
 };
 
+function isDateIndependentPrompt(text: string): boolean {
+  if (/\b(now|today|yesterday|tomorrow|currently|this|last|next|ago)\b/iu.test(text)) {
+    return false;
+  }
+  // Recognize generic question/directive structure, not a list of state verbs.
+  // Statements, mixed utterances and unknown forms retain their observation date.
+  const question = /^(how|what|why|which)\b[^.!?]*\?$/iu.test(text);
+  const policy = /^(always|never|do not|don['’]t)\s+[^.!?]+[.!]?$/iu.test(text);
+  const body = text.replace(/^how\s+(do|can|could|should|would)\s+(i|we|you)\s+/iu, "");
+  const personal =
+    /\b(i|me|my|mine|we|us|our|ours|you|your|yours|he|his|she|her|hers|they|them|their|theirs)\b/iu;
+  const stateClause = /\b(am|is|are|was|were|have|has|had)\b/iu;
+  return (question || policy) && !personal.test(body) && !stateClause.test(body);
+}
+
 function searchEvidenceKey(entry: RankedEvidence): string {
   // Do not use normalizedKey: removing punctuation can erase negation or code.
   const text = (entry.context ?? entry.title).replace(/\s+/gu, " ").trim();
   if (!text || (entry.type !== "question" && entry.type !== "fact")) return entry.id;
-  const dated =
-    entry.type === "fact" ||
-    /\b(now|today|yesterday|tomorrow|currently|this|last|next|ago)\b/iu.test(text) ||
-    /\bi\s+(am|have|live|work|use|own|earn)\b|\bi['’](m|ve)\b/iu.test(text);
-  // Facts retain case, detection cues and observation dates. Relative-time prompts
-  // also retain their date; matching wording alone does not establish simultaneity.
+  const dated = entry.type === "fact" || !isDateIndependentPrompt(text);
+  // Record role does not establish that wording is independent of observation time.
+  // Facts also retain case and detection cues.
   return JSON.stringify([
     entry.type,
     entry.type === "question" ? text.toLowerCase() : text,

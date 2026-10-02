@@ -107,6 +107,67 @@ describe("search evidence grouping", () => {
     expect(groupSearchEvidence(entries, 1.9)).toHaveLength(1);
   });
 
+  it.each([
+    "I no longer live in Paris.",
+    "I don't live in Paris.",
+    "My home is in Paris.",
+    "We moved to Paris.",
+    "The Paris office is closed.",
+    "I stopped working there. How do I update my profile?",
+    "Where do I live?",
+    "What is my address?",
+    "Why is the Paris office closed?",
+    "How do I explain that the Paris office is closed?",
+  ])("retains cross-date observations for either record role: %s", (text) => {
+    for (const type of ["question", "fact"] as const) {
+      const entries = [1, 2].map((date) =>
+        evidence(`${type}-${date}`, text, {
+          type,
+          detail: "Detected statement",
+          source: { conversationId: `${type}-${date}`, title: "Observation", date },
+        })
+      );
+      const results = groupSearchEvidence(entries);
+      expect(results).toHaveLength(2);
+      expect(results.map((entry) => entry.repetitionCount)).toEqual([1, 1]);
+      expect(results.flatMap((entry) => entry.provenance)).toEqual(entries);
+    }
+  });
+
+  it("groups normalized claims only within a known observation date", () => {
+    const entries = [
+      evidence("a", "I no longer live in Paris."),
+      evidence("b", "  I NO LONGER\n live in Paris. "),
+      evidence("c", "I no longer live in Paris.", { source: null }),
+      evidence("d", "I no longer live in Paris.", { source: null }),
+    ];
+    const results = groupSearchEvidence(entries);
+    expect(results.map((entry) => entry.repetitionCount)).toEqual([2, 1, 1]);
+    expect(results[0].provenance).toEqual(entries.slice(0, 2));
+    expect(results[0].sources).toEqual(entries.slice(0, 2).map((entry) => entry.source));
+  });
+
+  it.each([
+    "How do I grow tomatoes?",
+    "What causes rain?",
+    "Never share credentials.",
+    "Do not share credentials.",
+  ])("groups generic questions and policies across dates with full provenance: %s", (text) => {
+    const entries = [1, 2, 3].map((date) =>
+      evidence(`repeat-${date}`, date === 2 ? `  ${text.toUpperCase()}\n ` : text, {
+        similarity: date === 2 ? 0.9 : 0.8,
+        source: { conversationId: `repeat-${date}`, title: "Repeated request", date },
+      })
+    );
+    const results = groupSearchEvidence(entries, 1);
+    expect(results).toHaveLength(1);
+    expect(results[0].id).toBe("repeat-2");
+    expect(results[0].similarity).toBe(0.9);
+    expect(results[0].repetitionCount).toBe(3);
+    expect(results[0].provenance).toEqual([entries[1], entries[0], entries[2]]);
+    expect(results[0].sources).toEqual(results[0].provenance.map((entry) => entry.source));
+  });
+
   it("does not merge other entry types by a partial or generated summary", () => {
     const entries = ["conversation", "strand", "topic"].flatMap((type) => [
       evidence(`${type}-a`, "Same summary", { type: type as SearchResult["type"] }),
