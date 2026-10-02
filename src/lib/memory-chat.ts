@@ -230,7 +230,7 @@ export function validateMemoryChatCitations(
   evidence: MemoryChatEvidence[]
 ): { valid: boolean; citations: string[]; reason: string | null } {
   const allowed = new Set(evidence.map((item) => item.reference));
-  const citations = [...new Set([...answer.matchAll(/\[(S\d+)\]/g)].map((match) => match[1]))];
+  const citations = [...new Set([...answer.matchAll(/\[(S[\w-]*)\]/gi)].map((match) => match[1]))];
   if (citations.length === 0) {
     return {
       valid: false,
@@ -242,8 +242,8 @@ export function validateMemoryChatCitations(
     return { valid: false, citations, reason: "The local draft cited an unknown evidence stop." };
   }
   if (
-    /answer only from the labelled memory evidence|memory question:|retrieved evidence:|answer with evidence citations:/i.test(
-      answer
+    /you are a small local synthesis model|answer only from the labelled memory evidence|cite supporting labels|if the evidence is weak or missing|never invent preferences, diagnoses, dates, or source content|keep the answer under 140 words|memory question:|retrieved evidence:|answer with evidence citations:/i.test(
+      compactText(answer, answer.length)
     )
   ) {
     return { valid: false, citations, reason: "The local draft repeated its instructions." };

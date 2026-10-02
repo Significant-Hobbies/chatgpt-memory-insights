@@ -133,13 +133,45 @@ describe("memory chat context", () => {
     expect(buildMemoryChatFallback(evidence)).toContain("[S1]");
   });
 
-  it("rejects mixed known and invented citations rather than silently dropping the unknown one", () => {
+  it.each(["S99", "S0", "S01", "s1", "Sx", "S1-extra"])(
+    "rejects unknown citation %s alongside a known citation",
+    (reference) => {
+      expect(
+        validateMemoryChatCitations(
+          `A draft [S1] and an invented source [${reference}].`,
+          buildMemoryChatEvidence([result(0)])
+        )
+      ).toMatchObject({ valid: false });
+    }
+  );
+
+  it("checks citation IDs without establishing semantic support", () => {
+    const evidence = buildMemoryChatEvidence([
+      { ...result(0), context: "I am learning watercolor." },
+    ]);
+    expect(validateMemoryChatCitations("I am an expert surgeon [S1].", evidence)).toEqual({
+      valid: true,
+      citations: ["S1"],
+      reason: null,
+    });
+    expect(buildMemoryChatFallback(evidence)).toContain("I am learning watercolor.");
+    expect(buildMemoryChatFallback(evidence)).not.toContain("surgeon");
+  });
+
+  it.each([
+    "You are a small local synthesis model inside Memory Map.",
+    "Cite supporting labels like [S1] after each factual claim.",
+    "If the evidence is weak or missing, say that the mapped history does not contain enough evidence.",
+    "Never invent preferences, diagnoses, dates, or source content.",
+    "Keep the answer under 140 words.",
+    "Answer only from the labelled\n memory evidence in the latest user message.",
+    "Memory question: What changed?",
+    "Retrieved evidence: [S1]",
+    "Answer with evidence citations:",
+  ])("withholds echoed prompt instructions: %s", (instruction) => {
     expect(
-      validateMemoryChatCitations(
-        "A draft [S1] and an invented source [S99].",
-        buildMemoryChatEvidence([result(0)])
-      )
-    ).toMatchObject({ valid: false });
+      validateMemoryChatCitations(`${instruction} [S1]`, buildMemoryChatEvidence([result(0)]))
+    ).toMatchObject({ valid: false, reason: "The local draft repeated its instructions." });
   });
 
   it("withholds the observed instruction-echo failure and retains the actual watercolor excerpt", () => {
