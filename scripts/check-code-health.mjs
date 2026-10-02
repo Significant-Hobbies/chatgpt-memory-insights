@@ -135,7 +135,7 @@ function checkDuplication() {
   failRegressions("Duplication", observed, {
     clones: 3,
     duplicatedLines: 43,
-    percentage: 0.5421079172970247,
+    percentage: 0.50,
   });
 }
 
