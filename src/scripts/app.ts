@@ -18,10 +18,10 @@ import {
 import {
   buildMemoryChatEvidence,
   buildMemoryChatMessages,
-  buildGroundedFallback,
+  buildMemoryChatFallback,
   MEMORY_CHAT_MODEL,
   planMemoryChatResults,
-  validateGroundedAnswer,
+  validateMemoryChatCitations,
   type MemoryChatEvidence,
   type MemoryChatRuntime,
   type MemoryChatTurn,
@@ -1138,10 +1138,15 @@ function renderGraphTraversal(question: string, evidence: MemoryChatEvidence[]) 
   }
 }
 
-function appendMemoryChatMessage(role: "user" | "assistant", content: string, detail?: string) {
+function appendMemoryChatMessage(
+  role: "user" | "assistant",
+  content: string,
+  detail?: string,
+  assistantLabel = "Local model draft · unverified"
+) {
   const message = document.createElement("article");
   message.className = `memory-chat-message ${role}`;
-  message.append(text("span", role === "user" ? "You" : "Grounded answer"), text("p", content));
+  message.append(text("span", role === "user" ? "You" : assistantLabel), text("p", content));
   if (detail) message.append(text("small", detail));
   memoryChatTranscript.append(message);
   memoryChatTranscript.scrollTop = memoryChatTranscript.scrollHeight;
@@ -1241,21 +1246,22 @@ function onMemoryChatWorkerMessage(event: MessageEvent<MemoryChatWorkerResponse>
     return;
   }
   if (message.type === "answer") {
-    const validation = validateGroundedAnswer(message.answer, pendingMemoryEvidence);
+    const validation = validateMemoryChatCitations(message.answer, pendingMemoryEvidence);
     const displayedAnswer = validation.valid
       ? message.answer
-      : buildGroundedFallback(pendingMemoryEvidence);
+      : buildMemoryChatFallback(pendingMemoryEvidence);
     appendMemoryChatMessage(
       "assistant",
       displayedAnswer,
       validation.valid
-        ? `${memoryChatRuntimeLabel(message.runtime)} · ${formatDuration(message.elapsedMs)} · ${validation.citations.join(", ")} verified`
-        : `${memoryChatRuntimeLabel(message.runtime)} · ${formatDuration(message.elapsedMs)} · grounding validator withheld the draft`
+        ? `${memoryChatRuntimeLabel(message.runtime)} · ${formatDuration(message.elapsedMs)} · ${validation.citations.join(", ")} linked · answer accuracy has not been checked`
+        : `${memoryChatRuntimeLabel(message.runtime)} · ${formatDuration(message.elapsedMs)} · ${validation.reason}`,
+      validation.valid ? "Local model draft · unverified" : "Retrieved evidence"
     );
     memoryChatHistory.push({ role: "assistant", content: displayedAnswer });
     pendingMemoryQuestion = null;
     setMemoryChatStage(null);
-    memoryChatModelStatus.textContent = `Answer ready in ${formatDuration(message.elapsedMs)}. The model remains loaded until you unload or reset it.`;
+    memoryChatModelStatus.textContent = `${validation.valid ? "Draft" : "Evidence"} ready in ${formatDuration(message.elapsedMs)}. The model remains loaded until you unload or reset it.`;
     memoryChatQuery.disabled = false;
     memoryChatForm.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled = false;
     memoryChatQuery.focus();
@@ -1269,7 +1275,9 @@ function onMemoryChatWorkerMessage(event: MessageEvent<MemoryChatWorkerResponse>
   if (!memoryChatSession.hidden || pendingMemoryQuestion) {
     appendMemoryChatMessage(
       "assistant",
-      "I could not synthesize an answer locally. Review the retrieved evidence stops below."
+      "I could not synthesize an answer locally. Review the retrieved evidence stops below.",
+      undefined,
+      "Local model status"
     );
   }
   pendingMemoryQuestion = null;

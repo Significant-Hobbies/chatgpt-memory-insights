@@ -110,7 +110,7 @@ sync, and verified medical, emotional, or personality claims.
   order-preserving semantic batching completed and benchmarked on the
   owner-supplied archive; production deployment was not performed
 - 2026-07-28 — graph-routed Memory Chat, bounded cited evidence packs,
-  structured change/repeat retrieval, grounding validation, independent model
+  structured change/repeat retrieval, citation checks with unverified draft labels, independent model
   unload, and single-tab analysis ownership completed; production deployment
   was not performed
 - 2026-07-28 — visual atlas, execution timing, and graph-routed Memory Chat

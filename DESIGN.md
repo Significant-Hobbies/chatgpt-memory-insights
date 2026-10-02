@@ -178,7 +178,9 @@ local synthesis so the answer is never visually detached from retrieval.
 Memory Chat is an opt-in presentation layer over the existing hybrid index.
 The pinned 77M q8 model sees no more than six labelled excerpts and four recent
 turns. Its answer remains visibly distinct from memory state, must cite an
-S1–S6 evidence stop, and is withheld when the grounding check fails. Evidence
+S1–S6 evidence stop. Unknown citations and instruction echoes are withheld;
+recognized citations are syntax checks, not semantic verification. Generated
+answers are labelled unverified local drafts. Evidence
 buttons remain usable even when generation fails.
 
 ### Browser resource safety

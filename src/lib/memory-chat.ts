@@ -224,18 +224,13 @@ export function extractGeneratedAnswer(output: unknown): string {
   throw new Error("The local model did not produce an answer.");
 }
 
-export function validateGroundedAnswer(
+/** Citation syntax is checkable locally; semantic support is not established by it. */
+export function validateMemoryChatCitations(
   answer: string,
   evidence: MemoryChatEvidence[]
 ): { valid: boolean; citations: string[]; reason: string | null } {
   const allowed = new Set(evidence.map((item) => item.reference));
-  const citations = [
-    ...new Set(
-      [...answer.matchAll(/\[(S\d+)\]/g)]
-        .map((match) => match[1])
-        .filter((reference) => allowed.has(reference))
-    ),
-  ];
+  const citations = [...new Set([...answer.matchAll(/\[(S[\w-]*)\]/gi)].map((match) => match[1]))];
   if (citations.length === 0) {
     return {
       valid: false,
@@ -243,14 +238,24 @@ export function validateGroundedAnswer(
       reason: "The local draft did not cite any retrieved evidence.",
     };
   }
+  if (citations.some((reference) => !allowed.has(reference))) {
+    return { valid: false, citations, reason: "The local draft cited an unknown evidence stop." };
+  }
+  if (
+    /you are a small local synthesis model|answer only from the labelled memory evidence|cite supporting labels|if the evidence is weak or missing|never invent preferences, diagnoses, dates, or source content|keep the answer under 140 words|memory question:|retrieved evidence:|answer with evidence citations:/i.test(
+      compactText(answer, answer.length)
+    )
+  ) {
+    return { valid: false, citations, reason: "The local draft repeated its instructions." };
+  }
   return { valid: true, citations, reason: null };
 }
 
-export function buildGroundedFallback(evidence: MemoryChatEvidence[]): string {
+export function buildMemoryChatFallback(evidence: MemoryChatEvidence[]): string {
   if (evidence.length === 0) {
     return "The mapped history does not contain enough evidence to answer that question.";
   }
-  return `The small local model’s draft was withheld because it did not stay source-grounded. The strongest mapped evidence is [${evidence[0].reference}] ${compactText(
+  return `The local model’s draft could not be used. Review these retrieved excerpts instead: [${evidence[0].reference}] ${compactText(
     evidence[0].excerpt,
     260
   )}${evidence[1] ? ` A second relevant stop is [${evidence[1].reference}] ${compactText(evidence[1].excerpt, 180)}` : ""}`;

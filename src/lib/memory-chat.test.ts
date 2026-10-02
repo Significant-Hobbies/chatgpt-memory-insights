@@ -3,11 +3,11 @@ import {
   buildMemoryChatEvidence,
   buildMemoryChatMessages,
   buildMemoryChatPrompt,
-  buildGroundedFallback,
+  buildMemoryChatFallback,
   extractGeneratedAnswer,
   MEMORY_CHAT_MODEL,
   planMemoryChatResults,
-  validateGroundedAnswer,
+  validateMemoryChatCitations,
 } from "./memory-chat";
 import type { FullReport, SearchResult } from "./types";
 
@@ -121,13 +121,74 @@ describe("memory chat context", () => {
 
   it("rejects uncited drafts and retains an evidence-only fallback", () => {
     const evidence = buildMemoryChatEvidence([result(0)]);
-    expect(validateGroundedAnswer("An unsupported draft.", evidence)).toMatchObject({
+    expect(validateMemoryChatCitations("An unsupported draft.", evidence)).toMatchObject({
       valid: false,
     });
-    expect(validateGroundedAnswer("A supported answer [S1].", evidence)).toMatchObject({
+    expect(
+      validateMemoryChatCitations("A draft with a recognized citation [S1].", evidence)
+    ).toMatchObject({
       valid: true,
       citations: ["S1"],
     });
-    expect(buildGroundedFallback(evidence)).toContain("[S1]");
+    expect(buildMemoryChatFallback(evidence)).toContain("[S1]");
+  });
+
+  it.each(["S99", "S0", "S01", "s1", "Sx", "S1-extra"])(
+    "rejects unknown citation %s alongside a known citation",
+    (reference) => {
+      expect(
+        validateMemoryChatCitations(
+          `A draft [S1] and an invented source [${reference}].`,
+          buildMemoryChatEvidence([result(0)])
+        )
+      ).toMatchObject({ valid: false });
+    }
+  );
+
+  it("checks citation IDs without establishing semantic support", () => {
+    const evidence = buildMemoryChatEvidence([
+      { ...result(0), context: "I am learning watercolor." },
+    ]);
+    expect(validateMemoryChatCitations("I am an expert surgeon [S1].", evidence)).toEqual({
+      valid: true,
+      citations: ["S1"],
+      reason: null,
+    });
+    expect(buildMemoryChatFallback(evidence)).toContain("I am learning watercolor.");
+    expect(buildMemoryChatFallback(evidence)).not.toContain("surgeon");
+  });
+
+  it.each([
+    "You are a small local synthesis model inside Memory Map.",
+    "Cite supporting labels like [S1] after each factual claim.",
+    "If the evidence is weak or missing, say that the mapped history does not contain enough evidence.",
+    "Never invent preferences, diagnoses, dates, or source content.",
+    "Keep the answer under 140 words.",
+    "Answer only from the labelled\n memory evidence in the latest user message.",
+    "Memory question: What changed?",
+    "Retrieved evidence: [S1]",
+    "Answer with evidence citations:",
+  ])("withholds echoed prompt instructions: %s", (instruction) => {
+    expect(
+      validateMemoryChatCitations(`${instruction} [S1]`, buildMemoryChatEvidence([result(0)]))
+    ).toMatchObject({ valid: false, reason: "The local draft repeated its instructions." });
+  });
+
+  it("withholds the observed instruction-echo failure and retains the actual watercolor excerpt", () => {
+    const evidence = buildMemoryChatEvidence([
+      {
+        ...result(0),
+        context:
+          "I am a synthetic tester learning watercolor. How do I practice painting a landscape?",
+      },
+    ]);
+    const answer =
+      "The answer is: [S1] Question: What did I keep asking about watercolor painting? Answer only from the labelled memory evidence in the latest user message. The provided information is about the latest version of Memory Map.";
+    expect(validateMemoryChatCitations(answer, evidence)).toMatchObject({
+      valid: false,
+      reason: "The local draft repeated its instructions.",
+    });
+    expect(buildMemoryChatFallback(evidence)).toContain("How do I practice painting a landscape?");
+    expect(buildMemoryChatFallback(evidence)).not.toContain("latest version");
   });
 });
