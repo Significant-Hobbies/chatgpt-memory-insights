@@ -214,9 +214,9 @@ const capabilityRoutes = [
           "The local generator receives at most six labelled excerpts and four recent chat turns, keeping context inspectable and browser work bounded.",
       },
       {
-        title: "Citation grounding validator",
+        title: "Citation checks, not answer verification",
         detail:
-          "Generated drafts must cite retrieved S1–S6 stops. An uncited draft is withheld while the source evidence remains available.",
+          "Local drafts are labelled unverified. Missing or unknown citations and repeated instructions are withheld; recognized S1–S6 citations do not establish answer accuracy. Source excerpts remain available for review.",
       },
       {
         title: "Change-aware and repeat-aware retrieval",
