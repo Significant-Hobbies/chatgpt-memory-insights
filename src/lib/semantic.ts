@@ -1013,39 +1013,87 @@ export async function buildSemanticMemory(
   };
 }
 
+type RankedEvidence = LexicalSearchEntry & { similarity: number };
+
+type GroupedEvidence = RankedEvidence & {
+  repetitionCount: number;
+  sources: SourceRef[];
+  provenance: RankedEvidence[];
+};
+
+function searchEvidenceKey(entry: RankedEvidence): string {
+  // Do not use normalizedKey: removing punctuation can erase negation or code.
+  const text = (entry.context ?? entry.title).replace(/\s+/gu, " ").trim();
+  if (!text || (entry.type !== "question" && entry.type !== "fact")) return entry.id;
+  const dated =
+    entry.type === "fact" ||
+    /\b(now|today|yesterday|tomorrow|currently|this|last|next|ago)\b/iu.test(text) ||
+    /\bi\s+(am|have|live|work|use|own|earn)\b|\bi['’](m|ve)\b/iu.test(text);
+  // Facts retain case, detection cues and observation dates. Relative-time prompts
+  // also retain their date; matching wording alone does not establish simultaneity.
+  return JSON.stringify([
+    entry.type,
+    entry.type === "question" ? text.toLowerCase() : text,
+    entry.type === "fact" ? entry.detail : null,
+    dated ? (entry.source?.date ?? entry.id) : null,
+  ]);
+}
+
+export function groupSearchEvidence(results: RankedEvidence[], limit = 16): GroupedEvidence[] {
+  const groups = new Map<string, GroupedEvidence>();
+  const ranked = results.slice().sort((left, right) => {
+    const score = right.similarity - left.similarity;
+    return score || (left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
+  });
+  for (const entry of ranked) {
+    const key = searchEvidenceKey(entry);
+    const existing = groups.get(key);
+    if (existing) {
+      existing.repetitionCount += 1;
+      existing.provenance.push(entry);
+      if (entry.source) existing.sources.push(entry.source);
+    } else {
+      groups.set(key, {
+        ...entry,
+        repetitionCount: 1,
+        sources: entry.source ? [entry.source] : [],
+        provenance: [entry],
+      });
+    }
+  }
+  return [...groups.values()]
+    .filter((entry) => entry.similarity > 0)
+    .slice(0, Math.max(0, Math.floor(limit)));
+}
+
 export async function searchMemory(
   query: string,
   index: SearchEntry[],
   lexicalIndex: LexicalSearchEntry[],
   profile: AnalysisResolution["resolvedModelProfile"],
   progress: Progress
-): Promise<Array<Omit<SearchEntry, "embedding"> & { similarity: number }>> {
+): Promise<GroupedEvidence[]> {
   const { vectors } = await embedTexts([query], profile, progress);
   const [queryVector] = vectors;
-  const semanticResults = index
-    .map(({ embedding, ...entry }) => ({ ...entry, semanticScore: cosine(queryVector, embedding) }))
-    .filter((entry) => entry.semanticScore > 0.18)
-    .sort((left, right) => right.semanticScore - left.semanticScore)
-    .slice(0, 64);
+  const semanticResults = index.map(({ embedding, ...entry }) => {
+    const score = cosine(queryVector, embedding);
+    return { ...entry, semanticScore: score > 0.18 ? score : 0 };
+  });
   const queryTerms = new Set(
     normalizedKey(query)
       .split(" ")
       .filter((term) => term.length > 2)
   );
-  const lexicalResults = lexicalIndex
-    .map((entry) => {
-      const haystack = normalizedKey(`${entry.title} ${entry.detail}`);
-      const terms = new Set(haystack.split(" "));
-      const overlap = [...queryTerms].filter((term) => terms.has(term)).length;
-      const phraseBonus = haystack.includes(normalizedKey(query)) ? 0.3 : 0;
-      return {
-        ...entry,
-        lexicalScore: Math.min(0.99, (overlap / Math.max(1, queryTerms.size)) * 0.68 + phraseBonus),
-      };
-    })
-    .filter((entry) => entry.lexicalScore > 0)
-    .sort((left, right) => right.lexicalScore - left.lexicalScore)
-    .slice(0, 64);
+  const lexicalResults = lexicalIndex.map((entry) => {
+    const haystack = normalizedKey(`${entry.title} ${entry.detail}`);
+    const terms = new Set(haystack.split(" "));
+    const overlap = [...queryTerms].filter((term) => terms.has(term)).length;
+    const phraseBonus = haystack.includes(normalizedKey(query)) ? 0.3 : 0;
+    return {
+      ...entry,
+      lexicalScore: Math.min(0.99, (overlap / Math.max(1, queryTerms.size)) * 0.68 + phraseBonus),
+    };
+  });
 
   const candidates = new Map<
     string,
@@ -1071,8 +1119,8 @@ export async function searchMemory(
       .filter((entry) => entry.source && entry.topicId)
       .map((entry) => [entry.source!.conversationId, entry.topicId!] as const)
   );
-  return [...candidates.values()]
-    .map(({ semanticScore, lexicalScore, ...entry }) => {
+  return groupSearchEvidence(
+    [...candidates.values()].map(({ semanticScore, lexicalScore, ...entry }) => {
       const combined =
         semanticScore > 0 && lexicalScore > 0
           ? semanticScore * 0.65 + lexicalScore * 0.55
@@ -1087,8 +1135,7 @@ export async function searchMemory(
         similarity: Math.min(0.99, combined),
       };
     })
-    .sort((left, right) => right.similarity - left.similarity)
-    .slice(0, 16);
+  );
 }
 
 export function buildLexicalIndex(

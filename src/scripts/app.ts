@@ -2119,7 +2119,15 @@ function renderSearchResults(results: SearchResult[]) {
       const body = document.createElement("span");
       body.append(
         text("strong", truncate(result.title, 240)),
-        text("small", truncate(result.detail, 140))
+        text(
+          "small",
+          truncate(
+            (result.repetitionCount ?? 1) > 1
+              ? `${result.repetitionCount} matching entries · ${result.detail}`
+              : result.detail,
+            140
+          )
+        )
       );
       button.append(
         text("span", result.type, "search-result-type"),
@@ -2128,7 +2136,12 @@ function renderSearchResults(results: SearchResult[]) {
       );
       button.addEventListener("click", () => {
         searchResults.hidden = true;
-        if (result.topicId && currentReport?.semantic) {
+        if ((result.repetitionCount ?? 1) > 1 && result.sources?.length) {
+          showEvidence(result.title, result.sources, [
+            `${result.repetitionCount} matching entries. Each source is retained below.`,
+            result.detail,
+          ]);
+        } else if (result.topicId && currentReport?.semantic) {
           const topic = currentReport.semantic.topics.find(
             (candidate) => candidate.id === result.topicId
           );

@@ -395,6 +395,9 @@ export type MemorySnapshot = {
 
 export type SearchResult = Omit<SearchEntry, "embedding"> & {
   similarity: number;
+  repetitionCount?: number;
+  sources?: SourceRef[];
+  provenance?: Array<Omit<SearchEntry, "embedding"> & { similarity: number }>;
 };
 
 export type GraphFormationConversation = {
