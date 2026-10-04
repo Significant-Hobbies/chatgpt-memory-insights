@@ -1,0 +1,230 @@
+{
+  "$schema": "fleet.design-review.v2",
+  "version": 2,
+  "project": "memory-map-feedback-placement-20261004",
+  "target": "Restore shared footer feedback placement outside hidden graph progress",
+  "surfaceMode": "operate",
+  "mode": "preserve",
+  "register": "product",
+  "context": {
+    "product": "PRODUCT.md",
+    "design": "DESIGN.md"
+  },
+  "direction": {
+    "productSurfaces": {
+      "scope": "paired",
+      "landing": "src/pages/about.astro",
+      "app": "src/pages/index.astro",
+      "reason": "The explanation page and browser-local app share the existing product footer. Only the app insertion anchor changes."
+    },
+    "pairedPreview": {
+      "landing": ".fleet-local/feedback-placement-20261004/before-about.jpg",
+      "app": ".fleet-local/feedback-placement-20261004/before.jpg"
+    },
+    "source": "existing",
+    "references": [
+      "DESIGN.md",
+      "PRODUCT.md",
+      "https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/48"
+    ],
+    "probes": [],
+    "selected": "existing-design",
+    "approval": "not-required",
+    "ownerEvidence": {
+      "path": "",
+      "quote": ""
+    },
+    "supplied": "",
+    "before": ".fleet-local/feedback-placement-20261004/before.jpg",
+    "library": {
+      "strategy": "upstream-first",
+      "primary": "existing-project-system",
+      "sources": [],
+      "runtime": "existing",
+      "customReplacement": {
+        "used": false,
+        "authorization": "not-required",
+        "reason": "Existing native outer footer and official shared capture runtime are preserved; no replacement component."
+      }
+    },
+    "contract": {
+      "purpose": "Memory Map turns an exported AI conversation history into a private map of recurring themes, facts, emotions, and change.",
+      "purposeSource": "PRODUCT.md and canonical catalog purpose contract; browser-local processing verified in current source",
+      "canonicalPurpose": "Memory Map turns an exported AI conversation history into a private map of recurring themes, facts, emotions, and change.",
+      "purposeAlignment": "match",
+      "driftNote": "",
+      "audience": "People inspecting recurring themes and stated facts in their own ChatGPT exports.",
+      "job": "Reach feedback from the browser app without importing private history.",
+      "thesis": "Explicit body-level shared host preserves native navigation and capture slots outside hidden progress; compact newsletter fits the existing support column.",
+      "system": "Existing graph workbench and shared footer controls.",
+      "signature": "Browser-local analysis with inspectable evidence and existing native footer vocabulary.",
+      "risk": "Automatic insertion must not adopt hidden progress or story footers; marking the outer footer must preserve its navigation and capture.",
+      "qualityBar": "Feedback visible outside hidden progress, one dialog with optional email and unchecked consent, focus return, no horizontal overflow at390/768/1440; no private import or submission."
+    }
+  },
+  "evidence": {
+    "platform": "web",
+    "productContinuity": {
+      "status": "pass",
+      "reason": "",
+      "reviewer": "Codex direct paired render review",
+      "report": ".fleet-local/feedback-placement-20261004/review.md",
+      "surfaces": {
+        "landing": ".fleet-local/feedback-placement-20261004/compact-about.jpg",
+        "app": ".fleet-local/feedback-placement-20261004/compact-after-1440.jpg"
+      },
+      "checks": {
+        "designSystem": {
+          "status": "pass",
+          "observation": "Cool atlas/graph identity and restrained type remain coherent; persuasion and operation use task-specific layout."
+        },
+        "identity": {
+          "status": "pass",
+          "observation": "Memory Map name and mapping vocabulary match both surfaces."
+        },
+        "vocabulary": {
+          "status": "pass",
+          "observation": "ChatGPT export, browser-local processing and source evidence agree."
+        },
+        "productTruth": {
+          "status": "pass",
+          "observation": "No archive upload, account or checkout capability introduced; current browser-local claims retained."
+        },
+        "handoff": {
+          "status": "pass",
+          "observation": "About Analyze my ChatGPT ZIP links to / and app exposes existing import controls."
+        }
+      }
+    },
+    "slopScale": {
+      "platform": "web",
+      "posture": "advisory",
+      "reason": "",
+      "checkpoints": [
+        {
+          "stage": "iteration",
+          "status": "blocked",
+          "command": "node /Users/sarthak/Desktop/fleet/saas-maker/tooling/scripts/slop-score.mjs http://127.0.0.1:4339 --json",
+          "report": ".fleet-local/feedback-placement-20261004/slop-iteration-blocked.txt",
+          "reason": "Runner launches separate Chromium, prohibited by active connected-Chrome-only policy.",
+          "findingsReview": "Numeric score unknown; direct rendered review found and fixed hidden feedback and desktop signup clipping."
+        },
+        {
+          "stage": "final",
+          "status": "blocked",
+          "command": "node /Users/sarthak/Desktop/fleet/saas-maker/tooling/scripts/slop-score.mjs http://127.0.0.1:4339 --json",
+          "report": ".fleet-local/feedback-placement-20261004/slop-final-blocked.txt",
+          "reason": "Runner launches separate Chromium, prohibited by active connected-Chrome-only policy.",
+          "findingsReview": "Numeric score unknown; direct rendered review found and fixed hidden feedback and desktop signup clipping."
+        }
+      ]
+    },
+    "visualReview": {
+      "status": "pass",
+      "reviewer": "Codex direct rendered review",
+      "direction": "existing-design",
+      "report": ".fleet-local/feedback-placement-20261004/review.md",
+      "checks": {
+        "hierarchy": {
+          "status": "pass",
+          "observation": "Import stays primary; feedback and update capture appear in the actual outer footer."
+        },
+        "typography": {
+          "status": "pass",
+          "observation": "Existing headings, labels and mono metadata retained; consent readable without clipping."
+        },
+        "composition": {
+          "status": "pass",
+          "observation": "Two desktop help columns; compact newsletter removes clipped Sign up; phone stacks controls."
+        },
+        "identity": {
+          "status": "pass",
+          "observation": "Memory Map atlas artwork and browser-local copy preserved; loaded art captured in compact-footer.jpg."
+        },
+        "interaction": {
+          "status": "pass",
+          "observation": "One dialog, focused title, optional email and unchecked consent; Escape closes and restores launcher focus."
+        },
+        "responsive": {
+          "status": "pass",
+          "observation": "Actual Chrome 390/768/1440 captures: no document overflow; compact action fits and phone stacks."
+        }
+      }
+    },
+    "screenshots": [
+      {
+        "width": 390,
+        "path": ".fleet-local/feedback-placement-20261004/compact-after-390.jpg"
+      },
+      {
+        "width": 768,
+        "path": ".fleet-local/feedback-placement-20261004/compact-after-768.jpg"
+      },
+      {
+        "width": 1440,
+        "path": ".fleet-local/feedback-placement-20261004/compact-after-1440.jpg"
+      }
+    ],
+    "projectCheck": {
+      "command": "gh run view 37200754469 --repo Significant-Hobbies/chatgpt-memory-insights: complete pnpm run check, test:import, Rust fmt/clippy/tests at 0418b3a",
+      "status": "pass"
+    },
+    "critique": {
+      "score": 34,
+      "maximum": 40,
+      "dimensions": {
+        "hierarchy": 7,
+        "typography": 6,
+        "composition": 6,
+        "identity": 7,
+        "interaction": 4,
+        "responsive": 4
+      }
+    },
+    "audit": {
+      "score": 16,
+      "maximum": 20,
+      "dimensions": {
+        "purpose": 4,
+        "accessibility": 4,
+        "behavior": 3,
+        "responsive": 3,
+        "performance": 2
+      }
+    },
+    "unresolved": {
+      "p0": 0,
+      "p1": 0
+    },
+    "detector": {
+      "posture": "advisory",
+      "findings": []
+    },
+    "comprehension": {
+      "status": "not-applicable",
+      "reviewer": "",
+      "answers": {
+        "product": "",
+        "audience": "",
+        "value": "",
+        "mechanism": "",
+        "proof": "",
+        "nextAction": ""
+      },
+      "purposeScore": {
+        "product": 0,
+        "audience": 0,
+        "value": 0,
+        "mechanism": 0,
+        "proof": 0,
+        "nextAction": 0,
+        "total": 0
+      },
+      "mismatches": []
+    }
+  },
+  "ownerFeedback": {
+    "decision": "not-required",
+    "note": "Preserve work follows the existing direction; this is not owner acceptance of the result."
+  }
+}
