@@ -60,6 +60,7 @@ function checkFormat() {
   );
   const report = JSON.parse(result.stdout);
   const observed = { files: report.summary.errors };
+  if (observed.files > 0) console.error(JSON.stringify(report.diagnostics));
   console.log(`Format: ${observed.files} files differ from the enabled Biome formatter.`);
   // Ratcheted legacy debt: https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/12
   failRegressions("Format", observed, { files: 0 });
