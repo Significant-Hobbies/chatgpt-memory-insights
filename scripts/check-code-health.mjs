@@ -169,7 +169,9 @@ function checkDependencies() {
   const astroManifest = JSON.parse(
     readFileSync(join(projectRoot, "node_modules/astro/package.json"), "utf8")
   );
-  const astroRequire = createRequire(realpathSync(join(projectRoot, "node_modules/astro/package.json")));
+  const astroRequire = createRequire(
+    realpathSync(join(projectRoot, "node_modules/astro/package.json"))
+  );
   const cacheManifest = JSON.parse(
     readFileSync(astroRequire.resolve("http-cache-semantics/package.json"), "utf8")
   );
@@ -206,7 +208,8 @@ function checkDependencies() {
     accepted.add("GHSA-ch52-4w7c-c8xp");
   }
   const unexpected = advisories.filter((advisory) => !accepted.has(advisory.github_advisory_id));
-  const count = (severity) => advisories.filter((advisory) => advisory.severity === severity).length;
+  const count = (severity) =>
+    advisories.filter((advisory) => advisory.severity === severity).length;
   console.log(
     `Dependencies: ${count("critical")} critical, ${count("high")} high, ` +
       `${count("moderate")} moderate, ${unexpected.length} unexpected; ` +
