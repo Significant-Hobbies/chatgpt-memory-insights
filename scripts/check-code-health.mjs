@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { mkdtempSync, readFileSync, realpathSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import process from "node:process";
@@ -156,6 +158,25 @@ function checkDependencies() {
     "GHSA-fph4-wmhf-6fwf",
     "GHSA-jqff-g426-hqxp",
   ]);
+  // Temporary, exact-scope build-tool exception; severity remains reported below.
+  // Astro only uses this package's storable/timeToLive for remote-image builds,
+  // never the advisory's satisfiesWithoutRevalidation request-cache path.
+  // Maintainer dispute: https://github.com/kornelski/http-cache-semantics/issues/56#issuecomment-5975759591
+  // Any version/config/source drift or expiry restores the blocking audit.
+  const fingerprint = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");
+  const manifest = JSON.parse(readFileSync(join(projectRoot, "package.json"), "utf8"));
+  const astroManifest = JSON.parse(readFileSync(join(projectRoot, "node_modules/astro/package.json"), "utf8"));
+  const astroRequire = createRequire(realpathSync(join(projectRoot, "node_modules/astro/package.json")));
+  const cacheManifest = JSON.parse(readFileSync(astroRequire.resolve("http-cache-semantics/package.json"), "utf8"));
+  if (
+    Date.now() < Date.parse("2026-10-11T00:00:00Z") &&
+    manifest.dependencies.astro === "7.2.8" && astroManifest.version === "7.2.8" &&
+    cacheManifest.version === "4.2.0" &&
+    fingerprint(join(projectRoot, "astro.config.ts")) === "a5174e468e7596fc1bf2331a6e7594fcad09d41f6d7faa87d1781666184a26c0" &&
+    fingerprint(join(projectRoot, "node_modules/astro/dist/assets/build/remote.js")) === "f373fa76e3112446db327c79b34e2bbb1ef1dcad41affb60788adf30edc9588e"
+  ) {
+    accepted.add("GHSA-ch52-4w7c-c8xp");
+  }
   const advisories = Object.values(report.advisories ?? {});
   const unexpected = advisories.filter((advisory) => !accepted.has(advisory.github_advisory_id));
   const count = (severity) =>
