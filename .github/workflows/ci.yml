@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -21,6 +24,15 @@ jobs:
       - run: pnpm run check
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm run test:import
+      - name: Retain candidate browser build
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-build-${{ github.event.pull_request.head.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 6
 
   packer:
     runs-on: ubuntu-latest

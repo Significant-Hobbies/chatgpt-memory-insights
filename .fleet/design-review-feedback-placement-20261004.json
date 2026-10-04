@@ -1,0 +1,213 @@
+{
+  "$schema": "fleet.design-review.v2",
+  "version": 2,
+  "project": "memory-map-feedback-placement-20261004",
+  "target": "Restore shared footer feedback placement outside hidden graph progress",
+  "surfaceMode": "operate",
+  "mode": "preserve",
+  "register": "product",
+  "context": {
+    "product": "PRODUCT.md",
+    "design": "DESIGN.md"
+  },
+  "direction": {
+    "productSurfaces": {
+      "scope": "paired",
+      "landing": "src/pages/about.astro",
+      "app": "src/pages/index.astro",
+      "reason": "The explanation page and browser-local app share the existing product footer. Only the app insertion anchor changes."
+    },
+    "pairedPreview": {
+      "landing": ".fleet-local/feedback-placement-20261004/before-about.jpg",
+      "app": ".fleet-local/feedback-placement-20261004/before.jpg"
+    },
+    "source": "existing",
+    "references": [
+      "DESIGN.md",
+      "PRODUCT.md",
+      "https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/48"
+    ],
+    "probes": [],
+    "selected": "existing-design",
+    "approval": "not-required",
+    "ownerEvidence": {
+      "path": "",
+      "quote": ""
+    },
+    "supplied": "",
+    "before": ".fleet-local/feedback-placement-20261004/before.jpg",
+    "library": {
+      "strategy": "upstream-first",
+      "primary": "existing-project-system",
+      "sources": [],
+      "runtime": "existing",
+      "customReplacement": {
+        "used": false,
+        "authorization": "not-required",
+        "reason": "Existing native outer footer and official shared capture runtime are preserved; no replacement component."
+      }
+    },
+    "contract": {
+      "purpose": "Memory Map turns an exported AI conversation history into a private map of recurring themes, facts, emotions, and change.",
+      "purposeSource": "PRODUCT.md and canonical catalog purpose contract; browser-local processing verified in current source",
+      "canonicalPurpose": "Memory Map turns an exported AI conversation history into a private map of recurring themes, facts, emotions, and change.",
+      "purposeAlignment": "match",
+      "driftNote": "",
+      "audience": "People inspecting recurring themes and stated facts in their own ChatGPT exports.",
+      "job": "Reach feedback from the browser app without importing private history.",
+      "thesis": "Keep the actual outer footer as the explicit shared-runtime insertion anchor.",
+      "system": "Existing graph workbench and shared footer controls.",
+      "signature": "Browser-local analysis with inspectable evidence and existing native footer vocabulary.",
+      "risk": "Automatic insertion must not adopt hidden progress or story footers; marking the outer footer must preserve its navigation and capture.",
+      "qualityBar": "Feedback visible outside hidden progress, one dialog with optional email and unchecked consent, focus return, no horizontal overflow at390/768/1440; no private import or submission."
+    }
+  },
+  "evidence": {
+    "platform": "web",
+    "productContinuity": {
+      "status": "pending",
+      "reason": "",
+      "reviewer": "",
+      "report": "artifacts/design/product-continuity.md",
+      "surfaces": {
+        "landing": "artifacts/design/landing.png",
+        "app": "artifacts/design/app.png"
+      },
+      "checks": {
+        "designSystem": {
+          "status": "pending",
+          "observation": ""
+        },
+        "identity": {
+          "status": "pending",
+          "observation": ""
+        },
+        "vocabulary": {
+          "status": "pending",
+          "observation": ""
+        },
+        "productTruth": {
+          "status": "pending",
+          "observation": ""
+        },
+        "handoff": {
+          "status": "pending",
+          "observation": ""
+        }
+      }
+    },
+    "slopScale": {
+      "platform": "web",
+      "posture": "advisory",
+      "reason": "",
+      "checkpoints": []
+    },
+    "visualReview": {
+      "status": "pending",
+      "reviewer": "",
+      "direction": "",
+      "report": "artifacts/design/review.md",
+      "checks": {
+        "hierarchy": {
+          "status": "pending",
+          "observation": ""
+        },
+        "typography": {
+          "status": "pending",
+          "observation": ""
+        },
+        "composition": {
+          "status": "pending",
+          "observation": ""
+        },
+        "identity": {
+          "status": "pending",
+          "observation": ""
+        },
+        "interaction": {
+          "status": "pending",
+          "observation": ""
+        },
+        "responsive": {
+          "status": "pending",
+          "observation": ""
+        }
+      }
+    },
+    "screenshots": [
+      {
+        "width": 390,
+        "path": "artifacts/design/after-390.png"
+      },
+      {
+        "width": 768,
+        "path": "artifacts/design/after-768.png"
+      },
+      {
+        "width": 1440,
+        "path": "artifacts/design/after-1440.png"
+      }
+    ],
+    "projectCheck": {
+      "command": "replace-with-project-check",
+      "status": "pending"
+    },
+    "critique": {
+      "score": 0,
+      "maximum": 40,
+      "dimensions": {
+        "hierarchy": 0,
+        "typography": 0,
+        "composition": 0,
+        "identity": 0,
+        "interaction": 0,
+        "responsive": 0
+      }
+    },
+    "audit": {
+      "score": 0,
+      "maximum": 20,
+      "dimensions": {
+        "purpose": 0,
+        "accessibility": 0,
+        "behavior": 0,
+        "responsive": 0,
+        "performance": 0
+      }
+    },
+    "unresolved": {
+      "p0": 0,
+      "p1": 0
+    },
+    "detector": {
+      "posture": "advisory",
+      "findings": []
+    },
+    "comprehension": {
+      "status": "not-applicable",
+      "reviewer": "",
+      "answers": {
+        "product": "",
+        "audience": "",
+        "value": "",
+        "mechanism": "",
+        "proof": "",
+        "nextAction": ""
+      },
+      "purposeScore": {
+        "product": 0,
+        "audience": 0,
+        "value": 0,
+        "mechanism": 0,
+        "proof": 0,
+        "nextAction": 0,
+        "total": 0
+      },
+      "mismatches": []
+    }
+  },
+  "ownerFeedback": {
+    "decision": "not-required",
+    "note": "Preserve work follows the existing direction; this is not owner acceptance of the result."
+  }
+}
