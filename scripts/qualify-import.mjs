@@ -42,11 +42,7 @@ async function serveBuiltApp() {
       const content = await readFile(new URL(`../dist/${path}`, import.meta.url));
       response.setHeader(
         "content-type",
-        path.endsWith(".js")
-          ? "text/javascript"
-          : path.endsWith(".css")
-            ? "text/css"
-            : "text/html"
+        path.endsWith(".js") ? "text/javascript" : path.endsWith(".css") ? "text/css" : "text/html"
       );
       response.end(content);
     } catch {
@@ -111,72 +107,70 @@ for (const width of [390, 1280]) {
   });
 }
 
-test(
-  "synthetic ZIP completes pinned compact browser WASM inference",
-  { timeout: 300000 },
-  async () => {
-    const { server, origin } = await serveBuiltApp();
-    const browser = await chromium.launch({ args: ["--disable-webgpu"] });
-    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-    const pageErrors = [];
-    let pinnedModelRequested = false;
-    page.on("pageerror", (error) => pageErrors.push(error.message));
-    try {
-      await page.addInitScript(() => {
-        Object.defineProperty(navigator, "gpu", { configurable: true, value: undefined });
-      });
-      page.on("request", (request) => {
-        const url = new URL(request.url());
-        if (
-          url.hostname === "huggingface.co" &&
-          url.pathname ===
-            `/Xenova/all-MiniLM-L6-v2/resolve/${MODEL_REVISION}/onnx/model_quantized.onnx`
-        ) {
-          pinnedModelRequested = true;
-        }
-      });
-      await page.route("**/*", (route) => {
-        const url = new URL(route.request().url());
-        if (
-          url.origin === origin ||
-          (url.protocol === "https:" &&
-            (isPinnedModelRequest(route.request()) ||
-              (url.hostname === "cdn.jsdelivr.net" &&
-                url.pathname.startsWith("/npm/@huggingface/transformers@3.8.1/dist/"))))
-        ) {
-          return route.continue();
-        }
-        return route.abort();
-      });
-      await page.goto(origin);
-      await page.locator('input[name="model-profile"][value="compact"]').check();
-      await page
-        .locator("#archive-input")
-        .setInputFiles({ name: "synthetic.zip", mimeType: "application/zip", buffer: archive });
-      await expect(page.locator("#report-view")).toBeVisible({ timeout: 30000 });
-      await expect(page.locator("#error-view")).toBeHidden();
-      await expect(page.locator("#report-timing-status")).toContainText("Complete map ready", {
-        timeout: 240000,
-      });
-      await expect(page.locator("#report-timing-runtime")).toContainText("Compatibility mode · q8");
-      await expect(page.locator("#model-profile-note")).toContainText(
-        `${MODEL_ID}@${MODEL_REVISION.slice(0, 8)}`
-      );
-      const coverage = await page.locator("#report-timing-coverage").textContent();
-      const coverageMatch = /^(\d+) vectors · selected set preserved$/.exec(coverage ?? "");
-      assert.ok(coverageMatch, "completed coverage must preserve the selected set");
-      assert.ok(
-        Number(coverageMatch[1]) >= 22,
-        "coverage must include the fixture conversation, prompt, and 20 topic anchors"
-      );
-      assert.ok(pinnedModelRequested, "the pinned compact model revision must be requested");
-      assert.deepEqual(pageErrors, []);
-    } finally {
-      await browser.close();
-      await closeServer(server);
-    }
+test("synthetic ZIP completes pinned compact browser WASM inference", {
+  timeout: 300000,
+}, async () => {
+  const { server, origin } = await serveBuiltApp();
+  const browser = await chromium.launch({ args: ["--disable-webgpu"] });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const pageErrors = [];
+  let pinnedModelRequested = false;
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  try {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "gpu", { configurable: true, value: undefined });
+    });
+    page.on("request", (request) => {
+      const url = new URL(request.url());
+      if (
+        url.hostname === "huggingface.co" &&
+        url.pathname ===
+          `/Xenova/all-MiniLM-L6-v2/resolve/${MODEL_REVISION}/onnx/model_quantized.onnx`
+      ) {
+        pinnedModelRequested = true;
+      }
+    });
+    await page.route("**/*", (route) => {
+      const url = new URL(route.request().url());
+      if (
+        url.origin === origin ||
+        (url.protocol === "https:" &&
+          (isPinnedModelRequest(route.request()) ||
+            (url.hostname === "cdn.jsdelivr.net" &&
+              url.pathname.startsWith("/npm/@huggingface/transformers@3.8.1/dist/"))))
+      ) {
+        return route.continue();
+      }
+      return route.abort();
+    });
+    await page.goto(origin);
+    await page.locator('input[name="model-profile"][value="compact"]').check();
+    await page
+      .locator("#archive-input")
+      .setInputFiles({ name: "synthetic.zip", mimeType: "application/zip", buffer: archive });
+    await expect(page.locator("#report-view")).toBeVisible({ timeout: 30000 });
+    await expect(page.locator("#error-view")).toBeHidden();
+    await expect(page.locator("#report-timing-status")).toContainText("Complete map ready", {
+      timeout: 240000,
+    });
+    await expect(page.locator("#report-timing-runtime")).toContainText("Compatibility mode · q8");
+    await expect(page.locator("#model-profile-note")).toContainText(
+      `${MODEL_ID}@${MODEL_REVISION.slice(0, 8)}`
+    );
+    const coverage = await page.locator("#report-timing-coverage").textContent();
+    const coverageMatch = /^(\d+) vectors · selected set preserved$/.exec(coverage ?? "");
+    assert.ok(coverageMatch, "completed coverage must preserve the selected set");
+    assert.ok(
+      Number(coverageMatch[1]) >= 22,
+      "coverage must include the fixture conversation, prompt, and 20 topic anchors"
+    );
+    assert.ok(pinnedModelRequested, "the pinned compact model revision must be requested");
+    assert.deepEqual(pageErrors, []);
+  } finally {
+    await browser.close();
+    await closeServer(server);
   }
-);
+});
 
 test("analytics queues initialization until the SDK arrives without collecting archive text", async () => {
   const source = await readFile(new URL("../public/scripts/posthog.js", import.meta.url), "utf8");
