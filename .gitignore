@@ -10,3 +10,4 @@ coverage/
 *.log
 *.db
 *.db-journal
+.fleet-local/
