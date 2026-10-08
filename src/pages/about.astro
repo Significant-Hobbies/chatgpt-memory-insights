@@ -214,9 +214,9 @@ const capabilityRoutes = [
           "The local generator receives at most six labelled excerpts and four recent chat turns, keeping context inspectable and browser work bounded.",
       },
       {
-        title: "Citation grounding validator",
+        title: "Citation checks, not answer verification",
         detail:
-          "Generated drafts must cite retrieved S1–S6 stops. An uncited draft is withheld while the source evidence remains available.",
+          "Local drafts are labelled unverified. Missing or unknown citations and repeated instructions are withheld; recognized S1–S6 citations do not establish answer accuracy. Source excerpts remain available for review.",
       },
       {
         title: "Change-aware and repeat-aware retrieval",
@@ -688,7 +688,8 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
       </section>
     </main>
 
-    <footer class="about-footer">
+    <fleet-footer-extension product-name="Memory Map" art-src="https://sassmaker.com/footer-art/chatgpt-memory-insights.webp" surface="app">
+<footer slot="navigation" data-fleet-footer-navigation class="about-footer">
       <a class="brand" href="/">
         <svg viewBox="0 0 36 36" aria-hidden="true">
           <path d="M7 8 17 15 29 7M17 15l1 14M7 27l11 2 11-9" />
@@ -706,6 +707,7 @@ const totalCapabilities = capabilityRoutes.reduce((sum, route) => sum + route.st
       <a href="/">Analyze my ChatGPT ZIP →</a>
     </footer>
     <FooterCapture />
+</fleet-footer-extension>
     <script
       is:inline
       src="https://sassmaker.com/project-strip.js"
