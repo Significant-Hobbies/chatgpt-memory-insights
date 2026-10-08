@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, realpathSync } from "node:fs";
-import { createRequire } from "node:module";
+import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import process from "node:process";
@@ -142,58 +140,6 @@ function checkDuplication() {
   });
 }
 
-function expectedCacheScope(advisories) {
-  const cacheAdvisories = advisories.filter(
-    (advisory) => advisory.github_advisory_id === "GHSA-ch52-4w7c-c8xp"
-  );
-  return (
-    cacheAdvisories.length === 1 &&
-    cacheAdvisories.every(
-      (advisory) =>
-        advisory.module_name === "http-cache-semantics" &&
-        advisory.findings.length === 1 &&
-        advisory.findings.every(
-          (finding) =>
-            finding.version === "4.2.0" &&
-            finding.paths.length === 1 &&
-            finding.paths[0] === ".>astro>http-cache-semantics"
-        )
-    )
-  );
-}
-
-function acceptsTemporaryCacheAdvisory(advisories) {
-  // Temporary, exact-scope build-tool exception; severity remains reported below.
-  // Astro only uses this package's storable/timeToLive for remote-image builds,
-  // never the advisory's satisfiesWithoutRevalidation request-cache path.
-  // Maintainer dispute: https://github.com/kornelski/http-cache-semantics/issues/56#issuecomment-5975759591
-  // Any version/config/source drift or expiry restores the blocking audit.
-  const fingerprint = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");
-  const manifest = JSON.parse(readFileSync(join(projectRoot, "package.json"), "utf8"));
-  const astroManifest = JSON.parse(
-    readFileSync(join(projectRoot, "node_modules/astro/package.json"), "utf8")
-  );
-  const astroRequire = createRequire(
-    realpathSync(join(projectRoot, "node_modules/astro/package.json"))
-  );
-  const cacheManifest = JSON.parse(
-    readFileSync(astroRequire.resolve("http-cache-semantics/package.json"), "utf8")
-  );
-  return (
-    expectedCacheScope(advisories) &&
-    fingerprint(astroRequire.resolve("http-cache-semantics")) ===
-      "01b7d66c854b2fe53ac05c98feb6e0d64722ab8898a778e2d2426a8b468d178f" &&
-    Date.now() < Date.parse("2026-10-11T00:00:00Z") &&
-    manifest.dependencies.astro === "7.2.8" &&
-    astroManifest.version === "7.2.8" &&
-    cacheManifest.version === "4.2.0" &&
-    fingerprint(join(projectRoot, "astro.config.ts")) ===
-      "a5174e468e7596fc1bf2331a6e7594fcad09d41f6d7faa87d1781666184a26c0" &&
-    fingerprint(join(projectRoot, "node_modules/astro/dist/assets/build/remote.js")) ===
-      "f373fa76e3112446db327c79b34e2bbb1ef1dcad41affb60788adf30edc9588e"
-  );
-}
-
 function checkDependencies() {
   const result = run("pnpm", ["audit", "--json"], { allowFailure: true });
   const report = JSON.parse(result.stdout);
@@ -212,7 +158,6 @@ function checkDependencies() {
     "GHSA-jqff-g426-hqxp",
   ]);
   const advisories = Object.values(report.advisories ?? {});
-  if (acceptsTemporaryCacheAdvisory(advisories)) accepted.add("GHSA-ch52-4w7c-c8xp");
   const unexpected = advisories.filter((advisory) => !accepted.has(advisory.github_advisory_id));
   const count = (severity) =>
     advisories.filter((advisory) => advisory.severity === severity).length;
