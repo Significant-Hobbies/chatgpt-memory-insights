@@ -1,35 +1,39 @@
 ## Repository operating rules
 
 This repository is independently operable. Its tracked instructions and
-commands are authoritative; no sibling Fleet checkout is required. Protect
-production stability, keep changes scoped, verify work with repo-local checks,
-and record durable follow-up in this repository's GitHub Issues.
+commands are authoritative. Protect stability, keep changes scoped, verify work
+with repo-local checks, and record durable follow-up in this repository's
+GitHub Issues.
 
-## Project
+## What lives here
 
-- **Stack**: Astro + TypeScript + Tailwind CSS + Transformers.js + Cloudflare Pages
-- **Local dev**: `pnpm install && pnpm run dev`
-- **Check**: `pnpm run check`
-- **Deploy**: `pnpm run deploy` from clean, synced `main`
+- `mcp/`: the DaddyRad MCP server, the single local read-only stdio server
+  across the four DaddyRad native cores. Build it with SwiftPM from sibling
+  engine checkouts (`../../performancedaddy`, `../../contextdaddy`,
+  `../../storagedaddy`, `../../browserdaddy`); see `mcp/README.md`. It exposes
+  no network endpoint and does not access the GUI apps' live state. Keep file
+  access startup-selected, resource use bounded and process identities opt-in.
+- History only: Memory Map's design receipts (`artifacts/design`, referenced by
+  the live site's social images, so keep them), qualification evidence
+  (`docs/qualification`) and agent metadata.
 
-The check is the complete Fleet quality boundary. Use its narrower
-`format:check`, `lint`, `typecheck`, `test:coverage`, `quality:*`, or `build`
-scripts while iterating. Existing ratcheted debt is tracked in GitHub issue
-#12; improve its checked-in ceilings and floors in the same change that reduces
-them, and do not add inline suppression directives.
+Memory Map (the app) and `memory-pack` moved to `sass-maker/saas-maker`
+`apps/memory-map`; do not re-add them here. Its deploys and releases come from
+SaaS Maker.
+
+## Check
+
+CI (`.github/workflows/ci.yml`, macOS) validates `mcp/engine-revisions.json`,
+checks out the four engines at those exact revisions, then runs:
+
+```sh
+cd mcp
+swift test --filter DiagnosticsTests
+swift build -c release --product daddyrad-mcp
+python3 scripts/verify-mcp.py "$(swift build -c release --show-bin-path)/daddyrad-mcp"
+```
 
 ## Work tracking
 
 - GitHub Issues is the sole operational work queue.
-- An open issue is a to-do; a linked pull request is in progress; a merged
-  pull request plus a closed issue is done.
-- Use `PROJECT_STATUS.md` only for durable current/shipped product truth and
-  its GitHub Issues pointer. Do not duplicate planned, deferred, or blocked
-  work there.
-
-## Visual work
-
-For meaningful visual work, classify preserve or overhaul before code; keep
-`PROJECT_STATUS.md` authoritative for product scope, `PRODUCT.md` limited to
-design context, and `DESIGN.md` authoritative for visual direction. Validate
-the result at the project's required browser widths before claiming completion.
+- Use `PROJECT_STATUS.md` only for durable current truth.
