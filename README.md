@@ -1,145 +1,57 @@
-# Memory Map
+# chatgpt-memory-insights
 
-Memory Map turns a ChatGPT data-export ZIP into a private, searchable memory
-atlas in the browser. It shows topic relationships, repeated questions,
-question-domain lenses, likely typo and thread-change candidates, first-person
-fact candidates and changes, query-language signals, activity rhythms, and
-evidence-linked questions worth revisiting. Longitudinal views show which
-topics, question domains, and language signals are emerging, fading, steady, or
-resurfacing, while confidence controls let the visitor decide how much inferred
-evidence to show.
+This repository now hosts the **DaddyRad MCP server** ([`mcp/`](mcp/README.md)).
+Memory Map and its `memory-pack` CLI have moved to SaaS Maker.
 
-The archive is parsed in a web worker. Conversation text is never sent to an
-application server, nothing is persisted by default, and the original ZIP is
-never stored. Semantic grouping and search use a pinned browser-loaded
-embedding model. Automatic mode uses compact English-focused
-`Xenova/all-MiniLM-L6-v2` for predominantly Latin-script histories and can
-select `Xenova/paraphrase-multilingual-MiniLM-L12-v2` for multilingual
-histories. The visitor can override that choice before import.
+## Memory Map moved
 
-Production: <https://chatgpt.significanthobbies.com>
+Memory Map, the browser-local ChatGPT-export analysis app at
+<https://chatgpt.significanthobbies.com>, now lives in
+[`sass-maker/saas-maker` → `apps/memory-map`](https://github.com/sass-maker/saas-maker/tree/main/apps/memory-map)
+and deploys from there to the same Cloudflare Pages project and hostname, so
+saved browser-local indexes are unaffected.
 
-The public `/about` capability atlas explains all 51 current product
-capabilities, the browser-only data path, intended and unsupported use cases,
-and the complete path from ChatGPT export to searchable memory.
+- Source absorbed from this repository at
+  [`950a85ce`](https://github.com/Significant-Hobbies/chatgpt-memory-insights/commit/950a85ce1fd4fb255d145e1c514e776426a9b4e8)
+  in [saas-maker@6ef53142](https://github.com/sass-maker/saas-maker/commit/6ef53142) (#211).
+- Deploy path and `memory-pack` move: [saas-maker@576a623e](https://github.com/sass-maker/saas-maker/commit/576a623ed0ca4e8ea883cbe6ce29d118cc480e47) (#215).
+- Cutover tracking: [sass-maker/saas-maker#210](https://github.com/sass-maker/saas-maker/issues/210).
 
-Analysis is progressive: deterministic insights appear first, while a six-stage
-route shows elapsed time and an estimated wait for semantic mapping. The
-completed report collapses its one-time timing, model, and confidence controls
-into an analysis receipt instead of leaving setup chrome in the reading path.
-The receipt includes archive parsing, model download and preparation,
-embeddings, and report assembly. Supported compact-model runs use WebGPU
-acceleration after checking that an adapter is available, or WebAssembly
-compatibility mode. A failure after GPU initialization is not yet a qualified
-recovery path.
+## memory-pack moved
 
-The report period controls exact calendar windows, including inactive months.
-It updates the daily activity calendar, topic movement, query tone, language
-signals, and a filterable monthly cadence graph that can compare conversation
-count or approximate word count for all conversations or one overlapping
-question route. Search lives with the semantic topic map where its results are
-explained by graph and source evidence.
+The `memory-pack` CLI (formerly `packer/`), its release workflow, and the
+installer now live at
+[`apps/memory-map/packer`](https://github.com/sass-maker/saas-maker/tree/main/apps/memory-map/packer)
+with `.github/workflows/memory-pack-release.yml` and `memory-pack-ci.yml` in
+SaaS Maker. The installer is unchanged for users:
 
-During ingestion, every parsed conversation becomes a distinct stop in a live
-deterministic route sketch. The same canvas moves into the report while
-embeddings finish, then yields to the final semantic topic graph without
-delaying analysis.
-
-After analysis, Memory Chat can optionally load the pinned
-`Xenova/LaMini-Flan-T5-77M` q8 model in a dedicated browser worker. Every
-question visibly traverses the semantic graph, the model receives at most six
-labelled evidence excerpts, and the app withholds drafts that do not cite those
-retrieved stops. The generator can be unloaded independently and its prose is
-never promoted into saved memory.
-
-## Get your ChatGPT export
-
-In ChatGPT, open your profile menu and choose **Settings → Data controls →
-Export data → Export**, then confirm the request. OpenAI sends an email or SMS
-when the export is ready; download the ZIP and import it without unzipping it.
-Exports can take up to seven days, and the download link expires after 24
-hours. See OpenAI's
-[official export instructions](https://help.openai.com/en/articles/7260999-how-do-i-export-my-chatgpt-history-and-data)
-or use the [Privacy Portal](https://privacy.openai.com/).
-
-## Pack your Claude Code and Codex sessions
-
-`memory-pack` turns the transcripts Claude Code and Codex already keep in
-`~/.claude` and `~/.codex` into an archive Memory Map reads through the same
-path as a ChatGPT export. It packs your prompts and the assistant's replies and
-leaves tool calls, tool output, reasoning traces, and file contents behind, so
-gigabytes of transcripts become an archive of a few megabytes. It also reads
-the prompt history both CLIs keep for sessions they have already pruned, which
-reaches back much further than the transcripts do. It makes no network calls
-and masks credential-shaped tokens before writing.
-
-```bash
+```sh
 curl -fsSL https://chatgpt.significanthobbies.com/install.sh | sh
-
-memory-pack --dry-run --list   # see what would be packed
-memory-pack                    # write memory-pack-<date>.zip
 ```
 
-Source, options, and the full account of what is kept and dropped are in
-[`packer/`](packer/README.md).
+Releases `memory-pack-v0.1.0` to `memory-pack-v0.1.2` stay published on this
+repository's [Releases](https://github.com/Significant-Hobbies/chatgpt-memory-insights/releases);
+the installer falls back to them until SaaS Maker publishes its first
+`memory-pack-v*` release.
 
-## Develop
+Open questions moved too: #12 → [saas-maker#213](https://github.com/sass-maker/saas-maker/issues/213),
+#37 → [saas-maker#214](https://github.com/sass-maker/saas-maker/issues/214).
+Memory Map's history, design receipts (`artifacts/design`, still referenced by
+the live site's social images) and qualification evidence (`docs/qualification`)
+remain here.
 
-```bash
-pnpm install
-pnpm run dev
-```
+## DaddyRad MCP server
 
-## Verify
+[`mcp/`](mcp/) is the single local, read-only stdio MCP server across the four
+DaddyRad native cores (PerformanceDaddy, ContextDaddy, StorageDaddy,
+BrowserDaddy). It moved here verbatim from
+[`Significant-Hobbies/daddyrad@bfdd8a81`](https://github.com/Significant-Hobbies/daddyrad/tree/bfdd8a813deff13fbc9a342ff865a28a50b724e3/mcp)
+with its macOS CI job. Build and configuration instructions are in
+[`mcp/README.md`](mcp/README.md); its local paths still say `daddyrad/mcp`, so
+substitute `chatgpt-memory-insights/mcp`. It builds with SwiftPM against sibling
+checkouts of the four engine repositories (`../../performancedaddy` etc.), at
+the revisions pinned in `mcp/engine-revisions.json`.
 
-```bash
-pnpm run check
-```
+## License
 
-This runs the repository's full Fleet quality boundary: formatting and lint,
-Astro/TypeScript checks, 66 tests with coverage floors, Knip unused-code and
-cycle checks, complexity, exact duplication, dependency advisories,
-suppression and repository hygiene checks, and the production build. Existing
-debt is regression-gated by the checked-in quality scripts; historical context
-is in [issue #12](https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/12).
-
-`pnpm run test:import` additionally tests the built app in isolated Chromium
-(install with `pnpm exec playwright install chromium` if needed). It constructs
-a synthetic ZIP and blocks external requests. The actual worker produces one
-conversation's statistics; a model download failure now remains visible, stops
-the running-state copy, disables unavailable search/save controls, and allows
-retry without discarding the readable statistics. Checks run at 390 px and
-1280 px and are included in CI. Playwright is a development-only dependency.
-
-## Task reconciliation (2026-09-07)
-
-This audit began with zero open issues and PRs; none were closed. Remaining
-qualification is [#37](https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/37):
-large/split archives,
-multilingual/cross-browser behavior, and failures after GPU initialization.
-[Local synthetic qualification](docs/qualification/2026-09-07/README.md) now
-proves real compact-model import/search, explicit save, reload/restore, and
-forget. [Hosted synthetic verification](docs/qualification/2026-09-07/hosted/README.md)
-now passes on deployed source `3417cca`; the initial stale-asset failure and
-separate PostHog initialization exception are retained in that receipt. The
-offline import regression remains a separate failure-path check.
-[PostHog bootstrap repair #38](https://github.com/Significant-Hobbies/chatgpt-memory-insights/issues/38)
-is now deployed as `0120fdb` / `c9571467`. The ordinary public page loads the
-real SDK without initialization exceptions, and its bootstrap matches source.
-[Hosted analytics receipt](docs/qualification/2026-09-07/hosted/analytics-receipt.json)
-records unchanged analytics configuration and intercepted telemetry; provider
-event delivery is not claimed. Issue #38 is complete; #37 remains open.
-
-No private archive or hosted archive upload was used; the approved production
-release is recorded separately from the earlier local repair.
-
-## Deploy
-
-Production deployment is intentionally manual and guarded:
-
-```bash
-pnpm run deploy
-```
-
-The deploy command only runs from a clean `main` branch that matches
-`origin/main`.
+MIT, see [LICENSE](LICENSE).
